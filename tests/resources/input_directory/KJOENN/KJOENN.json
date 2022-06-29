@@ -1,0 +1,101 @@
+{
+    "shortName": "KJOENN",
+    "temporalityType": "FIXED",
+    "populationDescription": [{"languageCode": "no", "value": "NEW VALUE"}],
+    "spatialCoverageDescription": [{"languageCode": "no", "value": "Norge"}],
+    "dataRevision": {
+      "description": [{"languageCode": "no","value": "Første publisering."}],
+      "temporalEndOfSeries": false
+    },
+    "identifierVariables": [
+      {
+        "variableRole": "IDENTIFIER",
+        "shortName": "PERSON",
+        "name": [{"languageCode": "no", "value": "NEW VALUE"}],
+        "description": [{"languageCode": "no","value": "Identifikator for person i Microdata"}],
+        "dataType": "STRING",
+        "unitType": {
+          "shortName": "PERSON",
+          "name": [{"languageCode": "no", "value": "NEW VALUE"}],
+          "description": [{"languageCode": "no", "value": "NEW VALUE"}]
+        },
+        "format": "RandomUInt48",
+        "valueDomain": {
+          "shortName": "PERSONNUMMER",
+          "description": [{"languageCode": "no", "value":"NEW VALUE"}]
+        }
+      }
+    ],
+    "measureVariables": [
+      {
+        "variableRole": "MEASURE",
+        "shortName": "KJOENN",
+        "name": [{"languageCode": "no", "value": "NEW VALUE"}],
+        "description": [{"languageCode": "no", "value": "NEW VALUE"}],
+        "subjectFields": [
+          {
+            "shortName": "NEW VALUE",
+            "name": [{"languageCode": "no", "value": "NEW VALUE"}],
+            "description": [{"languageCode": "no", "value": "NEW VALUE"}]
+          },
+          {
+            "shortName": "NEW VALUE",
+            "name": [{"languageCode": "no", "value": "NEW VALUE"}],
+            "description": [{"languageCode": "no", "value": "NEW VALUE"}]
+          }
+        ],
+        "dataType": "STRING",
+        "uriDefinition": [""],
+        "valueDomain": {
+          "uriDefinition": [""],
+          "codeList": {
+            "codeItems": [
+              {
+                "code": "1",
+                "categoryTitle": [{"languageCode": "no", "value": "NEW VALUE"}],
+                "validFrom": "1900-01-01"
+              },
+              {
+                "code": "2",
+                "categoryTitle": [{"languageCode": "no", "value": "NEW VALUE"}],
+                "validFrom": "1900-01-01"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "attributeVariables": [
+      {
+        "variableRole": "START_TIME",
+        "shortName": "START",
+        "name": [
+          {"languageCode": "no", "value": "NEW VALUE"},
+          {"languageCode": "en", "value": "NEW VALUE"}
+        ],
+        "description": [{"languageCode": "no", "value": "NEW VALUE"}
+        ],
+        "dataType": "DATE",
+        "valueDomain": {
+          "description": [{"languageCode": "no", "value": "NEW VALUE"}]
+        }
+      },
+      {
+        "variableRole": "STOP_TIME",
+        "shortName": "STOP",
+        "name": [
+          {"languageCode": "no", "value": "NEW VALUE"},
+          {"languageCode": "en", "value": "NEW VALUE"}
+        ],
+        "description": [
+          {"languageCode": "no", "value": "NEW VALUE"},
+          {"languageCode": "en", "value": "NEW VALUE"}
+        ],
+        "dataType": "DATE",
+        "valueDomain": {
+          "description": [{"languageCode": "no", "value": "NEW VALUE"}
+          ]
+        }
+      }
+    ]
+  }
