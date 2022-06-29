@@ -1,0 +1,16 @@
+{
+    "version": "0.0.0.1635299291",
+    "description": "Draft",
+    "releaseTime": 1635299291,
+    "languageCode": "no",
+    "dataStructureUpdates": [
+      {
+        "name": "UTDANNING",
+        "description": "Første publisering",
+        "operation": "ADD",
+        "releaseStatus": "DRAFT"
+      }
+    ],
+    "updateType": "MINOR"
+  }
+  
