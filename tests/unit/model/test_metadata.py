@@ -1,11 +1,12 @@
-import os
 import json
 import shutil
 
 from job_executor.model import MetadataAll, Metadata
 
 
-load_json = lambda file_path: json.load(open(file_path))
+def load_json(file_path):
+    return json.load(open(file_path, encoding='utf'))
+
 
 TEST_DIR = 'tests/resources/model/metadata'
 METADATA_ALL_PATH = f'{TEST_DIR}/metadata_all.json'
@@ -32,17 +33,18 @@ def teardown_module():
         'tests/resources'
     )
 
+
 def test_metadata_all():
     metadata_all = MetadataAll(file_path=METADATA_ALL_PATH)
     assert metadata_all.dict() == load_json(METADATA_ALL_PATH)
 
 
 def test_metadata():
-        enumerated_metadata = Metadata(**ENUMERATED_METADATA)
-        assert enumerated_metadata.dict() == ENUMERATED_METADATA
+    enumerated_metadata = Metadata(**ENUMERATED_METADATA)
+    assert enumerated_metadata.dict() == ENUMERATED_METADATA
 
-        described_metadata = Metadata(**DESCRIBED_METADATA)
-        assert described_metadata.dict() == DESCRIBED_METADATA
+    described_metadata = Metadata(**DESCRIBED_METADATA)
+    assert described_metadata.dict() == DESCRIBED_METADATA
 
 
 def test_patch():

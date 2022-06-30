@@ -42,6 +42,7 @@ class JobParameters(BaseModel, use_enum_values=True):
     releaseStatus: Optional[ReleaseStatus]
 
     @root_validator(skip_on_failure=True)
+    @classmethod
     def remove_none_values(cls, values):
         return {
             key: value for key, value in values.items()
@@ -56,6 +57,7 @@ class Job(BaseModel, extra=Extra.forbid, use_enum_values=True):
     parameters: JobParameters
 
     @root_validator(skip_on_failure=True)
+    @classmethod
     def validate_job_type(cls, values):
         operation = values['operation']
         parameters = values['parameters']

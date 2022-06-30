@@ -1,5 +1,4 @@
 import os
-import pytest
 
 from job_executor.config import environment
 

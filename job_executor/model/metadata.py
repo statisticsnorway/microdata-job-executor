@@ -16,7 +16,7 @@ class TimePeriod(BaseModel):
     start: Union[int, None]
     stop: Optional[Union[int, None]]
 
-    def dict(self, **kwargs) -> dict:
+    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
         return (
             {"start": self.start, "stop": self.stop}
             if self.stop is not None
@@ -87,7 +87,7 @@ class ValueDomain(BaseModel):
             and self.missingValues is None
         )
 
-    def dict(self, **kwargs) -> dict:
+    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
         if self._is_described_value_domain():
             return {
                 key: value for key, value in {
@@ -140,7 +140,7 @@ class ValueDomain(BaseModel):
                 patched.update({
                     'missingValues': [value for value in self.missingValues]
                 })
-            for idx in range(len(self.codeList)):
+            for idx, _ in enumerate(self.codeList):
                 patched['codeList'].append(
                     self.codeList[idx].patch(other.codeList[idx]).dict()
                 )
@@ -176,6 +176,7 @@ class Variable(BaseModel):
     representedVariables: List[RepresentedVariable]
 
     @root_validator(pre=True)
+    @classmethod
     def remove_none(cls, values):
         return {
             key: value for key, value in values.items()
@@ -185,7 +186,7 @@ class Variable(BaseModel):
     def get_key_type_name(self):
         return None if self.keyType is None else self.keyType.name
 
-    def dict(self, **kwargs) -> dict:
+    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
         dict_representation = {
             "name": self.name,
             "label": self.label,
@@ -225,7 +226,7 @@ class Variable(BaseModel):
                 'Can not add or delete represented variables.'
             )
         patched_represented_variables = []
-        for idx in range(len(self.representedVariables)):
+        for idx, _ in enumerate(self.representedVariables):
             patched_represented_variables.append(
                 self.representedVariables[idx].patch(
                     other.representedVariables[idx]
@@ -293,7 +294,7 @@ class Metadata(BaseModel):
         if len(self.attributeVariables) != len(other.attributeVariables):
             raise PatchingError('Can not delete or add attributeVariables')
         patched_attribute_variables = []
-        for idx in range(len(self.attributeVariables)):
+        for idx, _ in enumerate(self.attributeVariables):
             patched_attribute_variables.append(
                 self.attributeVariables[idx].patch(
                     other.attributeVariables[idx]
@@ -318,7 +319,7 @@ class Metadata(BaseModel):
         })
 
     def write_to_file(self, file_path: str):
-        with open(file_path, 'w') as f:
+        with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(self.dict(), f)
 
 
@@ -336,9 +337,10 @@ class MetadataAll(BaseModel):
     iter: int = 0
 
     @root_validator(pre=True)
+    @classmethod
     def read_file(cls, values):
         file_path = values['file_path']
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             file_values = json.load(f)
         return {'file_path': file_path, **file_values}
 
@@ -369,7 +371,7 @@ class MetadataAll(BaseModel):
         self.dataStructures.append(metadata)
         self._write_to_file()
 
-    def get(self, dataset_name: str) -> Metadata:
+    def get(self, dataset_name: str) -> Union[Metadata, None]:
         for metadata in self.dataStructures:
             if metadata.name == dataset_name:
                 return Metadata(**metadata.dict())
@@ -384,7 +386,7 @@ class MetadataAll(BaseModel):
         }
 
     def _write_to_file(self):
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, 'w', encoding='utf-8') as f:
             json.dump(self.dict(), f)
 
 
@@ -395,6 +397,6 @@ def generate_new_metadata_all(file_path, metadata_all: MetadataAll):
     """
     if os.path.exists(file_path):
         raise FileExistsError('This version of metadata_all already exists')
-    with open(file_path, 'w') as f:
+    with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(metadata_all.dict(), f)
     return MetadataAll(file_path=file_path)

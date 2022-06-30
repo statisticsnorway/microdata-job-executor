@@ -1,7 +1,8 @@
 import json
 from typing import List, Tuple, Union
-from pydantic import BaseModel, Extra, root_validator
 from datetime import datetime
+
+from pydantic import BaseModel, Extra, root_validator
 
 from job_executor.exception.exception import (
     NoSuchDraftException,
@@ -116,9 +117,10 @@ class DraftVersion(DatastoreVersion):
     file_path: str
 
     @root_validator(skip_on_failure=True, pre=True)
+    @classmethod
     def read_file(cls, values):
         file_path = values['file_path']
-        with open(file_path) as f:
+        with open(file_path, encoding='utf-8') as f:
             file_values = json.load(f)
         return {'file_path': file_path, **file_values}
 
@@ -155,7 +157,7 @@ class DraftVersion(DatastoreVersion):
     def _write_to_file(self):
         self.releaseTime = (datetime.now() - datetime.utcfromtimestamp(0)).days
         self._calculate_update_type()
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, 'w', encoding='utf-8') as f:
             json.dump(self.dict(), f)
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
@@ -179,7 +181,7 @@ class DatastoreVersions():
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             file_data = json.load(f)
         self.name = file_data['name']
         self.label = file_data['label']
@@ -201,7 +203,7 @@ class DatastoreVersions():
         }
 
     def _save_to_file(self):
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, 'w', encoding='utf-8') as f:
             json.dump(self.dict(), f)
 
     def add_new_release_version(

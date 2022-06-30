@@ -17,7 +17,8 @@ pandas = "^1.4.2"
 pytest = "^7.1.2"
 pytest-dotenv = "^0.5.2"
 pytest-cov = "^3.0.0"
-flake8 = "^4.0.1"
+pylint = "^2.14.4"
+pycodestyle = "^2.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
