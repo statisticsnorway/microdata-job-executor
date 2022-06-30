@@ -15,7 +15,7 @@ ENUMERATED_EXPECTED_PATH = (
 
 
 def test_dataset_with_enumerated_valuedomain():
-    with open(ENUMERATED_EXPECTED_PATH) as f:
+    with open(ENUMERATED_EXPECTED_PATH, encoding='utf-8') as f:
         expected_metadata_json = json.load(f)
     actual_metadata = dataset_transformer.run(
         ENUMERATED_FILE_PATH
@@ -24,7 +24,7 @@ def test_dataset_with_enumerated_valuedomain():
 
 
 def test_dataset_with_described_valuedomain():
-    with open(DESCRIBED_EXPECTED_PATH) as f:
+    with open(DESCRIBED_EXPECTED_PATH, encoding='utf-8') as f:
         expected_metadata_json = json.load(f)
     actual_metadata = dataset_transformer.run(
         DESCRIBED_FILE_PATH

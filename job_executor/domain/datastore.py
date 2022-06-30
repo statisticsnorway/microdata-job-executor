@@ -43,7 +43,8 @@ def _get_release_status(dataset_name: str):
 def _get_latest_data_versions() -> dict:
     with open(
         f'{DATASTORE_DIR}/datastore/data_versions__'
-        f'{_datastore_versions.get_latest_version_number()[:3]}.json'
+        f'{_datastore_versions.get_latest_version_number()[:3]}.json',
+        encoding='utf-8'
     ) as f:
         return json.load(f)
 
@@ -83,7 +84,9 @@ def patch_metadata(dataset_name: str, description: str):
             'Can\'t patch metadata of dataset with status '
             f'{dataset_release_status}'
         )
-    with open(f'{WORKING_DIR}/{dataset_name}__DRAFT.json') as f:
+    with open(
+        f'{WORKING_DIR}/{dataset_name}__DRAFT.json', encoding='utf-8'
+    ) as f:
         draft_metadata = Metadata(**json.load(f))
     released_metadata = _latest_metadata_all.get(dataset_name)
     patched_metadata = released_metadata.patch(draft_metadata)
@@ -113,7 +116,9 @@ def add(dataset_name: str, description: str):
             f'Can\'t add dataset with status {dataset_release_status}'
         )
     working_dir_parquet_path = _get_working_dir_parquet_path(dataset_name)
-    with open(f'{WORKING_DIR}/{dataset_name}__DRAFT.json') as f:
+    with open(
+        f'{WORKING_DIR}/{dataset_name}__DRAFT.json', encoding='utf-8'
+    ) as f:
         draft_metadata = Metadata(**json.load(f))
     _draft_metadata_all.add(draft_metadata)
     _draft_version.add(
@@ -151,7 +156,9 @@ def change_data(dataset_name: str, description: str):
             f'{dataset_release_status}'
         )
     working_dir_parquet_path = _get_working_dir_parquet_path(dataset_name)
-    with open(f'{WORKING_DIR}/{dataset_name}__DRAFT.json') as f:
+    with open(
+        f'{WORKING_DIR}/{dataset_name}__DRAFT.json', encoding='utf-8'
+    ) as f:
         draft_metadata = Metadata(**json.load(f))
     _draft_metadata_all.remove(dataset_name)
     _draft_metadata_all.add(draft_metadata)
@@ -269,7 +276,7 @@ def bump_version(bump_manifesto: DatastoreVersion, description: str):
             )
             shutil.move(metadata_draft_path, metadata_release_path)
             new_metadata_all.remove(dataset_name)
-            with open(metadata_release_path) as f:
+            with open(metadata_release_path, encoding='utf-8') as f:
                 new_metadata_all.add(Metadata(**json.load(f)))
         if operation in ['ADD', 'CHANGE_DATA']:
             data_draft_path = _get_parquet_draft_path(dataset_name)
@@ -281,7 +288,8 @@ def bump_version(bump_manifesto: DatastoreVersion, description: str):
     if update_type in ['MINOR', 'MAJOR']:
         with open(
             f'{DATASTORE_DIR}/datastore/'
-            f'data_versions__{new_version[:3]}.json', 'w'
+            f'data_versions__{new_version[:3]}.json',
+            'w', encoding='utf-8'
         ) as f:
             json.dump(new_data_versions, f)
     _latest_metadata_all = new_metadata_all
@@ -295,6 +303,7 @@ def bump_version(bump_manifesto: DatastoreVersion, description: str):
         else:
             with open(
                 f'{DATASTORE_DIR}/metadata/'
-                f'{draft.name}/{draft.name}__DRAFT.json'
+                f'{draft.name}/{draft.name}__DRAFT.json',
+                encoding='utf-8'
             ) as f:
                 _draft_metadata_all.add(Metadata(**json.load(f)))

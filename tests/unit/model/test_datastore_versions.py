@@ -8,7 +8,9 @@ from job_executor.model import (
 )
 
 
-load_json = lambda file_path: json.load(open(file_path))
+def load_json(file_path):
+    return json.load(open(file_path, encoding='utf'))
+
 
 DATA_STRUCTURE_UPDATE = {
     "name": "KJOENN",
@@ -23,16 +25,16 @@ DATASTORE_VERSION = {
     "languageCode": "no",
     "dataStructureUpdates": [
         {
-        "name": "INNTEKT",
-        "description": "Første publisering",
-        "operation": "ADD",
-        "releaseStatus": "RELEASED"
+            "name": "INNTEKT",
+            "description": "Første publisering",
+            "operation": "ADD",
+            "releaseStatus": "RELEASED"
         },
         {
-        "name": "SIVSTAND",
-        "description": "Første publisering",
-        "operation": "ADD",
-        "releaseStatus": "RELEASED"
+            "name": "SIVSTAND",
+            "description": "Første publisering",
+            "operation": "ADD",
+            "releaseStatus": "RELEASED"
         }
     ],
     "updateType": "MINOR"
@@ -50,6 +52,7 @@ def test_data_structure_update():
 def test_datastore_version():
     datastore_version = DatastoreVersion(**DATASTORE_VERSION)
     assert datastore_version.dict() == DATASTORE_VERSION
+
 
 def test_draft_version():
     draft_version = DraftVersion(file_path=DRAFT_VERSION_PATH)
