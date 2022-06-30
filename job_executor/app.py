@@ -92,12 +92,12 @@ def _handle_manager_job(job: Job):
             job.parameters.datasetName, job.parameters.releaseStatus
         )
     elif operation == 'ADD':
-        datastore.change_data(
+        datastore.add(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'CHANGE_DATA':
-        datastore.add(
+        datastore.change_data(
             job.parameters.datasetName,
             job.parameters.description
         )
