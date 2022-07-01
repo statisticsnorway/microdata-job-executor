@@ -9,6 +9,12 @@
       "description": "Første publisering",
       "operation": "ADD",
       "releaseStatus": "DRAFT"
+    },
+    {
+      "name": "BRUTTO_INNTEKT",
+      "description": "Første publisering",
+      "operation": "ADD",
+      "releaseStatus": "DRAFT"
     }
   ],
   "updateType": "MINOR"

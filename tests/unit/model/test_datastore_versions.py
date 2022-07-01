@@ -1,4 +1,5 @@
 import json
+import os
 
 from job_executor.model import (
     DataStructureUpdate,
@@ -39,9 +40,9 @@ DATASTORE_VERSION = {
     ],
     "updateType": "MINOR"
 }
-TEST_DIR = 'tests/resources/model/datastore_versions'
-DRAFT_VERSION_PATH = f'{TEST_DIR}/draft_version.json'
-DATASTORE_VERSIONS_PATH = f'{TEST_DIR}/datastore_versions.json'
+DATASTORE_DIR = f'{os.environ["DATASTORE_DIR"]}/datastore'
+DRAFT_VERSION_PATH = f'{DATASTORE_DIR}/draft_version.json'
+DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore_versions.json'
 
 
 def test_data_structure_update():

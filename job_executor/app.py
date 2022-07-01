@@ -8,7 +8,7 @@ from job_executor.worker import (
     build_metadata_worker
 )
 from job_executor.model import Job, Datastore
-from job_executor.adapter import job_service_adapter
+from job_executor.adapter import job_service
 from job_executor.config import environment
 
 
@@ -23,7 +23,7 @@ def main():
     while True:
         time.sleep(5)
         workers = [worker for worker in workers if worker.is_alive()]
-        queued_worker_jobs = job_service_adapter.get_jobs(
+        queued_worker_jobs = job_service.get_jobs(
             job_status='queued',
             operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
         )
@@ -31,10 +31,10 @@ def main():
             if len(workers) < NUMBER_OF_WORKERS:
                 _handle_worker_job(job, workers)
 
-        built_jobs = job_service_adapter.get_jobs(
+        built_jobs = job_service.get_jobs(
             job_status='built'
         )
-        queued_manager_jobs = job_service_adapter.get_jobs(
+        queued_manager_jobs = job_service.get_jobs(
             job_status='queued',
             operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
         )
@@ -42,7 +42,7 @@ def main():
             try:
                 _handle_manager_job(job)
             except Exception as e:
-                job_service_adapter.update_job_status(
+                job_service.update_job_status(
                     job.jobId, 'failed',
                     log=str(e)
                 )
@@ -68,7 +68,7 @@ def _handle_worker_job(job: Job, workers: List[Process]):
         worker.start()
     else:
         logger.error(f'Unknown operation "{operation}"')
-        job_service_adapter.update_job_status(
+        job_service.update_job_status(
             job_id, 'failed',
             log=f'Unknown operation type {operation}'
         )

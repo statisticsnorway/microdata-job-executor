@@ -165,6 +165,12 @@ def test_bump_datastore():
         draft_after_bump = json.load(f)
     assert draft_after_bump['dataStructureUpdates'] == [
         {
+            'description': 'Første publisering',
+            'name': 'BRUTTO_INNTEKT',
+            'operation': 'ADD',
+            'releaseStatus': 'DRAFT'
+        },
+        {
             'description': 'oppdaterte metadata',
             'name': 'SIVSTAND',
             'operation': 'PATCH_METADATA',

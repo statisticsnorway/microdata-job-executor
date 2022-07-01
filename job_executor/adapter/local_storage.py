@@ -31,7 +31,7 @@ def _get_parquet_path(directory: str, dataset_name: str) -> str:
         return parquet_file_path
     else:
         raise FileExistsError(
-            f'No working dir parquet path for {dataset_name}'
+            f'Invalid parquet path in {directory} for {dataset_name}'
         )
 
 
