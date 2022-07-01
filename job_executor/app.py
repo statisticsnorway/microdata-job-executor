@@ -13,7 +13,7 @@ from job_executor.config import environment
 
 
 NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')
-DATASTORE = Datastore()
+datastore = Datastore()
 logger = logging.getLogger()
 
 
@@ -77,36 +77,36 @@ def _handle_worker_job(job: Job, workers: List[Process]):
 def _handle_manager_job(job: Job):
     operation = job.operation
     if operation == 'BUMP':
-        DATASTORE.bump_version(
+        datastore.bump_version(
             job.parameters.bumpManifesto,
             job.parameters.description
         )
     elif operation == 'PATCH_METADATA':
-        DATASTORE.patch_metadata(
+        datastore.patch_metadata(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'SET_STATUS':
-        DATASTORE.set_draft_release_status(
+        datastore.set_draft_release_status(
             job.parameters.datasetName, job.parameters.releaseStatus
         )
     elif operation == 'ADD':
-        DATASTORE.add(
+        datastore.add(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'CHANGE_DATA':
-        DATASTORE.change_data(
+        datastore.change_data(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'REMOVE':
-        DATASTORE.remove(
+        datastore.remove(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'DELETE_DRAFT':
-        DATASTORE.delete_draft(job.parameters.datasetName)
+        datastore.delete_draft(job.parameters.datasetName)
     else:
         raise UnknownOperationException(f'Unknown operation {operation}')
 
