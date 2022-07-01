@@ -55,10 +55,10 @@ def test_datastore_version():
 
 
 def test_draft_version():
-    draft_version = DraftVersion(file_path=DRAFT_VERSION_PATH)
+    draft_version = DraftVersion()
     assert draft_version.dict() == load_json(DRAFT_VERSION_PATH)
 
 
 def test_datastore_versions():
-    datastore_versions = DatastoreVersions(file_path=DATASTORE_VERSIONS_PATH)
+    datastore_versions = DatastoreVersions()
     assert datastore_versions.dict() == load_json(DATASTORE_VERSIONS_PATH)

@@ -2,10 +2,10 @@ import os
 import json
 import shutil
 
-from job_executor.domain import datastore
+from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
 
-
+DATASTORE = Datastore()
 DATASTORE_DIR = os.environ['DATASTORE_DIR']
 DATASTORE_DATA_DIR = f'{DATASTORE_DIR}/data'
 DATASTORE_METADATA_DIR = f'{DATASTORE_DIR}/metadata'
@@ -45,7 +45,7 @@ def teardown_module():
 def test_patch_metadata():
     DATASET_NAME = 'SIVSTAND'
     DESCRIPTION = 'oppdaterte metadata'
-    datastore.patch_metadata(DATASET_NAME, DESCRIPTION)
+    DATASTORE.patch_metadata(DATASET_NAME, DESCRIPTION)
 
     with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
         sivstand_metadata = json.load(f)
@@ -66,7 +66,7 @@ def test_patch_metadata():
 def test_add():
     DATASET_NAME = 'FOEDESTED'
     DESCRIPTION = 'første publisering'
-    datastore.add(DATASET_NAME, DESCRIPTION)
+    DATASTORE.add(DATASET_NAME, DESCRIPTION)
 
     assert os.path.exists(draft_data_path(DATASET_NAME))
     with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
@@ -88,7 +88,7 @@ def test_add():
 def test_change_data():
     DATASET_NAME = 'FOEDSELSVEKT'
     DESCRIPTION = 'oppdaterte data'
-    datastore.change_data(DATASET_NAME, DESCRIPTION)
+    DATASTORE.change_data(DATASET_NAME, DESCRIPTION)
 
     assert os.path.exists(draft_data_path(DATASET_NAME))
     with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
@@ -110,7 +110,7 @@ def test_change_data():
 def test_remove():
     DATASET_NAME = 'INNTEKT'
     DESCRIPTION = 'Fjernet variabel'
-    datastore.remove(DATASET_NAME, DESCRIPTION)
+    DATASTORE.remove(DATASET_NAME, DESCRIPTION)
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_version = json.load(f)
@@ -125,7 +125,7 @@ def test_remove():
 
 def test_delete_draft():
     DATASET_NAME = 'UTDANNING'
-    datastore.delete_draft(DATASET_NAME)
+    DATASTORE.delete_draft(DATASET_NAME)
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_version = json.load(f)
@@ -143,7 +143,7 @@ def test_set_draft_release_status():
     DATASET_NAME = 'FOEDESTED'
     DESCRIPTION = 'første publisering'
     NEW_STATUS = 'PENDING_RELEASE'
-    datastore.set_draft_release_status(DATASET_NAME, NEW_STATUS)
+    DATASTORE.set_draft_release_status(DATASET_NAME, NEW_STATUS)
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_version = json.load(f)
@@ -160,7 +160,7 @@ def test_bump_datastore():
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
 
-    datastore.bump_version(bump_manifesto, 'description')
+    DATASTORE.bump_version(bump_manifesto, 'description')
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
     assert draft_after_bump['dataStructureUpdates'] == [
