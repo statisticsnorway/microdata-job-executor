@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Extra, root_validator
 
-from job_executor.adapter import local_storage_adapter
+from job_executor.adapter import local_storage
 from job_executor.exception.exception import (
     NoSuchDraftException,
     ReleaseStatusException
@@ -118,7 +118,7 @@ class DraftVersion(DatastoreVersion):
     @root_validator(skip_on_failure=True, pre=True)
     @classmethod
     def read_file(cls, _):
-        return local_storage_adapter.get_draft_version()
+        return local_storage.get_draft_version()
 
     def add(self, data_structure_update: DataStructureUpdate):
         self.dataStructureUpdates.append(data_structure_update)
@@ -153,7 +153,7 @@ class DraftVersion(DatastoreVersion):
     def _write_to_file(self):
         self.releaseTime = (datetime.now() - datetime.utcfromtimestamp(0)).days
         self._calculate_update_type()
-        local_storage_adapter.write_draft_version(self.dict())
+        local_storage.write_draft_version(self.dict())
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
         dataset_update = next(
@@ -174,9 +174,7 @@ class DatastoreVersions():
     versions = List[DatastoreVersion]
 
     def __init__(self):
-        datastore_versions_dict = (
-            local_storage_adapter.get_datastore_versions()
-        )
+        datastore_versions_dict = (local_storage.get_datastore_versions())
         self.name = datastore_versions_dict['name']
         self.label = datastore_versions_dict['label']
         self.description = datastore_versions_dict['description']
@@ -197,9 +195,7 @@ class DatastoreVersions():
         }
 
     def _write_to_file(self):
-        local_storage_adapter.write_datastore_versions(
-            self.dict()
-        )
+        local_storage.write_datastore_versions(self.dict())
 
     def add_new_release_version(
         self,

@@ -7,7 +7,7 @@ from job_executor.model.datastore_versions import (
     DraftVersion,
     DataStructureUpdate
 )
-from job_executor.adapter import local_storage_adapter
+from job_executor.adapter import local_storage
 
 
 class Datastore():
@@ -25,7 +25,7 @@ class Datastore():
         )
         self.metadata_all_draft = MetadataAllDraft()
         self.metadata_all_latest = MetadataAll(
-            **local_storage_adapter.get_metadata_all(
+            **local_storage.get_metadata_all(
                 self.latest_version_number
             )
         )
@@ -53,7 +53,7 @@ class Datastore():
                 f'{dataset_release_status}'
             )
         draft_metadata = Metadata(
-            **local_storage_adapter.get_working_dir_metadata(dataset_name)
+            **local_storage.get_working_dir_metadata(dataset_name)
         )
         released_metadata = self.metadata_all_latest.get(dataset_name)
         patched_metadata = released_metadata.patch(draft_metadata)
@@ -67,10 +67,8 @@ class Datastore():
                 releaseStatus='DRAFT'
             )
         )
-        local_storage_adapter.write_metadata(
-            patched_metadata.dict(),
-            dataset_name,
-            'DRAFT'
+        local_storage.write_metadata(
+            patched_metadata.dict(), dataset_name, 'DRAFT'
         )
 
     def add(self, dataset_name: str, description: str):
@@ -92,16 +90,14 @@ class Datastore():
             )
         )
         draft_metadata = Metadata(
-            **local_storage_adapter.get_working_dir_metadata(dataset_name)
+            **local_storage.get_working_dir_metadata(dataset_name)
         )
-        local_storage_adapter.make_dataset_dir(dataset_name)
-        local_storage_adapter.write_metadata(
-            draft_metadata.dict(),
-            dataset_name,
-            'DRAFT'
+        local_storage.make_dataset_dir(dataset_name)
+        local_storage.write_metadata(
+            draft_metadata.dict(), dataset_name, 'DRAFT'
         )
         self.metadata_all_draft.add(draft_metadata)
-        local_storage_adapter.move_working_dir_parquet_to_datastore(
+        local_storage.move_working_dir_parquet_to_datastore(
             dataset_name
         )
 
@@ -118,7 +114,7 @@ class Datastore():
                 f'{dataset_release_status}'
             )
         draft_metadata = Metadata(
-            **local_storage_adapter.get_working_dir_metadata(dataset_name)
+            **local_storage.get_working_dir_metadata(dataset_name)
         )
         self.metadata_all_draft.remove(dataset_name)
         self.metadata_all_draft.add(draft_metadata)
@@ -130,12 +126,10 @@ class Datastore():
                 releaseStatus='DRAFT'
             )
         )
-        local_storage_adapter.write_metadata(
+        local_storage.write_metadata(
             draft_metadata.dict(), dataset_name, 'DRAFT'
         )
-        local_storage_adapter.move_working_dir_parquet_to_datastore(
-            dataset_name
-        )
+        local_storage.move_working_dir_parquet_to_datastore(dataset_name)
 
     def remove(self, dataset_name: str, description: str):
         """
@@ -168,9 +162,9 @@ class Datastore():
             self.metadata_all_draft.add(released_metadata)
         if deleted_draft.operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
             self.metadata_all_draft.remove(dataset_name)
-            local_storage_adapter.delete_metadata_draft(dataset_name)
+            local_storage.delete_metadata_draft(dataset_name)
         if deleted_draft.operation in ['ADD', 'CHANGE_DATA']:
-            local_storage_adapter.delete_parquet_draft(dataset_name)
+            local_storage.delete_parquet_draft(dataset_name)
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
         """
@@ -185,7 +179,7 @@ class Datastore():
         Release a new version of the datastore with the pending
         operations in the draft version of the datastore.
         """
-        latest_data_versions = local_storage_adapter.get_data_versions(
+        latest_data_versions = local_storage.get_data_versions(
             self.latest_version_number
         )
         if not self.draft_version.validate_bump_manifesto(bump_manifesto):
@@ -215,7 +209,7 @@ class Datastore():
                 del new_data_versions[dataset_name]
             if operation in ['PATCH_METADATA', 'CHANGE_DATA', 'ADD']:
                 released_metadata = (
-                    local_storage_adapter.rename_metadata_draft_to_release(
+                    local_storage.rename_metadata_draft_to_release(
                         dataset_name, new_version
                     )
                 )
@@ -226,24 +220,21 @@ class Datastore():
                 new_metadata_datasets.append(Metadata(**released_metadata))
             if operation in ['ADD', 'CHANGE_DATA']:
                 new_data_versions[dataset_name] = (
-                    local_storage_adapter.rename_parquet_draft_to_release(
+                    local_storage.rename_parquet_draft_to_release(
                         dataset_name, new_version
                     )
                 )
         if update_type in ['MINOR', 'MAJOR']:
-            local_storage_adapter.write_data_versions(
-                new_data_versions, new_version
-            )
+            local_storage.write_data_versions(new_data_versions, new_version)
         new_metadata_all_dict = self.metadata_all_latest.dict()
         new_metadata_all_dict['dataStructures'] = [
             dataset.dict() for dataset in new_metadata_datasets
         ]
-        local_storage_adapter.write_metadata_all(
-            new_metadata_all_dict,
-            new_version
+        local_storage.write_metadata_all(
+            new_metadata_all_dict, new_version
         )
         self.metadata_all_latest = MetadataAll(
-            **local_storage_adapter.get_metadata_all(new_version)
+            **local_storage.get_metadata_all(new_version)
         )
         self.latest_version_number = new_version
         self.metadata_all_draft.remove_all()
@@ -255,9 +246,5 @@ class Datastore():
                 continue
             else:
                 self.metadata_all_draft.add(
-                    Metadata(
-                        **local_storage_adapter.get_metadata(
-                            draft.name, 'DRAFT'
-                        )
-                    )
+                    Metadata(**local_storage.get_metadata(draft.name, 'DRAFT'))
                 )

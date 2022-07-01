@@ -2,7 +2,7 @@ from typing import List, Union
 from pydantic import BaseModel, root_validator
 
 from job_executor.model import Metadata
-from job_executor.adapter import local_storage_adapter
+from job_executor.adapter import local_storage
 
 
 class DataStoreInfo(BaseModel):
@@ -49,10 +49,10 @@ class MetadataAllDraft(MetadataAll):
     @root_validator(pre=True)
     @classmethod
     def read_file(cls, _):
-        return local_storage_adapter.get_metadata_all('DRAFT')
+        return local_storage.get_metadata_all('DRAFT')
 
     def _write_to_file(self):
-        local_storage_adapter.write_metadata_all(
+        local_storage.write_metadata_all(
             self.dict(),
             'DRAFT'
         )
