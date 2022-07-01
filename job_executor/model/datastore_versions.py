@@ -4,6 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Extra, root_validator
 
+from job_executor.adapter import local_storage_adapter
 from job_executor.exception.exception import (
     NoSuchDraftException,
     ReleaseStatusException
@@ -114,15 +115,11 @@ class DatastoreVersion(BaseModel):
 
 
 class DraftVersion(DatastoreVersion):
-    file_path: str
 
     @root_validator(skip_on_failure=True, pre=True)
     @classmethod
-    def read_file(cls, values):
-        file_path = values['file_path']
-        with open(file_path, encoding='utf-8') as f:
-            file_values = json.load(f)
-        return {'file_path': file_path, **file_values}
+    def read_file(cls, _):
+        return local_storage_adapter.get_draft_version()
 
     def add(self, data_structure_update: DataStructureUpdate):
         self.dataStructureUpdates.append(data_structure_update)
@@ -157,8 +154,7 @@ class DraftVersion(DatastoreVersion):
     def _write_to_file(self):
         self.releaseTime = (datetime.now() - datetime.utcfromtimestamp(0)).days
         self._calculate_update_type()
-        with open(self.file_path, 'w', encoding='utf-8') as f:
-            json.dump(self.dict(), f)
+        local_storage_adapter.write_draft_version(self.dict())
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
         dataset_update = next(
@@ -173,22 +169,21 @@ class DraftVersion(DatastoreVersion):
 
 
 class DatastoreVersions():
-    file_path: str
     name: str
     label: str
     description: str
     versions = List[DatastoreVersion]
 
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-        with open(file_path, 'r', encoding='utf-8') as f:
-            file_data = json.load(f)
-        self.name = file_data['name']
-        self.label = file_data['label']
-        self.description = file_data['description']
+    def __init__(self):
+        datastore_versions_dict = (
+            local_storage_adapter.get_datastore_versions()
+        )
+        self.name = datastore_versions_dict['name']
+        self.label = datastore_versions_dict['label']
+        self.description = datastore_versions_dict['description']
         self.versions = [
             DatastoreVersion(**version)
-            for version in file_data['versions']
+            for version in datastore_versions_dict['versions']
         ]
 
     def dict(self):
@@ -202,9 +197,10 @@ class DatastoreVersions():
             ]
         }
 
-    def _save_to_file(self):
-        with open(self.file_path, 'w', encoding='utf-8') as f:
-            json.dump(self.dict(), f)
+    def _write_to_file(self):
+        local_storage_adapter.write_datastore_versions(
+            self.dict()
+        )
 
     def add_new_release_version(
         self,
@@ -212,6 +208,17 @@ class DatastoreVersions():
         description: str,
         update_type: str
     ) -> str:
+        released_data_structure_updates = [
+            DataStructureUpdate(
+                name=data_structure.name,
+                description=data_structure.description,
+                operation=data_structure.operation,
+                releaseStatus=(
+                    "DELETED" if data_structure.operation == "REMOVE"
+                    else "RELEASED"
+                )
+            ) for data_structure in data_structure_updates
+        ]
         latest_version_number = self.versions[0].version
         new_version_number = bump_dotted_version_number(
                 latest_version_number, update_type
@@ -222,10 +229,10 @@ class DatastoreVersions():
             releaseTime=(datetime.now() - datetime.utcfromtimestamp(0)).days,
             languageCode='no',
             updateType=update_type,
-            dataStructureUpdates=data_structure_updates
+            dataStructureUpdates=released_data_structure_updates
         )
         self.versions = [new_release_version] + self.versions
-        self._save_to_file()
+        self._write_to_file()
         return dotted_to_underscored_version(new_version_number)
 
     def get_dataset_release_status(
