@@ -75,7 +75,7 @@ def get_data_versions(version: str) -> dict:
 def write_data_versions(data_versions: dict, version: str):
     """
     Writes given dict to a new data versions json file to the appropriate
-    datastore directory named with the given version. 
+    datastore directory named with the given version.
 
     * data_versions: dict - data versions dict
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
@@ -142,7 +142,7 @@ def get_metadata_all(version: str) -> dict:
 def write_metadata_all(metadata_all: dict, version: str):
     """
     Writes given dict to a metadata all json file to the appropriate
-    datastore directory named with the given version. 
+    datastore directory named with the given version.
 
     * metadata_all: dict - metadata all dict
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
@@ -180,7 +180,7 @@ def get_metadata(dataset_name: str, version: str) -> dict:
 def write_metadata(metadata: dict, dataset_name: str, version: str):
     """
     Writes given dict to a metadata json file to the appropriate
-    datastore directory named with the given version. 
+    datastore directory named with the given version.
 
     * metadata: dict - metadata dict
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
