@@ -4,10 +4,14 @@ from job_executor.model.datastore_versions import (
     DatastoreVersions,
     DraftVersion
 )
-from job_executor.model.metadata import (
-    Metadata,
-    MetadataAll
+from job_executor.model.metadata import Metadata
+from job_executor.model.datastore import Datastore
+from job_executor.model.job import Job
+from job_executor.model.metadata_all import (
+    MetadataAll,
+    MetadataAllDraft
 )
+
 
 __all__ = [
     "MetadataAll",
@@ -15,5 +19,8 @@ __all__ = [
     "DatastoreVersions",
     "DatastoreVersion",
     "DraftVersion",
-    "DataStructureUpdate"
+    "DataStructureUpdate",
+    "MetadataAllDraft",
+    "Datastore",
+    "Job"
 ]

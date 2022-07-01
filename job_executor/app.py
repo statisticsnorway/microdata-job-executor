@@ -7,14 +7,13 @@ from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker
 )
-from job_executor.domain import datastore
-from job_executor.model.job import Job
+from job_executor.model import Job, Datastore
 from job_executor.adapter import job_service_adapter
 from job_executor.config import environment
 
 
 NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')
-
+DATASTORE = Datastore()
 logger = logging.getLogger()
 
 
@@ -78,36 +77,36 @@ def _handle_worker_job(job: Job, workers: List[Process]):
 def _handle_manager_job(job: Job):
     operation = job.operation
     if operation == 'BUMP':
-        datastore.bump_version(
+        DATASTORE.bump_version(
             job.parameters.bumpManifesto,
             job.parameters.description
         )
     elif operation == 'PATCH_METADATA':
-        datastore.patch_metadata(
+        DATASTORE.patch_metadata(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'SET_STATUS':
-        datastore.set_draft_release_status(
+        DATASTORE.set_draft_release_status(
             job.parameters.datasetName, job.parameters.releaseStatus
         )
     elif operation == 'ADD':
-        datastore.add(
+        DATASTORE.add(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'CHANGE_DATA':
-        datastore.change_data(
+        DATASTORE.change_data(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'REMOVE':
-        datastore.remove(
+        DATASTORE.remove(
             job.parameters.datasetName,
             job.parameters.description
         )
     elif operation == 'DELETE_DRAFT':
-        datastore.delete_draft(job.parameters.datasetName)
+        DATASTORE.delete_draft(job.parameters.datasetName)
     else:
         raise UnknownOperationException(f'Unknown operation {operation}')
 
