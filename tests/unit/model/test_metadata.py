@@ -35,7 +35,7 @@ def teardown_module():
 
 
 def test_metadata_all():
-    metadata_all = MetadataAll(file_path=METADATA_ALL_PATH)
+    metadata_all = MetadataAll(**load_json(METADATA_ALL_PATH))
     assert metadata_all.dict() == load_json(METADATA_ALL_PATH)
 
 

@@ -2,7 +2,7 @@ import os
 import pytest
 
 from job_executor.model.job import Job, JobParameters
-from job_executor.adapter import job_service_adapter
+from job_executor.adapter import job_service
 from job_executor.exception.exception import HttpResponseError
 
 
@@ -15,7 +15,7 @@ JOB_LIST = [
         status='queued',
         parameters=JobParameters(datasetName='INNTEKT')
     ),
-        Job(
+    Job(
         jobId=JOB_ID,
         operation='SET_STATUS',
         status='queued',
@@ -34,7 +34,7 @@ def test_get_jobs(requests_mock):
     requests_mock.get(
         f'{JOB_SERVICE_URL}/jobs', json=[job.dict() for job in JOB_LIST]
     )
-    jobs = job_service_adapter.get_jobs()
+    jobs = job_service.get_jobs()
     assert jobs == JOB_LIST
     assert len(requests_mock.request_history) == 1
 
@@ -43,8 +43,8 @@ def test_update_job_status(requests_mock):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
-    job_service_adapter.update_job_status(JOB_ID, 'queued')
-    job_service_adapter.update_job_status(JOB_ID, 'queued', LOG_MESSAGE)
+    job_service.update_job_status(JOB_ID, 'queued')
+    job_service.update_job_status(JOB_ID, 'queued', LOG_MESSAGE)
     request_history = requests_mock.request_history
     assert len(request_history) == 2
     assert request_history[0].json() == {
@@ -60,7 +60,7 @@ def test_update_description(requests_mock):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
-    job_service_adapter.update_description(JOB_ID, DESCRIPTION)
+    job_service.update_description(JOB_ID, DESCRIPTION)
     request_history = requests_mock.request_history
     assert len(request_history) == 1
     assert request_history[0].json() == {
@@ -80,11 +80,11 @@ def test_no_connection(requests_mock):
         text=ERROR_RESPONSE
     )
     with pytest.raises(HttpResponseError) as e:
-        job_service_adapter.get_jobs()
+        job_service.get_jobs()
     assert ERROR_RESPONSE in str(e)
     with pytest.raises(HttpResponseError) as e:
-        job_service_adapter.update_job_status(JOB_ID, 'queued')
+        job_service.update_job_status(JOB_ID, 'queued')
     assert ERROR_RESPONSE in str(e)
     with pytest.raises(HttpResponseError) as e:
-        job_service_adapter.update_description(JOB_ID, DESCRIPTION)
+        job_service.update_description(JOB_ID, DESCRIPTION)
     assert ERROR_RESPONSE in str(e)

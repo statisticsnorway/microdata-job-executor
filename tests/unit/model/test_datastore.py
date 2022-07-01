@@ -2,10 +2,10 @@ import os
 import json
 import shutil
 
-from job_executor.domain import datastore
+from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
 
-
+datastore = Datastore()
 DATASTORE_DIR = os.environ['DATASTORE_DIR']
 DATASTORE_DATA_DIR = f'{DATASTORE_DIR}/data'
 DATASTORE_METADATA_DIR = f'{DATASTORE_DIR}/metadata'
@@ -164,6 +164,12 @@ def test_bump_datastore():
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
     assert draft_after_bump['dataStructureUpdates'] == [
+        {
+            'description': 'Første publisering',
+            'name': 'BRUTTO_INNTEKT',
+            'operation': 'ADD',
+            'releaseStatus': 'DRAFT'
+        },
         {
             'description': 'oppdaterte metadata',
             'name': 'SIVSTAND',
