@@ -16,34 +16,18 @@ class DataStoreInfo(CamelModel):
 class MetadataAll(CamelModel):
     data_store: DataStoreInfo
     data_structures: List[Metadata]
-    iter: int = 0
 
     def __iter__(self):
-        self.iter = 0
-        return self
-
-    def __next__(self):
-        if self.iter < len(self.data_structures):
-            index = self.iter
-            self.iter = self.iter + 1
-            return Metadata(**self.data_structures[index].dict())
-        else:
-            raise StopIteration
+        return iter([
+            Metadata(**data_structure.dict(by_alias=True))
+            for data_structure in self.data_structures
+        ])
 
     def get(self, dataset_name: str) -> Union[Metadata, None]:
         for metadata in self.data_structures:
             if metadata.name == dataset_name:
                 return Metadata(**metadata.dict())
         return None
-
-    def dict(self):
-        return {
-            "dataStore": self.data_store.dict(by_alias=True),
-            "dataStructures": [
-                metadata.dict(by_alias=True)
-                for metadata in self.data_structures
-            ]
-        }
 
 
 class MetadataAllDraft(MetadataAll):
@@ -55,7 +39,7 @@ class MetadataAllDraft(MetadataAll):
 
     def _write_to_file(self):
         local_storage.write_metadata_all(
-            self.dict(),
+            self.dict(by_alias=True),
             'DRAFT'
         )
 

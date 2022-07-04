@@ -1,13 +1,14 @@
 from typing import List, Optional, Union
-from pydantic import BaseModel, root_validator
+from pydantic import root_validator
 
+from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception.exception import (
     PatchingError,
     MetadataException
 )
 
 
-class TimePeriod(BaseModel):
+class TimePeriod(CamelModel):
     start: Union[int, None]
     stop: Optional[Union[int, None]]
 
@@ -19,7 +20,7 @@ class TimePeriod(BaseModel):
         )
 
 
-class KeyType(BaseModel):
+class KeyType(CamelModel):
     name: str
     label: str
     description: str
@@ -41,7 +42,7 @@ class KeyType(BaseModel):
         })
 
 
-class CodeListItem(BaseModel):
+class CodeListItem(CamelModel):
     category: str
     code: str
 
@@ -61,25 +62,25 @@ class CodeListItem(BaseModel):
         )
 
 
-class ValueDomain(BaseModel):
+class ValueDomain(CamelModel):
     description: Optional[str]
-    unitOfMeasure: Optional[str]
-    codeList: Optional[List[CodeListItem]]
-    missingValues: Optional[List[str]]
+    unit_of_measure: Optional[str]
+    code_list: Optional[List[CodeListItem]]
+    missing_values: Optional[List[str]]
 
     def _is_enumerated_value_domain(self):
         return (
-            self.codeList is not None
+            self.code_list is not None
             and self.description is None
-            and self.unitOfMeasure is None
+            and self.unit_of_measure is None
         )
 
     def _is_described_value_domain(self):
         return (
             self.description is not None
-            and self.unitOfMeasure is not None
-            and self.codeList is None
-            and self.missingValues is None
+            and self.unit_of_measure is not None
+            and self.code_list is None
+            and self.missing_values is None
         )
 
     def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
@@ -87,17 +88,17 @@ class ValueDomain(BaseModel):
             return {
                 key: value for key, value in {
                     "description": self.description,
-                    "unitOfMeasure": self.unitOfMeasure
+                    "unitOfMeasure": self.unit_of_measure
                 }.items() if value is not None
             }
         elif self._is_enumerated_value_domain():
             return {
                 "codeList": [
-                    code_item.dict() for code_item in self.codeList
+                    code_item.dict() for code_item in self.code_list
                 ],
                 "missingValues": [
                     missing_value for missing_value
-                    in self.missingValues
+                    in self.missing_values
                 ]
             }
         else:
@@ -111,43 +112,45 @@ class ValueDomain(BaseModel):
             )
         if self._is_described_value_domain():
             patched.update({'description': other.description})
-            if other.unitOfMeasure is not None:
-                patched.update({'unitOfMeasure': other.unitOfMeasure})
+            if other.unit_of_measure is not None:
+                patched.update({'unitOfMeasure': other.unit_of_measure})
             return ValueDomain(**patched)
         elif self._is_enumerated_value_domain():
-            if other.codeList is None:
+            if other.code_list is None:
                 raise PatchingError(
                     'Can not delete code list'
                 )
-            if self.missingValues != other.missingValues:
+            if self.missing_values != other.missing_values:
                 raise PatchingError(
                     'Can not change ValueDomain missingValues from '
-                    f'"{self.missingValues}" to "{other.missingValues}"'
+                    f'"{self.missing_values}" to "{other.missing_values}"'
                 )
-            if len(self.codeList) != len(other.codeList):
+            if len(self.code_list) != len(other.code_list):
                 raise PatchingError(
                     'Can not add or remove codes from ValueDomain codeList'
                 )
             patched = {
                 'codeList': []
             }
-            if self.missingValues is not None:
+            if self.missing_values is not None:
                 patched.update({
-                    'missingValues': [value for value in self.missingValues]
+                    'missingValues': [value for value in self.missing_values]
                 })
-            for idx, _ in enumerate(self.codeList):
+            for idx, _ in enumerate(self.code_list):
                 patched['codeList'].append(
-                    self.codeList[idx].patch(other.codeList[idx]).dict()
+                    self.code_list[idx].patch(
+                        other.code_list[idx]
+                    ).dict(by_alias=True)
                 )
             return ValueDomain(**patched)
         else:
             raise MetadataException('Invalid ValueDomain')
 
 
-class RepresentedVariable(BaseModel):
+class RepresentedVariable(CamelModel):
     description: str
-    validPeriod: TimePeriod
-    valueDomain: ValueDomain
+    valid_period: TimePeriod
+    value_domain: ValueDomain
 
     def patch(self, other: 'RepresentedVariable'):
         if other is None:
@@ -156,19 +159,21 @@ class RepresentedVariable(BaseModel):
             )
         return RepresentedVariable(**{
             "description": other.description,
-            "validPeriod": self.validPeriod.dict(),
-            "valueDomain": self.valueDomain.patch(other.valueDomain).dict()
+            "validPeriod": self.valid_period.dict(by_alias=True),
+            "valueDomain": self.value_domain.patch(
+                other.value_domain
+            ).dict(by_alias=True)
         })
 
 
-class Variable(BaseModel):
+class Variable(CamelModel):
     name: str
     label: str
-    dataType: str
+    data_type: str
     format: Optional[str]
-    variableRole: str
-    keyType: Optional[KeyType]
-    representedVariables: List[RepresentedVariable]
+    variable_role: str
+    key_type: Optional[KeyType]
+    represented_variables: List[RepresentedVariable]
 
     @root_validator(pre=True)
     @classmethod
@@ -179,23 +184,23 @@ class Variable(BaseModel):
         }
 
     def get_key_type_name(self):
-        return None if self.keyType is None else self.keyType.name
+        return None if self.key_type is None else self.key_type.name
 
     def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
         dict_representation = {
             "name": self.name,
             "label": self.label,
-            "dataType": self.dataType,
-            "variableRole": self.variableRole,
+            "dataType": self.data_type,
+            "variableRole": self.variable_role,
             "representedVariables": [
-                represented_variable.dict()
-                for represented_variable in self.representedVariables
+                represented_variable.dict(by_alias=True)
+                for represented_variable in self.represented_variables
             ]
         }
         if self.format is not None:
             dict_representation["format"] = self.format
-        if self.keyType is not None:
-            dict_representation["keyType"] = self.keyType.dict()
+        if self.key_type is not None:
+            dict_representation["keyType"] = self.key_type.dict()
         return dict_representation
 
     def patch(self, other: 'Variable'):
@@ -206,71 +211,71 @@ class Variable(BaseModel):
             )
         if (
             self.name != other.name or
-            self.dataType != other.dataType or
+            self.data_type != other.data_type or
             self.format != other.format or
-            self.variableRole != other.variableRole
+            self.variable_role != other.variable_role
         ):
             raise PatchingError(
                 'Illegal change to one of these variable fields: '
                 '[name, dataType, format, variableRole]]'
             )
-        if self.keyType is None and other.keyType is not None:
+        if self.key_type is None and other.key_type is not None:
             raise PatchingError('Can not change keyType')
-        if len(self.representedVariables) != len(other.representedVariables):
+        if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
                 'Can not add or delete represented variables.'
             )
         patched_represented_variables = []
-        for idx, _ in enumerate(self.representedVariables):
+        for idx, _ in enumerate(self.represented_variables):
             patched_represented_variables.append(
-                self.representedVariables[idx].patch(
-                    other.representedVariables[idx]
+                self.represented_variables[idx].patch(
+                    other.represented_variables[idx]
                 ).dict()
             )
         patched.update({
             "name": self.name,
             "label": other.label,
-            "dataType": self.dataType,
-            "variableRole": self.variableRole,
+            "dataType": self.data_type,
+            "variableRole": self.variable_role,
             "representedVariables": patched_represented_variables
         })
         if self.format is not None:
             patched.update({"format": self.format})
-        if self.keyType is not None:
+        if self.key_type is not None:
             patched.update({
-                'keyType': self.keyType.patch(other.keyType).dict()
+                'keyType': self.key_type.patch(other.key_type).dict()
             })
         return Variable(**patched)
 
 
 class IdentifierVariable(Variable):
-    pass
+    ...
 
 
 class MeasureVariable(Variable):
-    pass
+    ...
 
 
 class AttributeVariable(Variable):
-    pass
+    ...
 
 
-class Metadata(BaseModel):
+class Metadata(CamelModel):
     name: str
     temporality: str
-    languageCode: str
-    populationDescription: str
-    subjectFields: List[str]
-    temporalCoverage: TimePeriod
-    measureVariable: MeasureVariable
-    identifierVariables: List[IdentifierVariable]
-    attributeVariables: List[AttributeVariable]
+    language_code: str
+    population_description: str
+    subject_fields: List[str]
+    temporal_coverage: TimePeriod
+    measure_variable: MeasureVariable
+    identifier_variables: List[IdentifierVariable]
+    attribute_variables: List[AttributeVariable]
 
     def get_identifier_key_type_name(self):
-        return self.identifierVariables[0].get_key_type_name()
+        return self.identifier_variables[0].get_key_type_name()
 
     def get_measure_key_type_name(self):
-        return self.measureVariable.get_key_type_name()
+        return self.measure_variable.get_key_type_name()
 
     def patch(self, other: 'Metadata') -> 'Metadata':
         if other is None:
@@ -280,34 +285,34 @@ class Metadata(BaseModel):
         if (
             self.name != other.name or
             self.temporality != other.temporality or
-            self.languageCode != other.languageCode
+            self.language_code != other.language_code
         ):
             raise PatchingError(
                 'Can not change these metadata fields '
                 '[name, temporality, languageCode]'
             )
-        if len(self.attributeVariables) != len(other.attributeVariables):
+        if len(self.attribute_variables) != len(other.attribute_variables):
             raise PatchingError('Can not delete or add attributeVariables')
         patched_attribute_variables = []
-        for idx, _ in enumerate(self.attributeVariables):
+        for idx, _ in enumerate(self.attribute_variables):
             patched_attribute_variables.append(
-                self.attributeVariables[idx].patch(
-                    other.attributeVariables[idx]
+                self.attribute_variables[idx].patch(
+                    other.attribute_variables[idx]
                 ).dict()
             )
         return Metadata(**{
             "name": self.name,
             "temporality": self.temporality,
-            "languageCode": self.languageCode,
-            "populationDescription": other.populationDescription,
-            "subjectFields": [field for field in other.subjectFields],
-            "temporalCoverage": self.temporalCoverage.dict(),
+            "languageCode": self.language_code,
+            "populationDescription": other.population_description,
+            "subjectFields": [field for field in other.subject_fields],
+            "temporalCoverage": self.temporal_coverage.dict(),
             "measureVariable": (
-                self.measureVariable.patch(other.measureVariable).dict()
+                self.measure_variable.patch(other.measure_variable).dict()
             ),
             "identifierVariables": [
-                self.identifierVariables[0].patch(
-                    other.identifierVariables[0]
+                self.identifier_variables[0].patch(
+                    other.identifier_variables[0]
                 ).dict()
             ],
             "attributeVariables": patched_attribute_variables
