@@ -1,13 +1,10 @@
 from typing import List, Optional, Union
 from pydantic import BaseModel, root_validator
 
-
-class PatchingError(Exception):
-    pass
-
-
-class MetadataException(Exception):
-    pass
+from job_executor.exception.exception import (
+    PatchingError,
+    MetadataException
+)
 
 
 class TimePeriod(BaseModel):
