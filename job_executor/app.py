@@ -49,8 +49,8 @@ def main():
 
 
 def _handle_worker_job(job: Job, workers: List[Process]):
-    dataset_name = job.datasetName
-    job_id = job.id
+    dataset_name = job.parameters.dataset_name
+    job_id = job.job_id
     operation = job.operation
     if operation in ['ADD', 'CHANGE_DATA']:
         worker = Process(
@@ -78,35 +78,35 @@ def _handle_manager_job(job: Job):
     operation = job.operation
     if operation == 'BUMP':
         datastore.bump_version(
-            job.parameters.bumpManifesto,
+            job.parameters.bump_manifesto,
             job.parameters.description
         )
     elif operation == 'PATCH_METADATA':
         datastore.patch_metadata(
-            job.parameters.datasetName,
+            job.parameters.dataset_name,
             job.parameters.description
         )
     elif operation == 'SET_STATUS':
         datastore.set_draft_release_status(
-            job.parameters.datasetName, job.parameters.releaseStatus
+            job.parameters.dataset_name, job.parameters.release_status
         )
     elif operation == 'ADD':
         datastore.add(
-            job.parameters.datasetName,
+            job.parameters.dataset_name,
             job.parameters.description
         )
     elif operation == 'CHANGE_DATA':
         datastore.change_data(
-            job.parameters.datasetName,
+            job.parameters.dataset_name,
             job.parameters.description
         )
     elif operation == 'REMOVE':
         datastore.remove(
-            job.parameters.datasetName,
+            job.parameters.dataset_name,
             job.parameters.description
         )
     elif operation == 'DELETE_DRAFT':
-        datastore.delete_draft(job.parameters.datasetName)
+        datastore.delete_draft(job.parameters.dataset_name)
     else:
         raise UnknownOperationException(f'Unknown operation {operation}')
 

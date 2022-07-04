@@ -20,7 +20,7 @@ def test_dataset_with_enumerated_valuedomain():
     actual_metadata = dataset_transformer.run(
         ENUMERATED_FILE_PATH
     )
-    assert actual_metadata.dict() == expected_metadata_json
+    assert actual_metadata.dict(by_alias=True) == expected_metadata_json
 
 
 def test_dataset_with_described_valuedomain():
@@ -29,7 +29,7 @@ def test_dataset_with_described_valuedomain():
     actual_metadata = dataset_transformer.run(
         DESCRIBED_FILE_PATH
     )
-    assert actual_metadata.dict() == expected_metadata_json
+    assert actual_metadata.dict(by_alias=True) == expected_metadata_json
 
 
 def teardown_function():

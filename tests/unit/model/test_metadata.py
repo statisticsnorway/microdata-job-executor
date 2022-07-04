@@ -36,19 +36,19 @@ def teardown_module():
 
 def test_metadata_all():
     metadata_all = MetadataAll(**load_json(METADATA_ALL_PATH))
-    assert metadata_all.dict() == load_json(METADATA_ALL_PATH)
+    assert metadata_all.dict(by_alias=True) == load_json(METADATA_ALL_PATH)
 
 
 def test_metadata():
     enumerated_metadata = Metadata(**ENUMERATED_METADATA)
-    assert enumerated_metadata.dict() == ENUMERATED_METADATA
+    assert enumerated_metadata.dict(by_alias=True) == ENUMERATED_METADATA
 
     described_metadata = Metadata(**DESCRIBED_METADATA)
-    assert described_metadata.dict() == DESCRIBED_METADATA
+    assert described_metadata.dict(by_alias=True) == DESCRIBED_METADATA
 
 
 def test_patch():
     metadata = Metadata(**METADATA)
     updated_metadata = Metadata(**UPDATED_METADATA)
     patched_metadata = metadata.patch(updated_metadata)
-    assert patched_metadata.dict() == PATCHED_METADATA
+    assert patched_metadata.dict(by_alias=True) == PATCHED_METADATA

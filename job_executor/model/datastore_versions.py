@@ -1,8 +1,9 @@
 from typing import List, Tuple, Union
 from datetime import datetime
 
-from pydantic import BaseModel, Extra, root_validator
+from pydantic import Extra, root_validator
 
+from job_executor.model.camelcase_model import CamelModel
 from job_executor.adapter import local_storage
 from job_executor.exception.exception import (
     NoSuchDraftException,
@@ -10,11 +11,11 @@ from job_executor.exception.exception import (
 )
 
 
-class DataStructureUpdate(BaseModel, extra=Extra.forbid):
+class DataStructureUpdate(CamelModel, extra=Extra.forbid):
     name: str
     description: str
     operation: str
-    releaseStatus: str
+    release_status: str
 
     def set_release_status(self, new_status: str):
         if new_status == 'PENDING_RELEASE':
@@ -31,40 +32,27 @@ class DataStructureUpdate(BaseModel, extra=Extra.forbid):
                 )
         elif new_status != 'DRAFT':
             ReleaseStatusException(f'Invalid release status: {new_status}')
-        self.releaseStatus = new_status
+        self.release_status = new_status
 
 
-class DatastoreVersion(BaseModel):
+class DatastoreVersion(CamelModel):
     version: str
     description: str
-    releaseTime: int
-    languageCode: str
-    updateType: str
-    dataStructureUpdates: List[DataStructureUpdate]
-    iter: int = 0
-
-    def dict(self):
-        return {
-            "version": self.version,
-            "description": self.description,
-            "releaseTime": self.releaseTime,
-            "languageCode": self.languageCode,
-            "updateType": self.updateType,
-            "dataStructureUpdates": [
-                update.dict() for update in self.dataStructureUpdates
-            ]
-        }
+    release_time: int
+    language_code: str
+    update_type: str
+    data_structure_updates: List[DataStructureUpdate]
 
     def validate_bump_manifesto(
         self, bump_manifesto: 'DatastoreVersion'
     ) -> bool:
         pending_operations = [
-            update.dict() for update in self.dataStructureUpdates
-            if update.releaseStatus != 'DRAFT'
+            update.dict() for update in self.data_structure_updates
+            if update.release_status != 'DRAFT'
         ]
         other_pending_operations = [
-            update.dict() for update in bump_manifesto.dataStructureUpdates
-            if update.releaseStatus != 'DRAFT'
+            update.dict() for update in bump_manifesto.data_structure_updates
+            if update.release_status != 'DRAFT'
         ]
         if len(pending_operations) != len(other_pending_operations):
             return False
@@ -74,42 +62,34 @@ class DatastoreVersion(BaseModel):
         return True
 
     def __iter__(self):
-        self.iter = 0
-        return self
-
-    def __next__(self):
-        if self.iter < len(self.dataStructureUpdates):
-            index = self.iter
-            self.iter = self.iter + 1
-            return DataStructureUpdate(
-                **self.dataStructureUpdates[index].dict()
-            )
-        else:
-            raise StopIteration
+        return iter([
+            DataStructureUpdate(**update.dict(by_alias=True))
+            for update in self.data_structure_updates
+        ])
 
     def _calculate_update_type(self):
         pending_operations = [
-            update.operation for update in self.dataStructureUpdates
-            if update.releaseStatus != 'DRAFT'
+            update.operation for update in self.data_structure_updates
+            if update.release_status != 'DRAFT'
         ]
         if (
             'CHANGE_DATA' in pending_operations or
             'REMOVE' in pending_operations
         ):
-            self.updateType = 'MAJOR'
+            self.update_type = 'MAJOR'
         elif 'ADD' in pending_operations:
-            self.updateType = 'MINOR'
+            self.update_type = 'MINOR'
         elif 'PATCH_METADATA' in pending_operations:
-            self.updateType = 'PATCH'
+            self.update_type = 'PATCH'
         else:
-            self.updateType = None
+            self.update_type = None
 
     def get_dataset_release_status(
         self, dataset_name: str
     ) -> Union[str, None]:
-        for update in self.dataStructureUpdates:
+        for update in self.data_structure_updates:
             if update.name == dataset_name:
-                return update.releaseStatus
+                return update.release_status
         return None
 
 
@@ -121,16 +101,16 @@ class DraftVersion(DatastoreVersion):
         return local_storage.get_draft_version()
 
     def add(self, data_structure_update: DataStructureUpdate):
-        self.dataStructureUpdates.append(data_structure_update)
+        self.data_structure_updates.append(data_structure_update)
         self._write_to_file()
 
     def delete_draft(self, dataset_name: str) -> DataStructureUpdate:
         deleted_draft = next(
-            update for update in self.dataStructureUpdates
+            update for update in self.data_structure_updates
             if update.name == dataset_name
         )
-        self.dataStructureUpdates = [
-            update for update in self.dataStructureUpdates
+        self.data_structure_updates = [
+            update for update in self.data_structure_updates
             if update.name != dataset_name
         ]
         self._write_to_file()
@@ -139,25 +119,27 @@ class DraftVersion(DatastoreVersion):
     def release_pending(self) -> Tuple[List[DataStructureUpdate], str]:
         draft_updates = []
         pending_updates = []
-        for update in self.dataStructureUpdates:
-            if update.releaseStatus == 'DRAFT':
+        for update in self.data_structure_updates:
+            if update.release_status == 'DRAFT':
                 draft_updates.append(update)
             else:
                 pending_updates.append(update)
-        update_type = self.updateType
-        self.dataStructureUpdates = draft_updates
+        update_type = self.update_type
+        self.data_structure_updates = draft_updates
         self._calculate_update_type()
         self._write_to_file()
         return pending_updates, update_type
 
     def _write_to_file(self):
-        self.releaseTime = (datetime.now() - datetime.utcfromtimestamp(0)).days
+        self.release_time = (
+            (datetime.now() - datetime.utcfromtimestamp(0)).days
+        )
         self._calculate_update_type()
-        local_storage.write_draft_version(self.dict())
+        local_storage.write_draft_version(self.dict(by_alias=True))
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
         dataset_update = next(
-            update for update in self.dataStructureUpdates
+            update for update in self.data_structure_updates
             if update.name == dataset_name
         )
         if dataset_update is None:
@@ -167,35 +149,19 @@ class DraftVersion(DatastoreVersion):
         self._write_to_file()
 
 
-class DatastoreVersions():
+class DatastoreVersions(CamelModel):
     name: str
     label: str
     description: str
-    versions = List[DatastoreVersion]
+    versions: List[DatastoreVersion]
 
-    def __init__(self):
-        datastore_versions_dict = (local_storage.get_datastore_versions())
-        self.name = datastore_versions_dict['name']
-        self.label = datastore_versions_dict['label']
-        self.description = datastore_versions_dict['description']
-        self.versions = [
-            DatastoreVersion(**version)
-            for version in datastore_versions_dict['versions']
-        ]
-
-    def dict(self):
-        return {
-            'name': self.name,
-            'label': self.label,
-            'description': self.description,
-            'versions': [
-                version.dict()
-                for version in self.versions
-            ]
-        }
+    @root_validator(skip_on_failure=True, pre=True)
+    @classmethod
+    def read_file(cls, _):
+        return local_storage.get_datastore_versions()
 
     def _write_to_file(self):
-        local_storage.write_datastore_versions(self.dict())
+        local_storage.write_datastore_versions(self.dict(by_alias=True))
 
     def add_new_release_version(
         self,
@@ -208,7 +174,7 @@ class DatastoreVersions():
                 name=data_structure.name,
                 description=data_structure.description,
                 operation=data_structure.operation,
-                releaseStatus=(
+                release_status=(
                     "DELETED" if data_structure.operation == "REMOVE"
                     else "RELEASED"
                 )
@@ -221,10 +187,10 @@ class DatastoreVersions():
         new_release_version = DatastoreVersion(
             version=new_version_number,
             description=description,
-            releaseTime=(datetime.now() - datetime.utcfromtimestamp(0)).days,
-            languageCode='no',
+            release_time=(datetime.now() - datetime.utcfromtimestamp(0)).days,
+            language_code='no',
             updateType=update_type,
-            dataStructureUpdates=released_data_structure_updates
+            data_structure_updates=released_data_structure_updates
         )
         self.versions = [new_release_version] + self.versions
         self._write_to_file()

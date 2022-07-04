@@ -1,7 +1,8 @@
 from typing import Optional
-from pydantic import BaseModel, Extra, ValidationError, root_validator
+from pydantic import Extra, ValidationError, root_validator
 from enum import Enum
 
+from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion
 
 
@@ -35,11 +36,11 @@ class ReleaseStatus(str, Enum):
     PENDING_DELETE = 'PENDING_DELETE'
 
 
-class JobParameters(BaseModel, use_enum_values=True):
-    datasetName: str
-    bumpManifesto: Optional[DatastoreVersion]
+class JobParameters(CamelModel, use_enum_values=True):
+    dataset_name: str
+    bump_manifesto: Optional[DatastoreVersion]
     description: Optional[str]
-    releaseStatus: Optional[ReleaseStatus]
+    release_status: Optional[ReleaseStatus]
 
     @root_validator(skip_on_failure=True)
     @classmethod
@@ -50,8 +51,8 @@ class JobParameters(BaseModel, use_enum_values=True):
         }
 
 
-class Job(BaseModel, extra=Extra.forbid, use_enum_values=True):
-    jobId: str
+class Job(CamelModel, extra=Extra.forbid, use_enum_values=True):
+    job_id: str
     operation: Operation
     status: JobStatus
     parameters: JobParameters
@@ -59,11 +60,11 @@ class Job(BaseModel, extra=Extra.forbid, use_enum_values=True):
     @root_validator(skip_on_failure=True)
     @classmethod
     def validate_job_type(cls, values):
-        operation = values['operation']
-        parameters = values['parameters']
+        operation: Operation = values['operation']
+        parameters: JobParameters = values['parameters']
         if operation == Operation.BUMP:
             if (
-                parameters.bumpManifesto is None or
+                parameters.bump_manifesto is None or
                 parameters.description is None
             ):
                 raise ValidationError(
@@ -71,14 +72,14 @@ class Job(BaseModel, extra=Extra.forbid, use_enum_values=True):
                 )
         elif operation == Operation.SET_STATUS:
             if (
-                parameters.datasetName is None or
-                parameters.releaseStatus is None
+                parameters.dataset_name is None or
+                parameters.release_status is None
             ):
                 raise ValidationError(
                     'Missing parameters for SET STATUS operation'
                 )
         else:
-            if parameters.datasetName is None:
+            if parameters.dataset_name is None:
                 raise ValidationError(
                     f'Missing parameter for {operation} operation'
                 )

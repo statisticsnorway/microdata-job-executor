@@ -68,7 +68,7 @@ class Datastore():
             )
         )
         local_storage.write_metadata(
-            patched_metadata.dict(), dataset_name, 'DRAFT'
+            patched_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
         )
 
     def add(self, dataset_name: str, description: str):
@@ -94,7 +94,7 @@ class Datastore():
         )
         local_storage.make_dataset_dir(dataset_name)
         local_storage.write_metadata(
-            draft_metadata.dict(), dataset_name, 'DRAFT'
+            draft_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
         )
         self.metadata_all_draft.add(draft_metadata)
         local_storage.move_working_dir_parquet_to_datastore(
@@ -127,7 +127,7 @@ class Datastore():
             )
         )
         local_storage.write_metadata(
-            draft_metadata.dict(), dataset_name, 'DRAFT'
+            draft_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
         )
         local_storage.move_working_dir_parquet_to_datastore(dataset_name)
 
@@ -226,9 +226,9 @@ class Datastore():
                 )
         if update_type in ['MINOR', 'MAJOR']:
             local_storage.write_data_versions(new_data_versions, new_version)
-        new_metadata_all_dict = self.metadata_all_latest.dict()
+        new_metadata_all_dict = self.metadata_all_latest.dict(by_alias=True)
         new_metadata_all_dict['dataStructures'] = [
-            dataset.dict() for dataset in new_metadata_datasets
+            dataset.dict(by_alias=True) for dataset in new_metadata_datasets
         ]
         local_storage.write_metadata_all(
             new_metadata_all_dict, new_version

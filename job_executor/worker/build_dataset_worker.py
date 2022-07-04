@@ -26,8 +26,8 @@ def run_worker(job_id: str, dataset_name: str):
         job_service.update_job_status(job_id, 'transforming')
         transformed_metadata = dataset_transformer.run(metadata_file_path)
         temporality_type = transformed_metadata.temporality
-        temporal_coverage = transformed_metadata.temporalCoverage.dict()
-        data_type = transformed_metadata.measureVariable.dataType
+        temporal_coverage = transformed_metadata.temporal_coverage.dict()
+        data_type = transformed_metadata.measure_variable.data_type
 
         job_service.update_job_status(job_id, 'enriching')
         enriched_data_path = dataset_enricher.run(
