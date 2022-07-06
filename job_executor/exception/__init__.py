@@ -18,6 +18,10 @@ class NoSuchDraftException(Exception):
     ...
 
 
+class ExistingDraftException(Exception):
+    ...
+
+
 class UnknownOperationException(Exception):
     ...
 
@@ -27,4 +31,8 @@ class PatchingError(Exception):
 
 
 class MetadataException(Exception):
+    ...
+
+
+class BumpException(Exception):
     ...
