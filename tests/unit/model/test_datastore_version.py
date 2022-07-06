@@ -77,7 +77,7 @@ def test_get_dataset_release_status():
 
     release_status = datastore_version.get_dataset_release_status('INNTEKT')
     assert release_status == 'RELEASED'
- 
+
     release_status = datastore_version.get_dataset_release_status(
         'DOES_NOT_EXIST'
     )

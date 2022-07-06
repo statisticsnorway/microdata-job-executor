@@ -3,7 +3,7 @@ import pytest
 
 from job_executor.model.job import Job, JobParameters
 from job_executor.adapter import job_service
-from job_executor.exception.exception import HttpResponseError
+from job_executor.exception import HttpResponseError
 
 
 JOB_SERVICE_URL = os.environ['JOB_SERVICE_URL']

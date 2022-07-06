@@ -2,7 +2,7 @@ from datetime import timedelta
 from datetime import datetime
 import logging
 
-from job_executor.exception.exception import BuilderStepError
+from job_executor.exception import BuilderStepError
 
 
 logger = logging.getLogger()
@@ -45,9 +45,9 @@ def _enrich_csv(input_csv_path: str, temporal_coverage: dict,
     output_csv_path = input_csv_path.replace('.csv', '_enriched.csv')
     days_since_epoch_for = _generate_epoch_dict(temporal_coverage)
     try:
-        target_file = open(output_csv_path, 'w', newline='')
+        target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
         empty_values = ['', r'\N', None]
-        with open(input_csv_path, newline='') as csv_file:
+        with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
             for line in csv_file:
                 row = line.strip().split(';')
                 # line_number: int = row[0]
@@ -76,7 +76,7 @@ def _enrich_csv(input_csv_path: str, temporal_coverage: dict,
                     ]) + '\n'
                 )
     except KeyError as e:
-        raise TemporalCoverageException(
+        raise TemporalCoverageException(  # pylint: disable=raise-missing-from
             f"Date in dataset is outside of temporal coverage: {e}"
         )
     target_file.close()
@@ -97,7 +97,7 @@ def run(input_csv_path: str, temporal_coverage: dict, data_type: str) -> str:
         return output_file
     except Exception as e:
         logger.error(f'Error during enrichment: {str(e)}')
-        raise BuilderStepError('Failed to enrich dataset')
+        raise BuilderStepError('Failed to enrich dataset') from e
 
 
 class TemporalCoverageException(Exception):

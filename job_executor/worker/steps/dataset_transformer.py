@@ -2,7 +2,7 @@ import logging
 import json
 from datetime import datetime
 
-from job_executor.exception.exception import BuilderStepError
+from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
 
 
@@ -253,7 +253,7 @@ def _get_temporal_coverage(start, stop) -> dict:
 
 
 def _transform_metadata(metadata_file_path: str) -> str:
-    with open(metadata_file_path) as json_file:
+    with open(metadata_file_path, encoding='utf-8') as json_file:
         metadata = json.load(json_file)
     logger.info(f'Transforming metadata {metadata_file_path}')
 
@@ -290,7 +290,7 @@ def _transform_metadata(metadata_file_path: str) -> str:
     transformed_metadata_file_path = metadata_file_path.replace(
         '.json', '__DRAFT.json'
     )
-    with open(transformed_metadata_file_path, 'w') as f:
+    with open(transformed_metadata_file_path, 'w', encoding='utf-8') as f:
         json.dump(transformed, f)
 
     logger.info("Finished transformation")
@@ -310,4 +310,4 @@ def run(metadata_file_path: str) -> Metadata:
         return transformed_metadata
     except Exception as e:
         logger.error(f'Error during transformation: {str(e)}')
-        raise BuilderStepError('Failed to transform dataset')
+        raise BuilderStepError('Failed to transform dataset') from e

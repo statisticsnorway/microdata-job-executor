@@ -3,7 +3,7 @@ import pyarrow as pa
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
 
-from job_executor.exception.exception import BuilderStepError
+from job_executor.exception import BuilderStepError
 
 
 logger = logging.getLogger()
@@ -156,4 +156,4 @@ def run(csv_data_path: str, temporality_type: str, data_type: str) -> str:
         return parquet_path
     except Exception as e:
         logger.error(f'Error during conversion: {str(e)}')
-        raise BuilderStepError('Failed to convert dataset')
+        raise BuilderStepError('Failed to convert dataset') from e

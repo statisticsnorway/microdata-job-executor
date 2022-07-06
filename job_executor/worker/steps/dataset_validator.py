@@ -3,7 +3,7 @@ import logging
 from typing import Tuple
 from microdata_validator import validate, validate_metadata
 
-from job_executor.exception.exception import BuilderStepError
+from job_executor.exception import BuilderStepError
 from job_executor.config import environment
 
 logger = logging.getLogger()
@@ -30,7 +30,7 @@ def run_for_dataset(dataset_name: str) -> Tuple[str, str]:
         logger.error(f'Error during validation: {str(e)}')
         raise BuilderStepError(
             'Unexpected error when validating dataset'
-        )
+        ) from e
     if validation_errors:
         for error in validation_errors:
             logger.error(error)
@@ -64,7 +64,7 @@ def run_for_metadata(dataset_name: str):
         logger.error(f'Error during validation: {str(e)}')
         raise BuilderStepError(
             'Unexpected error when validating metadata'
-        )
+        ) from e
     if validation_errors:
         for error in validation_errors:
             logger.error(error)

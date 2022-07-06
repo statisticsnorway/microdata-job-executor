@@ -1,6 +1,6 @@
 import logging
 
-from job_executor.exception.exception import (
+from job_executor.exception import (
     BuilderStepError,
     HttpResponseError
 )

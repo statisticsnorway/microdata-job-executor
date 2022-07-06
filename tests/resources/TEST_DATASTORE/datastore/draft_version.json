@@ -14,7 +14,7 @@
       "name": "BRUTTO_INNTEKT",
       "description": "Første publisering",
       "operation": "ADD",
-      "releaseStatus": "DRAFT"
+      "releaseStatus": "PENDING_RELEASE"
     }
   ],
   "updateType": "MINOR"

@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 from pydantic import root_validator
 
 from job_executor.model.camelcase_model import CamelModel
-from job_executor.exception.exception import (
+from job_executor.exception import (
     PatchingError,
     MetadataException
 )
