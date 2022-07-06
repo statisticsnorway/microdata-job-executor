@@ -1,63 +1,31 @@
-import json
 import os
+import json
+import shutil
 
-from job_executor.model import (
-    DataStructureUpdate,
-    DatastoreVersion,
-    DraftVersion,
-    DatastoreVersions
-)
+from job_executor.model import DatastoreVersions, DataStructureUpdate
 
 
 def load_json(file_path):
     return json.load(open(file_path, encoding='utf'))
 
 
-DATA_STRUCTURE_UPDATE = {
-    "name": "KJOENN",
-    "description": "Første publisering",
-    "operation": "ADD",
-    "releaseStatus": "RELEASED"
-}
-DATASTORE_VERSION = {
-    "version": "0.1.0.0",
-    "description": "Første release",
-    "releaseTime": 1635299291,
-    "languageCode": "no",
-    "dataStructureUpdates": [
-        {
-            "name": "INNTEKT",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "releaseStatus": "RELEASED"
-        },
-        {
-            "name": "SIVSTAND",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "releaseStatus": "RELEASED"
-        }
-    ],
-    "updateType": "MINOR"
-}
 DATASTORE_DIR = f'{os.environ["DATASTORE_DIR"]}/datastore'
-DRAFT_VERSION_PATH = f'{DATASTORE_DIR}/draft_version.json'
 DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore_versions.json'
 
 
-def test_data_structure_update():
-    data_structure_update = DataStructureUpdate(**DATA_STRUCTURE_UPDATE)
-    assert data_structure_update.dict(by_alias=True) == DATA_STRUCTURE_UPDATE
+def setup_function():
+    shutil.copytree(
+        'tests/resources',
+        'tests/resources_backup'
+    )
 
 
-def test_datastore_version():
-    datastore_version = DatastoreVersion(**DATASTORE_VERSION)
-    assert datastore_version.dict(by_alias=True) == DATASTORE_VERSION
-
-
-def test_draft_version():
-    draft_version = DraftVersion()
-    assert draft_version.dict(by_alias=True) == load_json(DRAFT_VERSION_PATH)
+def teardown_function():
+    shutil.rmtree('tests/resources')
+    shutil.move(
+        'tests/resources_backup',
+        'tests/resources'
+    )
 
 
 def test_datastore_versions():
@@ -65,4 +33,31 @@ def test_datastore_versions():
     assert (
         datastore_versions.dict(by_alias=True)
         == load_json(DATASTORE_VERSIONS_PATH)
+    )
+
+
+def test_add_new_release_version():
+    datastore_versions = DatastoreVersions()
+    datastore_versions.add_new_release_version(
+        [
+            DataStructureUpdate(
+                name='NEW_DATASET',
+                description="Første publisering",
+                operation='ADD',
+                release_status='PENDING_RELEASE'
+            )
+        ],
+        "new datastore version",
+        "MAJOR"
+    )
+    assert len(datastore_versions.versions) == 2
+
+
+def test_get_dataset_release_status():
+    datastore_versions = DatastoreVersions()
+    assert (
+        datastore_versions.get_dataset_release_status('INNTEKT') == 'RELEASED'
+    )
+    assert (
+        datastore_versions.get_dataset_release_status('DOES_NOT_EXIST') is None
     )
