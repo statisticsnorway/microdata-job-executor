@@ -1,6 +1,7 @@
 from typing import Optional
-from pydantic import Extra, ValidationError, root_validator
 from enum import Enum
+
+from pydantic import Extra, ValidationError, root_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion

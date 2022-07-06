@@ -2,7 +2,7 @@ import time
 import logging
 from multiprocessing import Process
 from typing import List
-from job_executor.exception.exception import UnknownOperationException
+from job_executor.exception import UnknownOperationException
 from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker

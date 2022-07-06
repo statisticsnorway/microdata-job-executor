@@ -1,0 +1,22 @@
+{
+    "version": "0.0.0.1635299291",
+    "description": "Draft",
+    "releaseTime": 1635299291,
+    "languageCode": "no",
+    "dataStructureUpdates": [
+      {
+        "name": "UTDANNING",
+        "description": "Første publisering",
+        "operation": "ADD",
+        "releaseStatus": "DRAFT"
+      },
+      {
+        "name": "BRUTTO_INNTEKT",
+        "description": "Første publisering",
+        "operation": "ADD",
+        "releaseStatus": "PENDING_RELEASE"
+      }
+    ],
+    "updateType": "MINOR"
+  }
+  

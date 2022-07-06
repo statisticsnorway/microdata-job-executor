@@ -1,7 +1,7 @@
 import logging
 
 from job_executor.adapter import job_service
-from job_executor.exception.exception import (
+from job_executor.exception import (
     BuilderStepError,
     HttpResponseError
 )

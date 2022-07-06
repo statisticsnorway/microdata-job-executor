@@ -1,9 +1,10 @@
-import requests
 from typing import List
+
+import requests
 
 from job_executor.config import environment
 from job_executor.model.job import Job, JobStatus, Operation
-from job_executor.exception.exception import HttpResponseError
+from job_executor.exception import HttpResponseError
 
 
 JOB_SERVICE_URL = environment.get('JOB_SERVICE_URL')

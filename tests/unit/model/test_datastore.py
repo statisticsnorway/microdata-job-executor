@@ -156,7 +156,7 @@ def test_set_draft_release_status():
     } in draft_version['dataStructureUpdates']
 
 
-def test_bump_datastore():
+def test_bump_datastore_minor():
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
 
@@ -164,12 +164,6 @@ def test_bump_datastore():
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
     assert draft_after_bump['dataStructureUpdates'] == [
-        {
-            'description': 'Første publisering',
-            'name': 'BRUTTO_INNTEKT',
-            'operation': 'ADD',
-            'releaseStatus': 'DRAFT'
-        },
         {
             'description': 'oppdaterte metadata',
             'name': 'SIVSTAND',
@@ -200,14 +194,73 @@ def test_bump_datastore():
     assert (
         len(released_metadata_all['dataStructures']) -
         len(previous_metadata_all['dataStructures'])
-    ) == 1
+    ) == 2
+    with open(
+        f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
+    ) as f:
+        datastore_versions_json = json.load(f)
+    assert datastore_versions_json['versions'][0]['version'] == '0.2.0.0'
     with open(
         f'{DATASTORE_DIR}/datastore/data_versions__0_2.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__0_2',
         'FOEDESTED': 'FOEDESTED__0_2.parquet',
         'FOEDSELSVEKT': 'FOEDSELSVEKT__0_1.parquet',
+        'INNTEKT': 'INNTEKT__0_1',
+        'KJOENN': 'KJOENN__0_1.parquet',
+        'SIVSTAND': 'SIVSTAND__0_1.parquet'
+    }
+
+
+def test_bump_datastore_major():
+    datastore.set_draft_release_status('FOEDSELSVEKT', 'PENDING_RELEASE')
+    with open(DRAFT_VERSION, encoding='utf-8') as f:
+        bump_manifesto = DatastoreVersion(**json.load(f))
+    datastore.bump_version(bump_manifesto, 'description')
+
+    with open(DRAFT_VERSION, encoding='utf-8') as f:
+        draft_after_bump = json.load(f)
+    assert draft_after_bump['dataStructureUpdates'] == [
+        {
+            'description': 'oppdaterte metadata',
+            'name': 'SIVSTAND',
+            'operation': 'PATCH_METADATA',
+            'releaseStatus': 'DRAFT'
+        },
+        {
+            'description': 'Fjernet variabel',
+            'name': 'INNTEKT',
+            'operation': 'REMOVE',
+            'releaseStatus': 'DRAFT'
+        }
+    ]
+    with open(
+        f'{DATASTORE_DIR}/datastore/metadata_all__0_2_0.json', encoding='utf-8'
+    ) as f:
+        previous_metadata_all = json.load(f)
+    with open(
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json', encoding='utf-8'
+    ) as f:
+        released_metadata_all = json.load(f)
+    with open(
+        f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
+    ) as f:
+        datastore_versions_json = json.load(f)
+    assert datastore_versions_json['versions'][0]['version'] == '1.0.0.0'
+    assert (
+        len(released_metadata_all['dataStructures']) ==
+        len(previous_metadata_all['dataStructures'])
+    )
+    with open(
+        f'{DATASTORE_DIR}/datastore/data_versions__1_0.json', encoding='utf-8'
+    ) as f:
+        data_versions = json.load(f)
+    assert data_versions == {
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__0_2',
+        'FOEDESTED': 'FOEDESTED__0_2.parquet',
+        'FOEDSELSVEKT': 'FOEDSELSVEKT__1_0.parquet',
         'INNTEKT': 'INNTEKT__0_1',
         'KJOENN': 'KJOENN__0_1.parquet',
         'SIVSTAND': 'SIVSTAND__0_1.parquet'
