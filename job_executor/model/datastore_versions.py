@@ -2,6 +2,7 @@ from typing import List, Union
 from datetime import datetime
 
 from pydantic import Extra, root_validator
+from job_executor.exception import VersioningException
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model.data_structure_update import DataStructureUpdate
@@ -45,7 +46,7 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
                 latest_version_number, update_type
         )
         new_release_version = DatastoreVersion(
-            version=new_version_number,
+            version=new_version_number + '.0',
             description=description,
             release_time=(datetime.now() - datetime.utcfromtimestamp(0)).days,
             language_code='no',
@@ -84,9 +85,19 @@ def underscored_to_dotted_version(version: str) -> str:
 def bump_dotted_version_number(version: str, update_type: str) -> str:
     version_list = [int(number) for number in version.split('.')]
     if update_type == 'MAJOR':
-        version_list[0] += 1
-    if update_type == 'MINOR':
-        version_list[1] += 1
-    if update_type == 'PATCH':
+        return '.'.join([
+            str(version_list[0] + 1),
+            '0',
+            '0'
+        ])
+    elif update_type == 'MINOR':
+        return '.'.join([
+            str(version_list[0]),
+            str(version_list[1] + 1),
+            '0'
+        ])
+    elif update_type == 'PATCH':
         version_list[2] += 1
-    return '.'.join([str(number) for number in version_list])
+        return '.'.join([str(version_num) for version_num in version_list])
+    else:
+        raise VersioningException(f'Invalid update_type {update_type}')

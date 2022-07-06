@@ -1,4 +1,4 @@
-from job_executor.exception.exception import VersioningException
+from job_executor.exception import VersioningException
 from job_executor.model.metadata import Metadata
 from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
 from job_executor.model.datastore_versions import DatastoreVersions
