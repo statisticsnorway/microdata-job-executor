@@ -219,7 +219,7 @@ def test_bump_datastore_major():
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
     datastore.bump_version(bump_manifesto, 'description')
-    
+
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
     assert draft_after_bump['dataStructureUpdates'] == [
