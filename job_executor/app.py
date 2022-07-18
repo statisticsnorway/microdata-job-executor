@@ -49,9 +49,9 @@ def main():
 
 
 def _handle_worker_job(job: Job, workers: List[Process]):
-    dataset_name = job.parameters.dataset_name
+    dataset_name = job.parameters.target
     job_id = job.job_id
-    operation = job.operation
+    operation = job.parameters.operation
     if operation in ['ADD', 'CHANGE_DATA']:
         worker = Process(
             target=build_dataset_worker.run_worker,
@@ -75,7 +75,7 @@ def _handle_worker_job(job: Job, workers: List[Process]):
 
 
 def _handle_manager_job(job: Job):
-    operation = job.operation
+    operation = job.parameters.operation
     if operation == 'BUMP':
         datastore.bump_version(
             job.parameters.bump_manifesto,
@@ -83,30 +83,31 @@ def _handle_manager_job(job: Job):
         )
     elif operation == 'PATCH_METADATA':
         datastore.patch_metadata(
-            job.parameters.dataset_name,
+            job.parameters.target,
             job.parameters.description
         )
     elif operation == 'SET_STATUS':
         datastore.set_draft_release_status(
-            job.parameters.dataset_name, job.parameters.release_status
+            job.parameters.target,
+            job.parameters.release_status
         )
     elif operation == 'ADD':
         datastore.add(
-            job.parameters.dataset_name,
+            job.parameters.target,
             job.parameters.description
         )
     elif operation == 'CHANGE_DATA':
         datastore.change_data(
-            job.parameters.dataset_name,
+            job.parameters.target,
             job.parameters.description
         )
     elif operation == 'REMOVE':
         datastore.remove(
-            job.parameters.dataset_name,
+            job.parameters.target,
             job.parameters.description
         )
     elif operation == 'DELETE_DRAFT':
-        datastore.delete_draft(job.parameters.dataset_name)
+        datastore.delete_draft(job.parameters.target)
     else:
         raise UnknownOperationException(f'Unknown operation {operation}')
 
