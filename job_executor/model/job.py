@@ -2,7 +2,7 @@ from typing import Optional, List
 from enum import Enum
 import datetime
 
-from pydantic import Extra, ValidationError, root_validator
+from pydantic import Extra, root_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion
@@ -48,32 +48,36 @@ class JobParameters(CamelModel, use_enum_values=True):
     @root_validator(skip_on_failure=True)
     @classmethod
     def validate_job_type(cls, values):
-        operation: Operation = values['operation']
+        operation: Operation = values.get('operation')
         if (
             operation == Operation.BUMP
             and (
-                values['bump_manifesto'] is None or
-                values['description'] is None
+                values.get('bump_manifesto') is None or
+                values.get('description') is None
             )
         ):
-            raise ValidationError(
+            raise ValueError(
                 'No supplied bump manifesto for BUMP operation'
             )
-        if (
+        elif (
             operation == Operation.REMOVE
-            and values['descripton'] is None
+            and values.get('description') is None
         ):
-            raise ValidationError(
+            raise ValueError(
                 'Missing parameters for REMOVE operation'
             )
-        if (
+        elif (
             operation == Operation.SET_STATUS
-            and values['release_status'] is None
+            and values.get('release_status') is None
         ):
-            raise ValidationError(
+            raise ValueError(
                 'Missing parameters for SET STATUS operation'
             )
-        return values
+        else:
+            return {
+                key: value for key, value in values.items()
+                if value is not None
+            }
 
 
 class Log(CamelModel, extra=Extra.forbid):

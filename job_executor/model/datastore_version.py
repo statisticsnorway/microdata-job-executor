@@ -149,7 +149,7 @@ class DraftVersion(DatastoreVersion):
             raise NoSuchDraftException(f'No draft for dataset {dataset_name}')
         dataset_update.set_release_status(new_status)
         self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).days
+            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
         )
         self._calculate_update_type()
         self._write_to_file()

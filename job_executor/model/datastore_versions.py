@@ -97,7 +97,10 @@ def bump_dotted_version_number(version: str, update_type: str) -> str:
             '0'
         ])
     elif update_type == 'PATCH':
-        version_list[2] += 1
-        return '.'.join([str(version_num) for version_num in version_list])
+        return '.'.join([
+            str(version_list[0]),
+            str(version_list[1]),
+            str(version_list[2] + 1)
+        ])
     else:
         raise VersioningException(f'Invalid update_type {update_type}')
