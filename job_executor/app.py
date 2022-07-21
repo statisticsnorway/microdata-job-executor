@@ -41,9 +41,12 @@ def main():
         for job in built_jobs + queued_manager_jobs:
             try:
                 _handle_manager_job(job)
+                job_service.update_job_status(
+                    job.job_id, 'completed'
+                )
             except Exception as e:
                 job_service.update_job_status(
-                    job.jobId, 'failed',
+                    job.job_id, 'failed',
                     log=str(e)
                 )
 
@@ -55,14 +58,14 @@ def _handle_worker_job(job: Job, workers: List[Process]):
     if operation in ['ADD', 'CHANGE_DATA']:
         worker = Process(
             target=build_dataset_worker.run_worker,
-            args=(dataset_name, job_id,)
+            args=(job_id, dataset_name,)
         )
         workers.append(worker)
         worker.start()
     elif operation == 'PATCH_METADATA':
         worker = Process(
             target=build_metadata_worker.run_worker,
-            args=(dataset_name, job_id,)
+            args=(job_id, dataset_name,)
         )
         workers.append(worker)
         worker.start()
