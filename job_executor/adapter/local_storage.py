@@ -164,6 +164,15 @@ def get_working_dir_metadata(dataset_name: str) -> dict:
     return _read_json(f'{WORKING_DIR}/{dataset_name}__DRAFT.json')
 
 
+def get_working_dir_input_metadata(dataset_name: str) -> dict:
+    """
+    Returns the working dir metadata json file for given dataset_name.
+
+    * dataset_name: str - name of dataset
+    """
+    return _read_json(f'{WORKING_DIR}/{dataset_name}.json')
+
+
 def get_metadata(dataset_name: str, version: str) -> dict:
     """
     Returns the datastore metadata json file for the given version as a dict.

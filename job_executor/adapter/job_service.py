@@ -17,7 +17,7 @@ def get_jobs(
     if job_status is not None:
         query_fields.append(f'status={job_status}')
     if operations is not None:
-        query_fields.append(f'operations={",".join(operations)}')
+        query_fields.append(f'operation={",".join(operations)}')
 
     request_url = f'{JOB_SERVICE_URL}/jobs'
     if query_fields:
