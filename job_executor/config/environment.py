@@ -8,7 +8,8 @@ def _initialize_environment() -> dict:
         'DATASTORE_DIR': os.environ['DATASTORE_DIR'],
         'PSEUDONYM_SERVICE_URL': os.environ['PSEUDONYM_SERVICE_URL'],
         'JOB_SERVICE_URL': os.environ['JOB_SERVICE_URL'],
-        'NUMBER_OF_WORKERS': int(os.environ['NUMBER_OF_WORKERS'])
+        'NUMBER_OF_WORKERS': int(os.environ['NUMBER_OF_WORKERS']),
+        'SECRETS_FILE': os.environ['SECRETS_FILE']
     }
 
 
