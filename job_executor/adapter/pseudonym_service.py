@@ -1,9 +1,10 @@
 import logging
 from typing import List
+
 import requests
-from requests.exceptions import HTTPError
 
 from job_executor.config import environment, secrets
+from job_executor.exception import HttpResponseError
 
 
 PSEUDONYM_SERVICE_URL = environment.get('PSEUDONYM_SERVICE_URL')
@@ -23,8 +24,7 @@ def pseudonymize(idents: List[str], unit_id: str, job_id: str) -> dict:
         }
     )
     if response.status_code != 200:
-        raise HTTPError(
-            'Error in request to pseudonym-service with status code '
+        raise HttpResponseError(
             f'{response.status_code}: {response.text}'
         )
     return response.json()
