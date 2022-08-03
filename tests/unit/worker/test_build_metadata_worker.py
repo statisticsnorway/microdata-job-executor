@@ -14,6 +14,11 @@ EXPECTED_REQUESTS = [
         'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
     },
     {
+        'json': {'description': 'Første publisering.'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
+    },
+    {
         'json': {'status': 'transforming'},
         'method': 'PUT',
         'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'

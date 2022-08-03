@@ -4,19 +4,28 @@ from job_executor.exception import (
     BuilderStepError,
     HttpResponseError
 )
-from job_executor.adapter import job_service
+from job_executor.config import environment
+from job_executor.adapter import job_service, local_storage
 from job_executor.worker.steps import (
     dataset_validator,
     dataset_transformer
 )
 
 logger = logging.getLogger()
+WORKING_DIR = environment.get('WORKING_DIR')
 
 
 def run_worker(job_id: str, dataset_name: str):
     try:
         job_service.update_job_status(job_id, 'validating')
         metadata_file_path = dataset_validator.run_for_metadata(dataset_name)
+
+        input_metadata = local_storage.get_working_dir_input_metadata(
+            dataset_name
+        )
+        description = input_metadata['dataRevision']['description'][0]['value']
+        job_service.update_description(job_id, description)
+
         job_service.update_job_status(job_id, 'transforming')
         dataset_transformer.run(metadata_file_path)
         job_service.update_job_status(job_id, 'built')
@@ -29,7 +38,7 @@ def run_worker(job_id: str, dataset_name: str):
             job_id, 'failed',
             log='Failed due to communication errors in platform'
         )
-    except Exception:
+    except Exception as e:
         logger.error(str(e))
         job_service.update_job_status(
             job_id, 'failed', log='Unexpected exception when building dataset'

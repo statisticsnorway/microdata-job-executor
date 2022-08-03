@@ -8,9 +8,45 @@ DATASET_NAME = 'BOSTED'
 JOB_ID = '1234-1234-1234-1234'
 WORKING_DIR = os.environ['WORKING_DIR']
 JOB_SERVICE_URL = os.environ['JOB_SERVICE_URL']
-EXPECTED_REQUESTS = [
+EXPECTED_REQUESTS_PARTITIONED = [
     {
         'json': {'status': 'validating'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
+    },
+    {
+        'json': {'description': 'Oppdaterte data'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
+    },
+    {
+        'json': {'status': 'transforming'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'},
+    {
+        'json': {'status': 'enriching'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'},
+    {
+        'json': {'status': 'converting'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
+    },
+    {
+        'json': {'status': 'built'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
+    }
+]
+
+EXPECTED_REQUESTS_IMPORT = [
+    {
+        'json': {'status': 'validating'},
+        'method': 'PUT',
+        'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
+    },
+    {
+        'json': {'description': 'Første publisering.'},
         'method': 'PUT',
         'url': f'{JOB_SERVICE_URL}/jobs/{JOB_ID}'
     },
@@ -54,9 +90,7 @@ def test_build_partitioned_dataset(requests_mock):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
-
     run_worker(JOB_ID, PARTITIONED_DATASET_NAME)
-
     assert os.path.isdir(
         f'{WORKING_DIR}/{PARTITIONED_DATASET_NAME}__DRAFT'
     )
@@ -71,7 +105,7 @@ def test_build_partitioned_dataset(requests_mock):
         }
         for req in requests_mock.request_history
     ]
-    assert requests_made == EXPECTED_REQUESTS
+    assert requests_made == EXPECTED_REQUESTS_PARTITIONED
 
 
 def test_import(requests_mock):
@@ -95,4 +129,4 @@ def test_import(requests_mock):
         }
         for req in requests_mock.request_history
     ]
-    assert requests_made == EXPECTED_REQUESTS
+    assert requests_made == EXPECTED_REQUESTS_IMPORT

@@ -11,18 +11,22 @@ JOB_ID = '123'
 JOB_LIST = [
     Job(
         jobId=JOB_ID,
-        operation='CHANGE_DATA',
         status='queued',
-        parameters=JobParameters(datasetName='INNTEKT')
+        parameters=JobParameters(
+            target='INNTEKT',
+            operation='CHANGE_DATA'
+        ),
+        logs=[]
     ),
     Job(
         jobId=JOB_ID,
-        operation='SET_STATUS',
         status='queued',
         parameters=JobParameters(
-            datasetName='KJOENN',
+            operation='SET_STATUS',
+            target='KJOENN',
             releaseStatus='PENDING_RELEASE'
-        )
+        ),
+        logs=[]
     )
 ]
 LOG_MESSAGE = 'log message'

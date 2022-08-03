@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
+import datetime
 
-from pydantic import Extra, ValidationError, root_validator
+from pydantic import Extra, root_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion
@@ -38,50 +39,57 @@ class ReleaseStatus(str, Enum):
 
 
 class JobParameters(CamelModel, use_enum_values=True):
-    dataset_name: str
+    operation: Operation
+    target: str
     bump_manifesto: Optional[DatastoreVersion]
     description: Optional[str]
     release_status: Optional[ReleaseStatus]
 
     @root_validator(skip_on_failure=True)
     @classmethod
-    def remove_none_values(cls, values):
-        return {
-            key: value for key, value in values.items()
-            if value is not None
-        }
+    def validate_job_type(cls, values):
+        operation: Operation = values.get('operation')
+        if (
+            operation == Operation.BUMP
+            and (
+                values.get('bump_manifesto') is None or
+                values.get('description') is None
+            )
+        ):
+            raise ValueError(
+                'No supplied bump manifesto for BUMP operation'
+            )
+        elif (
+            operation == Operation.REMOVE
+            and values.get('description') is None
+        ):
+            raise ValueError(
+                'Missing parameters for REMOVE operation'
+            )
+        elif (
+            operation == Operation.SET_STATUS
+            and values.get('release_status') is None
+        ):
+            raise ValueError(
+                'Missing parameters for SET STATUS operation'
+            )
+        else:
+            return {
+                key: value for key, value in values.items()
+                if value is not None
+            }
 
 
-class Job(CamelModel, extra=Extra.forbid, use_enum_values=True):
+class Log(CamelModel, extra=Extra.forbid):
+    at: datetime.datetime
+    message: str
+
+    def dict(self, **kwargs):   # pylint: disable=unused-argument
+        return {'at': self.at.isoformat(), 'message': self.message}
+
+
+class Job(CamelModel, use_enum_values=True):
     job_id: str
-    operation: Operation
     status: JobStatus
     parameters: JobParameters
-
-    @root_validator(skip_on_failure=True)
-    @classmethod
-    def validate_job_type(cls, values):
-        operation: Operation = values['operation']
-        parameters: JobParameters = values['parameters']
-        if operation == Operation.BUMP:
-            if (
-                parameters.bump_manifesto is None or
-                parameters.description is None
-            ):
-                raise ValidationError(
-                    'No supplied bump manifesto for BUMP operation'
-                )
-        elif operation == Operation.SET_STATUS:
-            if (
-                parameters.dataset_name is None or
-                parameters.release_status is None
-            ):
-                raise ValidationError(
-                    'Missing parameters for SET STATUS operation'
-                )
-        else:
-            if parameters.dataset_name is None:
-                raise ValidationError(
-                    f'Missing parameter for {operation} operation'
-                )
-        return values
+    logs: Optional[List[Log]] = []
