@@ -1,6 +1,8 @@
 import logging
 from typing import Tuple, Union
 
+import microdata_validator
+
 from job_executor.exception import BuilderStepError
 from job_executor.adapter import pseudonym_service
 from job_executor.model import Metadata
@@ -8,7 +10,7 @@ from job_executor.model import Metadata
 logger = logging.getLogger()
 
 
-def _get_unit_id_types(
+def _get_unit_types(
     metadata: Metadata
 ) -> Tuple[Union[str, None], Union[str, None]]:
     return (
@@ -166,8 +168,20 @@ def run(input_csv_path: str, metadata: Metadata, job_id: str) -> str:
     """
     try:
         logger.info(f'Pseudonymizing data {input_csv_path}')
-        identifier_unit_id_type, measure_unit_id_type = (
-            _get_unit_id_types(metadata)
+        identifier_unit_type, measure_unit_type = (
+            _get_unit_types(metadata)
+        )
+        identifier_unit_id_type = (
+            None if identifier_unit_type is None
+            else microdata_validator.get_unit_id_type_for_unit_type(
+                identifier_unit_type
+            )
+        )
+        measure_unit_id_type = (
+            None if measure_unit_type is None
+            else microdata_validator.get_unit_id_type_for_unit_type(
+                measure_unit_type
+            )
         )
         output_file = _pseudonymize_csv(
             input_csv_path,

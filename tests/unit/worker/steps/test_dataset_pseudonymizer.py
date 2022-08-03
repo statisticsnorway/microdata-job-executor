@@ -23,6 +23,10 @@ PSEUDONYM_DICT = {
 }
 with open(f'{WORKING_DIR}/metadata.json', encoding='utf-8') as f:
     METADATA = Metadata(**json.load(f))
+with open(
+    f'{WORKING_DIR}/metadata_invalid_unit_type.json', encoding='utf-8'
+) as f:
+    INVALID_METADATA = Metadata(**json.load(f))
 
 
 @pytest.fixture(autouse=True)
@@ -59,4 +63,10 @@ def test_pseudonymizer(mocker):
 def test_pseudonymizer_adapter_failure():
     with pytest.raises(BuilderStepError) as e:
         dataset_pseudonymizer.run(INPUT_CSV_PATH, METADATA, JOB_ID)
+    assert 'Failed to pseudonymize dataset' == str(e.value)
+
+
+def test_pseudonymizer_invalid_unit_id_type():
+    with pytest.raises(BuilderStepError) as e:
+        dataset_pseudonymizer.run(INPUT_CSV_PATH, INVALID_METADATA, JOB_ID)
     assert 'Failed to pseudonymize dataset' == str(e.value)

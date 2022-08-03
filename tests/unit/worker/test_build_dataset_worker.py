@@ -100,7 +100,7 @@ EXPECTED_REQUESTS_PARTITIONED = [
         'method': 'POST',
         'url': (
             'http://mock.pseudonym.service/'
-            '?unit_id_type=PERSON&job_id=1234-1234-1234-1234'
+            '?unit_id_type=FNR&job_id=1234-1234-1234-1234'
         )
     },
     {
@@ -155,7 +155,7 @@ EXPECTED_REQUESTS_IMPORT = [
         'method': 'POST',
         'url': (
             'http://mock.pseudonym.service/'
-            '?unit_id_type=PERSON&job_id=1234-1234-1234-1234'
+            '?unit_id_type=FNR&job_id=1234-1234-1234-1234'
         )
     },
     {
@@ -196,7 +196,7 @@ def test_build_partitioned_dataset(requests_mock):
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
     requests_mock.post(
-        f'{PSEUDONYM_SERVICE_URL}?unit_id_type=PERSON&job_id={JOB_ID}',
+        f'{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}',
         json=PSEUDONYM_DICT
     )
     run_worker(JOB_ID, PARTITIONED_DATASET_NAME)
@@ -227,7 +227,7 @@ def test_import(requests_mock):
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
     requests_mock.post(
-        f'{PSEUDONYM_SERVICE_URL}?unit_id_type=PERSON&job_id={JOB_ID}',
+        f'{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}',
         json=PSEUDONYM_DICT
     )
     run_worker(JOB_ID, DATASET_NAME)

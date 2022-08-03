@@ -14,9 +14,9 @@ PSEUDONYM_SERVICE_API_KEY = secrets.get('PSEUDONYM_SERVICE_API_KEY')
 logger = logging.getLogger()
 
 
-def pseudonymize(idents: List[str], unit_id: str, job_id: str) -> dict:
+def pseudonymize(idents: List[str], unit_id_type: str, job_id: str) -> dict:
     response = requests.post(
-        f'{PSEUDONYM_SERVICE_URL}?unit_id_type={unit_id}&job_id={job_id}',
+        f'{PSEUDONYM_SERVICE_URL}?unit_id_type={unit_id_type}&job_id={job_id}',
         json=idents,
         headers={
             'Content-Type': 'application/json',

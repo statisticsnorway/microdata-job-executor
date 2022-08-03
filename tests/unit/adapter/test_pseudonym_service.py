@@ -9,8 +9,8 @@ JOB_ID = '123-123-123'
 PSEUDONYM_SERVICE_URL = environment.get('PSEUDONYM_SERVICE_URL')
 API_KEY = secrets.get('PSEUDONYM_SERVICE_API_KEY')
 
-URL = f'{PSEUDONYM_SERVICE_URL}/?unit_id_type=PERSON&job_id={JOB_ID}'
-UNIT_ID = 'PERSON'
+URL = f'{PSEUDONYM_SERVICE_URL}/?unit_id_type=FNR&job_id={JOB_ID}'
+UNIT_ID_TYPE = 'FNR'
 IDENTIFIERS = ['test1', 'test2']
 PSEUDONYM_DICT = {'test1': 'value', 'test2': 'value'}
 
@@ -21,7 +21,7 @@ def test_pseudonymize(requests_mock):
         json=PSEUDONYM_DICT
     )
     assert (
-        pseudonym_service.pseudonymize(IDENTIFIERS, UNIT_ID, JOB_ID)
+        pseudonym_service.pseudonymize(IDENTIFIERS, UNIT_ID_TYPE, JOB_ID)
         == PSEUDONYM_DICT
     )
     request_history = requests_mock.request_history
@@ -40,7 +40,7 @@ def test_pseudonymize_bad_status(requests_mock):
         text='error'
     )
     with pytest.raises(HttpResponseError) as e:
-        pseudonym_service.pseudonymize(IDENTIFIERS, UNIT_ID, JOB_ID)
+        pseudonym_service.pseudonymize(IDENTIFIERS, UNIT_ID_TYPE, JOB_ID)
     request_history = requests_mock.request_history
     request = request_history[0]
 
