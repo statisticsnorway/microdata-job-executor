@@ -10,7 +10,8 @@ from job_executor.worker.steps import (
     dataset_validator,
     dataset_converter,
     dataset_transformer,
-    dataset_enricher
+    dataset_enricher,
+    dataset_pseudonymizer
 )
 
 
@@ -36,14 +37,18 @@ def run_worker(job_id: str, dataset_name: str):
         temporal_coverage = transformed_metadata.temporal_coverage.dict()
         data_type = transformed_metadata.measure_variable.data_type
 
+        job_service.update_job_status(job_id, 'pseudonymizing')
+        pseudonymized_data_path = dataset_pseudonymizer.run(
+            data_file_path, transformed_metadata, job_id
+        )
         job_service.update_job_status(job_id, 'enriching')
         enriched_data_path = dataset_enricher.run(
-            data_file_path, temporal_coverage, data_type
+            pseudonymized_data_path, temporal_coverage, data_type
         )
 
         job_service.update_job_status(job_id, 'converting')
         dataset_converter.run(
-            enriched_data_path, temporality_type, data_type
+            dataset_name, enriched_data_path, temporality_type, data_type
         )
         job_service.update_job_status(job_id, 'built')
         logger.info('Dataset built sucessfully')

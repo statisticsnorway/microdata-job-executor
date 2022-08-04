@@ -1,0 +1,66 @@
+{
+  "name": "input",
+  "populationDescription": "N/A",
+  "languageCode": "no",
+  "temporality": "STATUS",
+  "subjectFields": [],
+  "temporalCoverage": { "start": 16436, "stop": 18627 },
+  "identifierVariables": [
+    {
+      "variableRole": "Identifier",
+      "name": "PERSON",
+      "label": "Person",
+      "dataType": "String",
+      "representedVariables": [
+        {
+          "description": "N/A",
+          "validPeriod": { "start": 16436, "stop": 18627 },
+          "valueDomain": { "description": "N/A", "unitOfMeasure": "N/A" }
+        }
+      ],
+      "format": "RandomUInt48",
+      "keyType": { "name": "PERSON", "label": "Person", "description": "N/A" }
+    }
+  ],
+  "measureVariable": {
+    "variableRole": "Measure",
+    "name": "input",
+    "label": "input",
+    "dataType": "String",
+    "representedVariables": [
+      {
+        "description": "N/A",
+        "validPeriod": { "start": 16436, "stop": 18627 },
+        "valueDomain": { "description": "N/A", "unitOfMeasure": "N/A" }
+      }
+    ]
+  },
+  "attributeVariables": [
+    {
+      "variableRole": "START_TIME",
+      "name": "START",
+      "label": "Startdato",
+      "dataType": "Instant",
+      "representedVariables": [
+        {
+          "description": "N/A",
+          "validPeriod": { "start": 16436, "stop": 18627 },
+          "valueDomain": { "description": "N/A", "unitOfMeasure": "N/A" }
+        }
+      ]
+    },
+    {
+      "variableRole": "STOP_TIME",
+      "name": "STOP",
+      "label": "Stoppdato",
+      "dataType": "Instant",
+      "representedVariables": [
+        {
+          "description": "N/A",
+          "validPeriod": { "start": 16436, "stop": 18627 },
+          "valueDomain": { "description": "N/A", "unitOfMeasure": "N/A" }
+        }
+      ]
+    }
+  ]
+}

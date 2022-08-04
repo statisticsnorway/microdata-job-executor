@@ -20,6 +20,7 @@ pytest-dotenv = "^0.5.2"
 pytest-cov = "^3.0.0"
 pylint = "^2.14.4"
 pycodestyle = "^2.8.0"
+pytest-mock = "^3.8.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

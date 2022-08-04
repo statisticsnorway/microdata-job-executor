@@ -47,4 +47,4 @@ def update_description(job_id: str, new_description: str):
         json={'description': new_description}
     )
     if response.status_code != 200:
-        raise HttpResponseError(f'{response.text}')
+        raise HttpResponseError(f'{response.status_code}: {response.text}')

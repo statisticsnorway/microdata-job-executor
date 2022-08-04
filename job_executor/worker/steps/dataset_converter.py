@@ -4,9 +4,11 @@ import pyarrow.csv as pv
 import pyarrow.parquet as pq
 
 from job_executor.exception import BuilderStepError
+from job_executor.config import environment
 
 
 logger = logging.getLogger()
+WORKING_DIR = environment.get('WORKING_DIR')
 
 
 def _get_read_options():
@@ -84,10 +86,10 @@ def _create_table_for_partitioned_parquet(data_path: str,
     )
 
 
-def _convert_csv_to_simple_parquet(csv_data_path: str, data_type: str) -> str:
-    parquet_file_path = csv_data_path.replace(
-        '_enriched.csv', '__DRAFT.parquet'
-    )
+def _convert_csv_to_simple_parquet(
+    dataset_name: str, csv_data_path: str, data_type: str
+) -> str:
+    parquet_file_path = f'{WORKING_DIR}/{dataset_name}__DRAFT.parquet'
     logger.info(
         f"Converts csv {csv_data_path} "
         f"to simple parquet {parquet_file_path}"
@@ -100,11 +102,10 @@ def _convert_csv_to_simple_parquet(csv_data_path: str, data_type: str) -> str:
     return parquet_file_path
 
 
-def _convert_csv_to_partitioned_parquet(csv_data_path: str,
-                                        data_type: str) -> str:
-    parquet_partition_path = csv_data_path.replace(
-        '_enriched.csv', '__DRAFT'
-    )
+def _convert_csv_to_partitioned_parquet(
+    dataset_name: str, csv_data_path: str, data_type: str
+) -> str:
+    parquet_partition_path = f'{WORKING_DIR}/{dataset_name}__DRAFT'
     logger.info(
         f"Converts csv {csv_data_path} "
         f"to partitioned parquet {parquet_partition_path}"
@@ -124,7 +125,12 @@ def _convert_csv_to_partitioned_parquet(csv_data_path: str,
     return parquet_partition_path
 
 
-def run(csv_data_path: str, temporality_type: str, data_type: str) -> str:
+def run(
+    dataset_name: str,
+    csv_data_path: str,
+    temporality_type: str,
+    data_type: str
+) -> str:
     """
     Converts a csv file to parquet format. Will partition the parquet
     if given temporality type is "STATUS" or "ACCUMULATED".
@@ -139,7 +145,7 @@ def run(csv_data_path: str, temporality_type: str, data_type: str) -> str:
         )
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             parquet_path = _convert_csv_to_partitioned_parquet(
-                csv_data_path, data_type
+                dataset_name, csv_data_path, data_type
             )
             logger.info(
                 'Converted csv to partitioned parquet and wrote to '
@@ -147,7 +153,7 @@ def run(csv_data_path: str, temporality_type: str, data_type: str) -> str:
             )
         else:
             parquet_path = _convert_csv_to_simple_parquet(
-                csv_data_path, data_type
+                dataset_name, csv_data_path, data_type
             )
             logger.info(
                 'Converted csv to parquet and wrote to '
