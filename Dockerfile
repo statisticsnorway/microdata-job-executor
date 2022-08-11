@@ -1,5 +1,5 @@
 # Export Poetry Packages
-FROM ubuntu:21.10 as builder
+FROM ubuntu:22.04 as builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -16,12 +16,12 @@ ENV PYTHONUNBUFFERED=1 \
 # Prepend poetry and venv to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# Install python 3.9
+# Install python 3.10
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    python3.9 \
+    python3-pip python3-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && ln -s /usr/bin/python3.9 /usr/bin/python
+    && ln -s /usr/bin/python3 /usr/bin/python
 
 # Install tools
 RUN apt-get update \
@@ -37,7 +37,7 @@ COPY poetry.lock pyproject.toml /app/
 
 # Install poetry and export dependencies to requirements yaml
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python -
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 #Set application version in pyproject.toml, use zero if not set
 ARG BUILD_NUMBER=0
@@ -46,7 +46,7 @@ RUN poetryVersion=$(poetry version -s); buildNumber=${BUILD_NUMBER}; newVersion=
 RUN poetry export > requirements.txt
 
 # Production image
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 COPY job_executor job_executor
