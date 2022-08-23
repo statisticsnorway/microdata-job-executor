@@ -1,5 +1,6 @@
 import os
 import shutil
+from multiprocessing import Queue
 
 from job_executor.worker.build_dataset_worker import run_worker
 
@@ -199,7 +200,7 @@ def test_build_partitioned_dataset(requests_mock):
         f'{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}',
         json=PSEUDONYM_DICT
     )
-    run_worker(JOB_ID, PARTITIONED_DATASET_NAME)
+    run_worker(JOB_ID, PARTITIONED_DATASET_NAME, Queue())
     print(os.listdir(f'{WORKING_DIR}'))
     assert os.path.isdir(
         f'{WORKING_DIR}/{PARTITIONED_DATASET_NAME}__DRAFT'
@@ -230,7 +231,7 @@ def test_import(requests_mock):
         f'{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}',
         json=PSEUDONYM_DICT
     )
-    run_worker(JOB_ID, DATASET_NAME)
+    run_worker(JOB_ID, DATASET_NAME, Queue())
 
     assert os.path.isfile(
         f'{WORKING_DIR}/{DATASET_NAME}__DRAFT.parquet'
