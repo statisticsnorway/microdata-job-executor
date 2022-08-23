@@ -45,7 +45,7 @@ def _pseudonymize_identifier_only(
             target_file.write(
                 ';'.join([
                     line_number,
-                    identifier_to_pseudonym[unit_id],
+                    str(identifier_to_pseudonym[unit_id]),
                     value,
                     start_date, stop_date
                 ]) + '\n'
