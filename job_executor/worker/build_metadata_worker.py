@@ -21,7 +21,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
     logger = logging.getLogger()
     try:
-        configure_worker_logger(logging_queue)
+        configure_worker_logger(logging_queue, job_id)
         logger.info(
             f'Starting metadata worker for dataset '
             f'{dataset_name} and job {job_id}'

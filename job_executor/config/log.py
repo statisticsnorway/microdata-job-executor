@@ -1,7 +1,6 @@
 import json
 import logging
 import logging.handlers
-import multiprocessing
 import platform
 import sys
 import traceback
@@ -16,27 +15,27 @@ class ContextFilter(logging.Filter):
     """
     This is a filter which injects contextual information into the log.
     """
-    process_name = ""
+    job_id = ""
 
-    def __init__(self, process_name):
+    def __init__(self, job_id: str):
         super().__init__()
-        self.process_name = process_name
+        self.job_id = job_id
 
     def filter(self, record):
         # prefix record.msg instead of adding a new field
         # to be compliant with Kibana
-        record.msg = self.process_name + ': ' + record.msg
+        record.msg = self.job_id + ': ' + record.msg
         return True
 
 
-def configure_worker_logger(queue: Queue):
+def configure_worker_logger(queue: Queue, job_id: str):
     queue_handler = logging.handlers.QueueHandler(queue)
     queue_handler.setLevel(logging.INFO)
     # use default formatter here so that the JSON formatter will be applied when
     # reading from queue
     queue_handler.formatter = logging.Formatter()
 
-    log_filter = ContextFilter(multiprocessing.current_process().name)
+    log_filter = ContextFilter(job_id)
 
     logger = logging.getLogger()
     logger.handlers.clear()
