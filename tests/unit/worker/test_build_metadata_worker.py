@@ -1,5 +1,6 @@
 import os
 import shutil
+from multiprocessing import Queue
 
 from job_executor.worker.build_metadata_worker import run_worker
 
@@ -51,7 +52,7 @@ def test_import(requests_mock):
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
 
-    run_worker(JOB_ID, DATASET_NAME)
+    run_worker(JOB_ID, DATASET_NAME, Queue())
 
     assert os.path.isfile(
         f'{WORKING_DIR}/{DATASET_NAME}__DRAFT.json'

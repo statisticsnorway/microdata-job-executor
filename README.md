@@ -22,7 +22,6 @@ poetry install
 #### Intellij IDEA
 Use plugin Poetry and add Python Interpreter "Poetry Environment". See https://plugins.jetbrains.com/plugin/14307-poetry
 
-
 ### Running tests
 Open terminal and go to root directory of the project and run:
 ````
@@ -34,6 +33,20 @@ poetry run pytest --cov=job_executor/
 docker build --tag job_executor .
 ````
 
+### Running with Wiremock
+To stub out collaborating services run the following:
+````
+cd wiremock
+docker run -it --rm \
+-p 8080:8080 \
+--name wiremock \
+-v $PWD:/home/wiremock \
+wiremock/wiremock:2.33.2
+````
+Access http://localhost:8080/__admin/mappings to display the mappings.
+There is an initial set of mappings under `wiremock/mappings`. Feel free to add more if needed.
+
+Then set the PSEUDONYM_SERVICE_URL and JOB_SERVICE_URL to http://localhost:8080 and run the application.
 
 
 ## Built with

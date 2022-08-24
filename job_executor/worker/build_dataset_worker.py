@@ -1,7 +1,10 @@
 import logging
+from multiprocessing import Queue
+from time import perf_counter
 
-from job_executor.config import environment
 from job_executor.adapter import job_service, local_storage
+from job_executor.config import environment
+from job_executor.config.log import configure_worker_logger
 from job_executor.exception import (
     BuilderStepError,
     HttpResponseError
@@ -14,13 +17,19 @@ from job_executor.worker.steps import (
     dataset_pseudonymizer
 )
 
-
-logger = logging.getLogger()
 WORKING_DIR = environment.get('WORKING_DIR')
 
 
-def run_worker(job_id: str, dataset_name: str):
+def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
+    start = perf_counter()
+    logger = logging.getLogger()
     try:
+        configure_worker_logger(logging_queue, job_id)
+        logger.info(
+            f'Starting dataset worker for dataset '
+            f'{dataset_name} and job {job_id}'
+        )
+
         job_service.update_job_status(job_id, 'validating')
         data_file_path, metadata_file_path = dataset_validator.run_for_dataset(
             dataset_name
@@ -51,8 +60,7 @@ def run_worker(job_id: str, dataset_name: str):
             dataset_name, enriched_data_path, temporality_type, data_type
         )
         job_service.update_job_status(job_id, 'built')
-        logger.info('Dataset built sucessfully')
-
+        logger.info('Dataset built successfully')
     except BuilderStepError as e:
         logger.error(str(e))
         job_service.update_job_status(job_id, 'failed', log=str(e))
@@ -68,3 +76,9 @@ def run_worker(job_id: str, dataset_name: str):
             job_id, 'failed',
             log='Unexpected error when building dataset'
         )
+    finally:
+        delta = perf_counter() - start
+        logger.info(f'Dataset worker for dataset '
+                    f'{dataset_name} and job {job_id} '
+                    f'done in {delta:.2f} seconds'
+                    )

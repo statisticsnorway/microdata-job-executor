@@ -1,7 +1,13 @@
+import sys
+import threading
 import time
 import logging
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from typing import List
+
+import json_logging
+
+from job_executor.config.log import CustomJSONLog
 from job_executor.exception import UnknownOperationException
 from job_executor.worker import (
     build_dataset_worker,
@@ -14,58 +20,85 @@ from job_executor.config import environment
 
 NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')
 datastore = Datastore()
+json_logging.init_non_web(custom_formatter=CustomJSONLog, enable_json=True)
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
+
+def logger_thread(logging_queue: Queue):
+    """
+    This method will run as a thread in the main process and will receive
+    logs from workers via Queue.
+    """
+    while True:
+        record = logging_queue.get()
+        if record is None:
+            break
+        logger.handle(record)
 
 
 def main():
     workers: List[Process] = []
+    logging_queue = Queue()
 
-    while True:
-        time.sleep(5)
-        workers = [worker for worker in workers if worker.is_alive()]
-        queued_worker_jobs = job_service.get_jobs(
-            job_status='queued',
-            operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
-        )
-        for job in queued_worker_jobs:
-            if len(workers) < NUMBER_OF_WORKERS:
-                _handle_worker_job(job, workers)
+    log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))
+    log_thread.start()
 
-        built_jobs = job_service.get_jobs(
-            job_status='built'
-        )
-        queued_manager_jobs = job_service.get_jobs(
-            job_status='queued',
-            operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
-        )
-        for job in built_jobs + queued_manager_jobs:
-            try:
-                _handle_manager_job(job)
-                job_service.update_job_status(
-                    job.job_id, 'completed'
-                )
-            except Exception as e:
-                job_service.update_job_status(
-                    job.job_id, 'failed',
-                    log=str(e)
-                )
+    try:
+        while True:
+            time.sleep(5)
+            workers = [worker for worker in workers if worker.is_alive()]
+            queued_worker_jobs = job_service.get_jobs(
+                job_status='queued',
+                operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
+            )
+            logger.info(f'Found {len(queued_worker_jobs)} worker jobs')
+            for job in queued_worker_jobs:
+                if len(workers) < NUMBER_OF_WORKERS:
+                    _handle_worker_job(job, workers, logging_queue)
+
+            built_jobs = job_service.get_jobs(
+                job_status='built'
+            )
+            logger.info(f'Found {len(built_jobs)} built jobs')
+            queued_manager_jobs = job_service.get_jobs(
+                job_status='queued',
+                operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
+            )
+            logger.info(f'Found {len(queued_manager_jobs)} queued manager jobs')
+            for job in built_jobs + queued_manager_jobs:
+                try:
+                    _handle_manager_job(job)
+                    job_service.update_job_status(
+                        job.job_id, 'completed'
+                    )
+                except Exception as e:
+                    job_service.update_job_status(
+                        job.job_id, 'failed',
+                        log=str(e)
+                    )
+    finally:
+        # Tell the logging thread to finish up
+        logging_queue.put(None)
+        log_thread.join()
 
 
-def _handle_worker_job(job: Job, workers: List[Process]):
+def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
     dataset_name = job.parameters.target
     job_id = job.job_id
     operation = job.parameters.operation
     if operation in ['ADD', 'CHANGE_DATA']:
         worker = Process(
             target=build_dataset_worker.run_worker,
-            args=(job_id, dataset_name,)
+            args=(job_id, dataset_name, logging_queue,)
         )
         workers.append(worker)
         worker.start()
     elif operation == 'PATCH_METADATA':
         worker = Process(
             target=build_metadata_worker.run_worker,
-            args=(job_id, dataset_name,)
+            args=(job_id, dataset_name, logging_queue,)
         )
         workers.append(worker)
         worker.start()
@@ -116,6 +149,5 @@ def _handle_manager_job(job: Job):
 
 
 if __name__ == '__main__':
-    logger.info('Initiating dataset-builder')
-    logger.info('Started polling for jobs')
+    logger.info('Polling for jobs...')
     main()

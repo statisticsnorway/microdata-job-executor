@@ -137,11 +137,9 @@ def run(
     """
     try:
         logger.info(
-            f'''
-            Converting {csv_data_path} to parquet
-            data_type: {data_type}
-            temporality_type: {temporality_type}
-            '''
+            f'Converting {csv_data_path} to parquet, '
+            f'data_type: {data_type}, '
+            f'temporality_type: {temporality_type}'
         )
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             parquet_path = _convert_csv_to_partitioned_parquet(

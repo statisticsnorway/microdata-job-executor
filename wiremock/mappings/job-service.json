@@ -1,0 +1,45 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "foo",
+      "request": {
+        "method": "GET",
+        "url": "/jobs?status=queued&operation=PATCH_METADATA,ADD,CHANGE_DATA"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"job_id\": \"123-123-123-123\", \"operation\": \"ADD\", \"status\": \"completed\", \"parameters\": {\"target\": \"INNTEKT\",\"operation\": \"ADD\"}}]"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/jobs?status=queued&operation=SET_STATUS,BUMP,DELETE_DRAFT,REMOVE"
+      },
+      "response": {
+        "status": 200,
+        "body": "{}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/jobs?status=built"
+      },
+      "response": {
+        "status": 200,
+        "body": "{}"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/jobs/123-123-123-123"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"message\": \"OK\"}"
+      }
+    }
+  ]
+}
