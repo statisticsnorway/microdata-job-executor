@@ -78,6 +78,8 @@ def main():
                         job.job_id, 'failed',
                         log=str(e)
                     )
+    except Exception as e:
+        logger.exception(e)
     finally:
         # Tell the logging thread to finish up
         logging_queue.put(None)
