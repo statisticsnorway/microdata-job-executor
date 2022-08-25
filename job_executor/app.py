@@ -53,7 +53,6 @@ def main():
                 job_status='queued',
                 operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
             )
-            logger.info(f'Found {len(queued_worker_jobs)} worker jobs')
             for job in queued_worker_jobs:
                 if len(workers) < NUMBER_OF_WORKERS:
                     _handle_worker_job(job, workers, logging_queue)
@@ -61,12 +60,15 @@ def main():
             built_jobs = job_service.get_jobs(
                 job_status='built'
             )
-            logger.info(f'Found {len(built_jobs)} built jobs')
             queued_manager_jobs = job_service.get_jobs(
                 job_status='queued',
                 operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
             )
-            logger.info(f'Found {len(queued_manager_jobs)} queued manager jobs')
+            logger.info(f'Found '
+                        f'{len(queued_worker_jobs)}'
+                        f'/{len(built_jobs)}'
+                        f'/{len(queued_manager_jobs)}'
+                        f' (worker, built, queued manager jobs)')
             for job in built_jobs + queued_manager_jobs:
                 try:
                     _handle_manager_job(job)
@@ -78,6 +80,8 @@ def main():
                         job.job_id, 'failed',
                         log=str(e)
                     )
+    except Exception as e:
+        logger.exception(e)
     finally:
         # Tell the logging thread to finish up
         logging_queue.put(None)
