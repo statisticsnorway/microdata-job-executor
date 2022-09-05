@@ -16,7 +16,8 @@ JOB_LIST = [
             target='INNTEKT',
             operation='CHANGE_DATA'
         ),
-        logs=[]
+        logs=[],
+        created_at = '2022-05-18T11:40:22.519222'
     ),
     Job(
         jobId=JOB_ID,
@@ -26,7 +27,8 @@ JOB_LIST = [
             target='KJOENN',
             releaseStatus='PENDING_RELEASE'
         ),
-        logs=[]
+        logs=[],
+        created_at = '2022-05-18T11:40:22.519222'
     )
 ]
 LOG_MESSAGE = 'log message'

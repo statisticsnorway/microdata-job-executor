@@ -36,7 +36,7 @@ stages:
           export PIP_NO_CACHE_DIR=off \
             PIP_DISABLE_PIP_VERSION_CHECK=on \
             PIP_DEFAULT_TIMEOUT=100 \
-            POETRY_VERSION=1.1.4 \
+            POETRY_VERSION=1.1.14 \
             POETRY_VIRTUALENVS_IN_PROJECT=true \
             POETRY_NO_INTERACTION=1
         displayName: 'Export environment variables'
@@ -48,7 +48,7 @@ stages:
             python3-distutils \
             python3-apt \
             libpython3.9-dev
-          curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python -
+           curl -sSL https://install.python-poetry.org | python3 -
           source $HOME/.poetry/env
           poetry install
         displayName: 'Install dependencies'
