@@ -23,6 +23,8 @@ WORKING_DIR = environment.get('WORKING_DIR')
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
     logger = logging.getLogger()
+    csv_files: list[str] = []
+    
     try:
         configure_worker_logger(logging_queue, job_id)
         logger.info(
@@ -50,11 +52,12 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         pseudonymized_data_path = dataset_pseudonymizer.run(
             data_file_path, transformed_metadata, job_id
         )
+        csv_files.append(pseudonymized_data_path)
         job_service.update_job_status(job_id, 'enriching')
         enriched_data_path = dataset_enricher.run(
             pseudonymized_data_path, temporal_coverage, data_type
         )
-
+        csv_files.append(enriched_data_path)
         job_service.update_job_status(job_id, 'converting')
         dataset_converter.run(
             dataset_name, enriched_data_path, temporality_type, data_type
@@ -77,6 +80,8 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             log='Unexpected error when building dataset'
         )
     finally:
+        local_storage.delete_files(csv_files)
+
         delta = perf_counter() - start
         logger.info(f'Dataset worker for dataset '
                     f'{dataset_name} and job {job_id} '

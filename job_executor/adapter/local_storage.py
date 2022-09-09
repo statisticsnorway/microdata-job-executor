@@ -286,3 +286,12 @@ def delete_parquet_draft(dataset_name: str) -> None:
         shutil.rmtree(parquet_path)
     elif os.path.isfile(f'{parquet_path}.parquet'):
         os.remove(f'{parquet_path}.parquet')
+
+def delete_files(csv_files : list[str]):
+    """
+    Deletes a list of files. Intended to clean up left-over csv files
+    * csv_files: list[str] - list of csv files to delete
+    """
+    for csv_file in csv_files:
+        if os.path.isfile(csv_file):
+            os.remove(csv_file)
