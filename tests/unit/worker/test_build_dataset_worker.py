@@ -178,6 +178,10 @@ EXPECTED_REQUESTS_IMPORT = [
 
 
 def setup_function():
+
+    if os.path.isdir('tests/resources_backup'):
+        shutil.rmtree('tests/resources_backup')
+
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'

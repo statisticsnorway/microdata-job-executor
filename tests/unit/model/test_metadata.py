@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 
 from job_executor.model import MetadataAll, Metadata
@@ -20,6 +21,10 @@ PATCHED_METADATA = load_json(f'{TEST_DIR}/patched_metadata.json')
 
 
 def setup_module():
+
+    if os.path.isdir('tests/resources_backup'):
+        shutil.rmtree('tests/resources_backup')
+
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'

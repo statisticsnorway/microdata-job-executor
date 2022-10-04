@@ -14,6 +14,10 @@ DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore_versions.json'
 
 
 def setup_function():
+
+    if os.path.isdir('tests/resources_backup'):
+        shutil.rmtree('tests/resources_backup')
+
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'
