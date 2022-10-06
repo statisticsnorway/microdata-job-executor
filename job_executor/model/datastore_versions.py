@@ -69,9 +69,12 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
         return None
 
     def get_latest_version_number(self) -> str:
-        return dotted_to_underscored_version(
-            self.versions[0].version
-        )
+        if len(self.versions):
+            return dotted_to_underscored_version(
+                self.versions[0].version
+            )
+        else:
+            return '0_0_0'
 
 
 def dotted_to_underscored_version(version: str) -> str:
