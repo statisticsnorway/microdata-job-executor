@@ -1,6 +1,7 @@
 # test good case
 # test bad case
 import json
+import os
 import shutil
 import pytest
 
@@ -35,6 +36,10 @@ def set_working_dir(monkeypatch):
 
 
 def setup_function():
+
+    if os.path.isdir(f'{WORKING_DIR}_backup'):
+        shutil.rmtree(f'{WORKING_DIR}_backup')
+
     shutil.copytree(WORKING_DIR, f'{WORKING_DIR}_backup')
 
 

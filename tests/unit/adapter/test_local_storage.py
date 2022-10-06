@@ -39,6 +39,10 @@ MOVED_WORKING_DIR_DATASET_DATA_PATH = (
 
 
 def setup_module():
+
+    if os.path.isdir('tests/resources_backup'):
+        shutil.rmtree('tests/resources_backup')
+
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'
