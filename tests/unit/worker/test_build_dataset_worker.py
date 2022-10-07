@@ -2,7 +2,9 @@ import os
 import shutil
 from multiprocessing import Queue
 
-from job_executor.worker.build_dataset_worker import run_worker
+
+
+from job_executor.worker.build_dataset_worker import run_worker, local_storage
 
 PARTITIONED_DATASET_NAME = 'INNTEKT'
 DATASET_NAME = 'BOSTED'
@@ -274,3 +276,21 @@ def request_matches(request: dict, other: dict):
         if request_payload != other_payload:
             return False
     return True
+
+def test_delete_files_is_called(requests_mock, mocker):
+
+    spy = mocker.patch.object(
+        local_storage, 'delete_files')
+
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
+    requests_mock.post(
+        f'{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}',
+        json=PSEUDONYM_DICT
+    )
+    
+    run_worker(JOB_ID, DATASET_NAME, Queue())
+
+    spy.assert_called()
+
