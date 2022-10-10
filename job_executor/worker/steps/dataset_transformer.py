@@ -279,6 +279,7 @@ def _transform_metadata(metadata_file_path: str) -> str:
         ),
         'languageCode': 'no',
         'temporality': metadata['temporalityType'],
+        'sensitivityLevel': metadata['sensitivityLevel'],
         'subjectFields': _transform_subject_fields(metadata),
         'temporalCoverage': _get_temporal_coverage(start, stop),
         'identifierVariables': transformed_identifiers,
