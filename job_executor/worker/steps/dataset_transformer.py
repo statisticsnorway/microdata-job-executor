@@ -204,10 +204,9 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
 
 
 def _transform_subject_fields(metadata: dict) -> list:
-    measure_variable = metadata["measureVariables"][0]
-    subject_fields = measure_variable["subjectFields"]
+    subject_fields = metadata["subjectFields"]
     return [
-         _get_norwegian_text(subject_field['name'])
+         _get_norwegian_text(subject_field)
          for subject_field in subject_fields
     ]
 
