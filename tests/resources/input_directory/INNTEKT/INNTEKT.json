@@ -1,126 +1,83 @@
 {
-  "shortName": "INNTEKT",
   "temporalityType": "ACCUMULATED",
+  "sensitivityLevel": "PERSON_GENERAL",
   "populationDescription": [
     {
       "languageCode": "no",
       "value": "Alle rapporterte personinntekter i norge fra år 1234 til år 4321"
     }
   ],
-  "spatialCoverageDescription": [{ "languageCode": "no", "value": "Norge" }],
+  "spatialCoverageDescription": [
+    {
+      "languageCode": "no",
+      "value": "Norge"
+    }
+  ],
   "dataRevision": {
-    "description": [{ "languageCode": "no", "value": "Oppdaterte data" }],
+    "description": [
+      {
+        "languageCode": "no",
+        "value": "Oppdaterte data"
+      }
+    ],
     "temporalEndOfSeries": false
   },
   "identifierVariables": [
     {
-      "shortName": "PERSON",
-      "name": [{ "languageCode": "no", "value": "Personidentifikator" }],
-      "description": [
-        {
-          "languageCode": "no",
-          "value": "Identifikator for person i Microdata"
-        }
-      ],
-      "dataType": "STRING",
-      "unitType": {
-        "shortName": "PERSON",
-        "name": [{ "languageCode": "no", "value": "Person" }],
-        "description": [
-          {
-            "languageCode": "no",
-            "value": "Statistisk enhet er person (individ, enkeltmenenske)"
-          }
-        ]
-      },
-      "format": "RandomUInt48",
-      "valueDomain": {
-        "shortName": "PERSONNUMMER",
-        "description": [
-          { "languageCode": "no", "value": "Pseudonymisert personnummer" }
-        ]
-      }
+      "unitType": "PERSON"
     }
   ],
   "measureVariables": [
     {
-      "shortName": "INNTEKT",
-      "name": [{ "languageCode": "no", "value": "Inntekt" }],
-      "description": [
-        { "languageCode": "no", "value": "Personens rapporterte inntekt" }
-      ],
-      "subjectFields": [
-        {
-          "shortName": "OEKONOMI",
-          "name": [{ "languageCode": "no", "value": "Økonomi" }],
-          "description": [{ "languageCode": "no", "value": "Økonomi" }]
-        },
-        {
-          "shortName": "SAMFUNN",
-          "name": [{ "languageCode": "no", "value": "Samfunn" }],
-          "description": [{ "languageCode": "no", "value": "Samfunn" }]
-        },
-        {
-          "shortName": "NYTT EMNE",
-          "name": [{ "languageCode": "no", "value": "nytt emne" }],
-          "description": [{ "languageCode": "no", "value": "nytt emne" }]
-        }
-      ],
-      "dataType": "STRING",
-      "uriDefinition": [""],
-      "valueDomain": {
-        "uriDefinition": [],
-        "description": [
-          { "languageCode": "no", "value": "Årlig personinntekt" }
-        ],
-        "measurementType": "CURRENCY",
-        "measurementUnitDescription": [
-          { "languageCode": "no", "value": "Norske Øre" }
-        ]
-      }
-    }
-  ],
-  "attributeVariables": [
-    {
-      "variableRole": "START_TIME",
-      "shortName": "START",
       "name": [
-        { "languageCode": "no", "value": "Startdato" },
-        { "languageCode": "en", "value": "Start date" }
+        {
+          "languageCode": "no",
+          "value": "Inntekt"
+        }
       ],
       "description": [
         {
           "languageCode": "no",
-          "value": "Startdato/måletidspunktet for hendelsen"
+          "value": "Personens rapporterte inntekt"
         }
       ],
-      "dataType": "DATE",
-      "valueDomain": {
-        "description": [
+      "subjectFields": [
+        [
           {
-            "languageCode": "no",
-            "value": "Dato oppgitt i dager siden 1970-01-01"
+            "value": "OEKONOMI",
+            "languageCode": "no"
+          }
+        ],
+        [
+          {
+            "value": "SAMFUNN",
+            "languageCode": "no"
+          }
+        ],
+        [
+          {
+            "value": "NYTT EMNE",
+            "languageCode": "no"
           }
         ]
-      }
-    },
-    {
-      "variableRole": "STOP_TIME",
-      "shortName": "STOP",
-      "name": [
-        { "languageCode": "no", "value": "Stoppdato" },
-        { "languageCode": "en", "value": "Stop date" }
       ],
-      "description": [
-        { "languageCode": "no", "value": "Stoppdato/sluttdato for hendelsen" },
-        { "languageCode": "en", "value": "Event stop/end date" }
+      "dataType": "STRING",
+      "uriDefinition": [
+        ""
       ],
-      "dataType": "DATE",
       "valueDomain": {
+        "uriDefinition": [],
         "description": [
           {
             "languageCode": "no",
-            "value": "Dato oppgitt i dager siden 1970-01-01"
+            "value": "Årlig personinntekt"
+          }
+        ],
+        "measurementType": "CURRENCY",
+        "measurementUnitDescription": [
+          {
+            "languageCode": "no",
+            "value": "Norske Øre"
           }
         ]
       }

@@ -1,113 +1,117 @@
 {
-    "shortName": "BOSTED",
-    "temporalityType": "EVENT",
-    "populationDescription": [{"languageCode": "no", "value": "Alle personer registrert bosatt i Norge"}],
-    "spatialCoverageDescription": [{"languageCode": "no", "value": "Norge"}],
-    "dataRevision": {
-      "description": [{"languageCode": "no","value": "Første publisering."}],
-      "temporalEndOfSeries": false
-    },
-    "identifierVariables": [
+  "temporalityType": "EVENT",
+  "sensitivityLevel": "PERSON_GENERAL",
+  "populationDescription": [
+    {
+      "languageCode": "no",
+      "value": "Alle personer registrert bosatt i Norge"
+    }
+  ],
+  "spatialCoverageDescription": [
+    {
+      "languageCode": "no",
+      "value": "Norge"
+    }
+  ],
+  "dataRevision": {
+    "description": [
       {
-        "shortName": "PERSON",
-        "name": [{"languageCode": "no", "value": "Personidentifikator"}],
-        "description": [{"languageCode": "no","value": "Identifikator for person i Microdata"}],
-        "dataType": "STRING",
-        "unitType": {
-          "shortName": "PERSON",
-          "name": [{"languageCode": "no", "value": "Person"}],
-          "description": [{"languageCode": "no", "value": "Statistisk enhet er person (individ, enkeltmenenske)"}]
-        },
-        "format": "RandomUInt48",
-        "valueDomain": {
-          "shortName": "PERSONNUMMER",
-          "description": [{"languageCode": "no", "value":"Pseudonymisert personnummer"}]
-        }
+        "languageCode": "no",
+        "value": "Første publisering."
       }
     ],
-    "measureVariables": [
-      {
-        "shortName": "BOSTED",
-        "name": [{"languageCode": "no", "value": "Bosted"}],
-        "description": [{"languageCode": "no", "value": "Bosted for person"}],
-        "subjectFields": [
+    "temporalEndOfSeries": false
+  },
+  "identifierVariables": [
+    {
+      "unitType": "PERSON"
+    }
+  ],
+  "measureVariables": [
+    {
+      "name": [
+        {
+          "languageCode": "no",
+          "value": "Bosted"
+        }
+      ],
+      "description": [
+        {
+          "languageCode": "no",
+          "value": "Bosted for person"
+        }
+      ],
+      "subjectFields": [
+        [
           {
-            "shortName": "BEFOLKNING",
-            "name": [{"languageCode": "no", "value": "Befolkning"}],
-            "description": [{"languageCode": "no", "value": "Befolkning"}]
+            "value": "BEFOLKNING",
+            "languageCode": "no"
+          }
+        ]
+      ],
+      "dataType": "STRING",
+      "uriDefinition": [
+        "https://www.ssb.no/a/metadata/conceptvariable/vardok/91/nb"
+      ],
+      "valueDomain": {
+        "uriDefinition": [
+          "https://www.ssb.no/klass/klassifikasjoner/19"
+        ],
+        "codeList": [
+          {
+            "code": "1",
+            "categoryTitle": [
+              {
+                "languageCode": "no",
+                "value": "Vest"
+              }
+            ],
+            "validFrom": "1926-01-01"
+          },
+          {
+            "code": "2",
+            "categoryTitle": [
+              {
+                "languageCode": "no",
+                "value": "Øst"
+              }
+            ],
+            "validFrom": "1926-01-01"
+          },
+          {
+            "code": "3",
+            "categoryTitle": [
+              {
+                "languageCode": "no",
+                "value": "Sør"
+              }
+            ],
+            "validFrom": "1926-01-01"
+          },
+          {
+            "code": "4",
+            "categoryTitle": [
+              {
+                "languageCode": "no",
+                "value": "Nord"
+              }
+            ],
+            "validFrom": "1926-01-01"
           }
         ],
-        "dataType": "STRING",
-        "uriDefinition": ["https://www.ssb.no/a/metadata/conceptvariable/vardok/91/nb"],
-        "valueDomain": {
-          "uriDefinition": ["https://www.ssb.no/klass/klassifikasjoner/19"],
-          "codeList": {
-            "codeItems": [
+        "sentinelAndMissingValues": [
+          {
+            "code": "0",
+            "categoryTitle": [
               {
-                "code": "1",
-                "categoryTitle": [{"languageCode": "no", "value": "Vest"}],
-                "validFrom": "1926-01-01"
-              },
-              {
-                "code": "2",
-                "categoryTitle": [{"languageCode": "no", "value": "Øst"}],
-                "validFrom": "1926-01-01"
-              },
-              {
-                "code": "3",
-                "categoryTitle": [{"languageCode": "no", "value": "Sør"}],
-                "validFrom": "1926-01-01"
-              },
-              {
-                "code": "4",
-                "categoryTitle": [{"languageCode": "no", "value": "Nord"}],
-                "validFrom": "1926-01-01"
+                "languageCode": "no",
+                "value": "Bosted ukjent"
               }
-            ]
-          },
-          "sentinelAndMissingValues" : [
-            {
-              "code": "0",
-              "categoryTitle": [
-                  {"languageCode": "no", "value": "Bosted ukjent"}
-              ],
-              "validFrom": "1900-01-01"
-            }
-          ]
-        }
+            ],
+            "validFrom": "1900-01-01"
+          }
+        ]
       }
-    ],
-    "attributeVariables": [
-      {
-        "variableRole": "START_TIME",
-        "shortName": "START",
-        "name": [
-          {"languageCode": "no", "value": "Startdato"},
-          {"languageCode": "en", "value": "Start date"}
-        ],
-        "description": [{"languageCode": "no", "value": "Startdato/måletidspunktet for hendelsen"}
-        ],
-        "dataType": "DATE",
-        "valueDomain": {
-          "description": [{"languageCode": "no", "value": "Dato oppgitt i dager siden 1970-01-01"}]
-        }
-      },
-      {
-        "variableRole": "STOP_TIME",
-        "shortName": "STOP",
-        "name": [
-          {"languageCode": "no", "value": "Stoppdato"},
-          {"languageCode": "en", "value": "Stop date"}
-        ],
-        "description": [
-          {"languageCode": "no", "value": "Stoppdato/sluttdato for hendelsen"},
-          {"languageCode": "en", "value": "Event stop/end date"}
-        ],
-        "dataType": "DATE",
-        "valueDomain": {
-          "description": [{"languageCode": "no", "value": "Dato oppgitt i dager siden 1970-01-01"}
-          ]
-        }
-      }
-    ]
-  }
+    }
+  ]
+}
