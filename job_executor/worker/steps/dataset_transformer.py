@@ -20,7 +20,7 @@ def _create_represented_variables(description: str,
         return _represented_variables_from_code_list(
             description=description,
             sentinel_and_missing_values=sentinel_and_missing_values,
-            code_items=value_domain["codeList"]["codeItems"]
+            code_items=value_domain["codeList"]
         )
     else:
         return _represented_variables_from_description(
