@@ -3,6 +3,7 @@
   "populationDescription": "Utdanningniv\u00e5 for en populasjon",
   "languageCode": "no",
   "temporality": "EVENT",
+  "sensitivityLevel": "PERSON_GENERAL",
   "subjectFields": ["Befolkning"],
   "temporalCoverage": { "start": -18263, "stop": -6940 },
   "identifierVariables": [

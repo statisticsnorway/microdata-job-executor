@@ -3,6 +3,7 @@
   "populationDescription": "N/A",
   "languageCode": "no",
   "temporality": "STATUS",
+  "sensitivityLevel": "PERSON_GENERAL",
   "subjectFields": [],
   "temporalCoverage": { "start": 16436, "stop": 18627 },
   "identifierVariables": [

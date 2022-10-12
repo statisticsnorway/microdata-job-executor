@@ -3,6 +3,7 @@
   "populationDescription": "Alle personer som har f\u00e5tt kreft.",
   "languageCode": "no",
   "temporality": "STATUS",
+  "sensitivityLevel": "PERSON_GENERAL",
   "subjectFields": [
     "Helse",
     "Helsetjenester"

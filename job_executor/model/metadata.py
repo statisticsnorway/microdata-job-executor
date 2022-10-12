@@ -264,6 +264,7 @@ class Metadata(CamelModel):
     name: str
     temporality: str
     language_code: str
+    sensitivity_level: str
     population_description: str
     subject_fields: List[str]
     temporal_coverage: TimePeriod
@@ -304,6 +305,7 @@ class Metadata(CamelModel):
             "name": self.name,
             "temporality": self.temporality,
             "languageCode": self.language_code,
+            "sensitivityLevel": self.sensitivity_level,
             "populationDescription": other.population_description,
             "subjectFields": [field for field in other.subject_fields],
             "temporalCoverage": self.temporal_coverage.dict(),
