@@ -21,6 +21,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
     logger = logging.getLogger()
     consumed_files: list[str] = []
+
     try:
         configure_worker_logger(logging_queue, job_id)
         logger.info(
@@ -58,7 +59,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     finally:
         local_storage.delete_files(consumed_files)
         delta = perf_counter() - start
-        logger.info(f'Metadata worker for dataset '
-                    f'{dataset_name} and job {job_id} '
-                    f'done in {delta:.2f} seconds'
-                    )
+        logger.info(
+            f'Metadata worker for dataset {dataset_name} and job {job_id}'
+            f' done in {delta:.2f} seconds'
+        )

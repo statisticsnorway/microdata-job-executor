@@ -1,6 +1,8 @@
 import logging
 import json
 from datetime import datetime
+import os
+from pathlib import Path
 
 from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
@@ -253,7 +255,7 @@ def _get_temporal_coverage(start, stop) -> dict:
     return period
 
 
-def _transform_metadata(metadata_file_path: str) -> str:
+def _transform_metadata(metadata_file_path: Path) -> str:
     with open(metadata_file_path, encoding='utf-8') as json_file:
         metadata = json.load(json_file)
     logger.info(f'Transforming metadata {metadata_file_path}')
@@ -289,7 +291,7 @@ def _transform_metadata(metadata_file_path: str) -> str:
             metadata, start, stop
         ),
     }
-    transformed_metadata_file_path = metadata_file_path.replace(
+    transformed_metadata_file_path = str(metadata_file_path).replace(
         '.json', '__DRAFT.json'
     )
     with open(transformed_metadata_file_path, 'w', encoding='utf-8') as f:
