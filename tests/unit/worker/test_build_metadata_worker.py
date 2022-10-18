@@ -8,6 +8,7 @@ from job_executor.worker.build_metadata_worker import run_worker, local_storage
 DATASET_NAME = 'KJOENN'
 JOB_ID = '1234-1234-1234-1234'
 WORKING_DIR = os.environ['WORKING_DIR']
+EXPECTED_DIR = 'tests/resources/expected'
 JOB_SERVICE_URL = os.environ['JOB_SERVICE_URL']
 EXPECTED_REQUESTS = [
     {
@@ -58,11 +59,16 @@ def test_import(requests_mock):
     )
 
     run_worker(JOB_ID, DATASET_NAME, Queue())
-    with open(f'{WORKING_DIR}/{DATASET_NAME}.json') as f:
-        print(json.load(f))
-    assert os.path.isfile(
-        f'{WORKING_DIR}/{DATASET_NAME}__DRAFT.json'
-    )
+    with open(
+        f'{WORKING_DIR}/{DATASET_NAME}__DRAFT.json', 'r', encoding='utf-8'
+    ) as f:
+        actual_metadata = json.load(f)
+    with open(
+        f'{EXPECTED_DIR}/{DATASET_NAME}.json', 'r', encoding='utf-8'
+    ) as f:
+        expected_metadata = json.load(f)
+    
+    assert actual_metadata == expected_metadata
     requests_made = [
         {
             'method': req.method,
