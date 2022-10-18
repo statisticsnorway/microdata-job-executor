@@ -20,7 +20,7 @@ def _create_represented_variables(description: str,
         return _represented_variables_from_code_list(
             description=description,
             sentinel_and_missing_values=sentinel_and_missing_values,
-            code_items=value_domain["codeList"]
+            code_items=value_domain['codeList']
         )
     else:
         return _represented_variables_from_description(
@@ -36,23 +36,23 @@ def _represented_variables_from_description(description: str,
                                             start: str, stop: str) -> list:
     return [
         {
-            "description": description,
-            "validPeriod": {
-                "start": (
+            'description': description,
+            'validPeriod': {
+                'start': (
                     start if start is None else _days_since_epoch(start)
                 ),
-                "stop": (
+                'stop': (
                     stop if stop is None else _days_since_epoch(stop)
                 )
             },
-            "valueDomain": {
-                "description": _get_norwegian_text(
-                    value_domain["description"]
+            'valueDomain': {
+                'description': _get_norwegian_text(
+                    value_domain['description']
                 ),
-                "unitOfMeasure": _get_norwegian_text(
+                'unitOfMeasure': _get_norwegian_text(
                     value_domain.get(
-                        "measurementUnitDescription",
-                        [{"languageCode": "no", "value": "N/A"}]
+                        'measurementUnitDescription',
+                        [{'languageCode': 'no', 'value': 'N/A'}]
                     )
                 )
             }
@@ -146,31 +146,33 @@ def _represented_variables_from_code_list(description: str,
     return represented_variables
 
 
-def _transform_variable(variable: dict, role: str, start: str, stop: str):
+def _transform_variable(
+    variable: dict, role: str, start: str, stop: str):
     variable_description = (
         _get_norwegian_text(variable['description'])
         if 'description' in variable else 'N/A'
     )
+
     transformed_variable = {
-        "variableRole": role,
-        "name": variable["shortName"],
-        "label": _get_norwegian_text(variable["name"]),
-        "dataType": _transform_data_type(variable['dataType']),
-        "representedVariables": _create_represented_variables(
+        'variableRole': role,
+        'name': variable['shortName'],
+        'label': _get_norwegian_text(variable['name']),
+        'dataType': _transform_data_type(variable['dataType']),
+        'representedVariables': _create_represented_variables(
             description=variable_description,
-            value_domain=variable["valueDomain"],
+            value_domain=variable['valueDomain'],
             temporal_coverage_start=start,
             temporal_coverage_latest=stop
         )
     }
-    if "format" in variable:
-        transformed_variable["format"] = variable["format"]
-    if "unitType" in variable:
-        transformed_variable["keyType"] = {
-            "name": variable["unitType"]["shortName"],
-            "label": _get_norwegian_text(variable["unitType"]["name"]),
-            "description": _get_norwegian_text(
-                variable["unitType"]["description"]
+    if 'format' in variable:
+        transformed_variable['format'] = variable['format']
+    if 'unitType' in variable:
+        transformed_variable['keyType'] = {
+            'name': variable['unitType']['shortName'],
+            'label': _get_norwegian_text(variable['unitType']['name']),
+            'description': _get_norwegian_text(
+                variable['unitType']['description']
             ),
         }
     return transformed_variable
@@ -180,14 +182,14 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
     attributes = [
         next(
             (
-                variable for variable in metadata["attributeVariables"]
+                variable for variable in metadata['attributeVariables']
                 if variable['variableRole'] == 'START_TIME'
             ),
             None
         ),
         next(
             (
-                variable for variable in metadata["attributeVariables"]
+                variable for variable in metadata['attributeVariables']
                 if variable['variableRole'] == 'STOP_TIME'
             ),
             None
@@ -196,7 +198,7 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
     return [
         _transform_variable(
             attribute,
-            _get_variable_role(attribute["variableRole"]),
+            _get_variable_role(attribute['variableRole']),
             start, stop
         )
         for attribute in attributes if attribute is not None
@@ -204,7 +206,7 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
 
 
 def _transform_subject_fields(metadata: dict) -> list:
-    subject_fields = metadata["subjectFields"]
+    subject_fields = metadata['subjectFields']
     return [
          _get_norwegian_text(subject_field)
          for subject_field in subject_fields
@@ -226,28 +228,28 @@ def _days_since_epoch(date_string: str) -> int:
 
 def _get_variable_role(attribute_type: str) -> str:
     return {
-        "stop": "Stop",
-        "start": "Start",
-        "source": "Source"
+        'stop': 'Stop',
+        'start': 'Start',
+        'source': 'Source'
     }.get(attribute_type.lower(), attribute_type)
 
 
 def _transform_data_type(data_type: str) -> str:
     data_types_mapping = {
-        "STRING": "String",
-        "LONG": "Long",
-        "DOUBLE": "Double",
-        "DATE": "Instant"
+        'STRING': 'String',
+        'LONG': 'Long',
+        'DOUBLE': 'Double',
+        'DATE': 'Instant'
     }
     return data_types_mapping.get(data_type, data_type)
 
 
 def _get_temporal_coverage(start, stop) -> dict:
     period = {
-        "start": start if start is None else _days_since_epoch(start)
+        'start': start if start is None else _days_since_epoch(start)
     }
     if stop:
-        period["stop"] = _days_since_epoch(stop)
+        period['stop'] = _days_since_epoch(stop)
     return period
 
 
@@ -264,12 +266,12 @@ def _transform_metadata(metadata_file_path: str) -> str:
     stop = metadata['dataRevision'].get('temporalCoverageLatest', None)
 
     transformed_identifiers = [
-        _transform_variable(identifier, "Identifier", start, stop)
-        for identifier in metadata["identifierVariables"]
+        _transform_variable(identifier, 'Identifier', start, stop)
+        for identifier in metadata['identifierVariables']
     ]
     transformed_measure = _transform_variable(
-        metadata["measureVariables"][0],
-        "Measure", start, stop
+        metadata['measureVariables'][0],
+        'Measure', start, stop
     )
     transformed = {
         'name': metadata['shortName'],

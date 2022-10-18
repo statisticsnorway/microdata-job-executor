@@ -3,6 +3,7 @@
   "populationDescription": "F\u00f8dselsvekt for en populasjon",
   "languageCode": "no",
   "temporality": "FIXED",
+  "sensitivityLevel": "PERSON_GENERAL",
   "subjectFields": ["Helse"],
   "temporalCoverage": { "start": -25567, "stop": 18628 },
   "identifierVariables": [

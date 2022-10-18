@@ -1,6 +1,20 @@
 {
   "temporalityType": "FIXED",
   "sensitivityLevel": "PERSON_GENERAL",
+  "subjectFields": [
+    [
+      {
+        "value": "NEW VALUE",
+        "languageCode": "no"
+      }
+    ],
+    [
+      {
+        "value": "NEW VALUE",
+        "languageCode": "no"
+      }
+    ]
+  ],
   "populationDescription": [
     {
       "languageCode": "no",
@@ -29,7 +43,6 @@
   ],
   "measureVariables": [
     {
-      "shortName": "KJOENN",
       "name": [
         {
           "languageCode": "no",
@@ -42,20 +55,6 @@
           "value": "NEW VALUE"
         }
       ],
-      "subjectFields": [
-        [
-          {
-            "value": "NEW VALUE",
-            "languageCode": "no"
-          }
-        ],
-        [
-          {
-            "value": "NEW VALUE",
-            "languageCode": "no"
-          }
-        ]
-      ],
       "dataType": "STRING",
       "uriDefinition": [
         ""
@@ -64,30 +63,28 @@
         "uriDefinition": [
           ""
         ],
-        "codeList": {
-          "codeItems": [
-            {
-              "code": "1",
-              "categoryTitle": [
-                {
-                  "languageCode": "no",
-                  "value": "NEW VALUE"
-                }
-              ],
-              "validFrom": "1900-01-01"
-            },
-            {
-              "code": "2",
-              "categoryTitle": [
-                {
-                  "languageCode": "no",
-                  "value": "NEW VALUE"
-                }
-              ],
-              "validFrom": "1900-01-01"
-            }
-          ]
-        }
+        "codeList": [
+          {
+            "code": "1",
+            "categoryTitle": [
+              {
+                "languageCode": "no",
+                "value": "NEW VALUE"
+              }
+            ],
+            "validFrom": "1900-01-01"
+          },
+          {
+            "code": "2",
+            "categoryTitle": [
+              {
+                "languageCode": "no",
+                "value": "NEW VALUE"
+              }
+            ],
+            "validFrom": "1900-01-01"
+          }
+        ]
       }
     }
   ]

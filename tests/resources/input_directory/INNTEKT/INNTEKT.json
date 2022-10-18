@@ -1,6 +1,26 @@
 {
   "temporalityType": "ACCUMULATED",
   "sensitivityLevel": "PERSON_GENERAL",
+  "subjectFields": [
+    [
+      {
+        "value": "OEKONOMI",
+        "languageCode": "no"
+      }
+    ],
+    [
+      {
+        "value": "SAMFUNN",
+        "languageCode": "no"
+      }
+    ],
+    [
+      {
+        "value": "NYTT EMNE",
+        "languageCode": "no"
+      }
+    ]
+  ],
   "populationDescription": [
     {
       "languageCode": "no",
@@ -40,26 +60,6 @@
           "languageCode": "no",
           "value": "Personens rapporterte inntekt"
         }
-      ],
-      "subjectFields": [
-        [
-          {
-            "value": "OEKONOMI",
-            "languageCode": "no"
-          }
-        ],
-        [
-          {
-            "value": "SAMFUNN",
-            "languageCode": "no"
-          }
-        ],
-        [
-          {
-            "value": "NYTT EMNE",
-            "languageCode": "no"
-          }
-        ]
       ],
       "dataType": "STRING",
       "uriDefinition": [

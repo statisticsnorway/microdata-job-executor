@@ -1,6 +1,9 @@
 {
   "temporalityType": "EVENT",
   "sensitivityLevel": "PERSON_GENERAL",
+  "subjectFields": [
+    [{"value": "BEFOLKNING", "languageCode": "no"}]
+  ],
   "populationDescription": [
     {
       "languageCode": "no",
@@ -40,14 +43,6 @@
           "languageCode": "no",
           "value": "Bosted for person"
         }
-      ],
-      "subjectFields": [
-        [
-          {
-            "value": "BEFOLKNING",
-            "languageCode": "no"
-          }
-        ]
       ],
       "dataType": "STRING",
       "uriDefinition": [

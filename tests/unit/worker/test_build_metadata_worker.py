@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from multiprocessing import Queue
@@ -57,7 +58,8 @@ def test_import(requests_mock):
     )
 
     run_worker(JOB_ID, DATASET_NAME, Queue())
-
+    with open(f'{WORKING_DIR}/{DATASET_NAME}.json') as f:
+        print(json.load(f))
     assert os.path.isfile(
         f'{WORKING_DIR}/{DATASET_NAME}__DRAFT.json'
     )
