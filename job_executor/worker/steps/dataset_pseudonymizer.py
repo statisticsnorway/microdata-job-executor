@@ -44,7 +44,7 @@ def _pseudonymize_identifier_only(
             stop_date: str = row[4]
             target_file.write(
                 ';'.join([
-                    line_number,
+                    str(line_number),
                     str(identifier_to_pseudonym[unit_id]),
                     value,
                     start_date, stop_date
@@ -79,9 +79,9 @@ def _pseudonymize_measure_only(
             stop_date: str = row[4]
             target_file.write(
                 ';'.join([
-                    line_number,
+                    str(line_number),
                     unit_id,
-                    value_to_pseudonym[value],
+                    str(value_to_pseudonym[value]),
                     start_date, stop_date
                 ]) + '\n'
             )
@@ -122,9 +122,9 @@ def _pseudonymize_identifier_and_measure(
             stop_date: str = row[4]
             target_file.write(
                 ';'.join([
-                    line_number,
-                    identifier_to_pseudonym[unit_id],
-                    value_to_pseudonym[value],
+                    str(line_number),
+                    str(identifier_to_pseudonym[unit_id]),
+                    str(value_to_pseudonym[value]),
                     start_date, stop_date
                 ]) + '\n'
             )
