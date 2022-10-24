@@ -11,6 +11,13 @@ from job_executor.model import Metadata
 logger = logging.getLogger()
 
 
+def _transform_temporal_status_dates(status_dates: list) -> list:
+    return [
+        _days_since_epoch(status_date)
+        for status_date in status_dates
+    ]
+
+
 def _create_represented_variables(description: str,
                                   value_domain: dict,
                                   temporal_coverage_start: str,
@@ -176,6 +183,9 @@ def _transform_variable(
             'description': _get_norwegian_text(
                 variable['unitType']['description']
             ),
+            'notPseudonym': (
+                not variable['unitType']['requiresPseudonymization']
+            )
         }
     return transformed_variable
 
@@ -266,7 +276,6 @@ def _transform_metadata(metadata_file_path: Path) -> str:
     # They are in that case NOT used to update metadata state.
     start = metadata['dataRevision'].get('temporalCoverageStart', None)
     stop = metadata['dataRevision'].get('temporalCoverageLatest', None)
-
     transformed_identifiers = [
         _transform_variable(identifier, 'Identifier', start, stop)
         for identifier in metadata['identifierVariables']
@@ -291,6 +300,12 @@ def _transform_metadata(metadata_file_path: Path) -> str:
             metadata, start, stop
         ),
     }
+    if metadata['temporalityType'] == 'STATUS':
+        transformed['temporalStatusDates'] = (
+            _transform_temporal_status_dates(
+                metadata['dataRevision']['temporalStatusDates']
+            )
+        )
     transformed_metadata_file_path = str(metadata_file_path).replace(
         '.json', '__DRAFT.json'
     )
