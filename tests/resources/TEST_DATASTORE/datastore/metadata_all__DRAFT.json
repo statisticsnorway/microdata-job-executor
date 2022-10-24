@@ -34,7 +34,8 @@
           "keyType": {
             "name": "PERSON",
             "label": "Person",
-            "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+            "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+            "notPseudonym": false
           }
         }
       ],
@@ -117,7 +118,8 @@
           "keyType": {
             "name": "PERSON",
             "label": "Person",
-            "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+            "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+            "notPseudonym": false
           }
         }
       ],
@@ -203,7 +205,8 @@
           "keyType": {
             "name": "PERSON",
             "label": "Person",
-            "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+            "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+            "notPseudonym": false
           }
         }
       ],
@@ -312,7 +315,8 @@
           "keyType": {
             "name": "PERSON",
             "label": "Person",
-            "description": "Statistisk enhet er person (individ, enkeltmenneske)"
+            "description": "Statistisk enhet er person (individ, enkeltmenneske)",
+            "notPseudonym": false
           }
         }
       ],
@@ -395,7 +399,8 @@
           "keyType": {
             "name": "PERSON",
             "label": "Person",
-            "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+            "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+            "notPseudonym": false
           }
         }
       ],
@@ -485,7 +490,8 @@
           "keyType": {
             "name": "PERSON",
             "label": "Person",
-            "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+            "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+            "notPseudonym": false
           }
         }
       ],

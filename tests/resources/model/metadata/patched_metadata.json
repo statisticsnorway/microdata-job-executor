@@ -26,7 +26,8 @@
         "keyType": {
           "name": "PERSON",
           "label": "new value",
-          "description": "new value"
+          "description": "new value",
+          "notPseudonym": false
         }
       }
     ],

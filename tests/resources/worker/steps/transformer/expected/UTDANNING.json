@@ -1,15 +1,16 @@
 {
-    "name": "KJOENN",
-    "populationDescription": "NEW VALUE",
+    "name": "UTDANNING",
+    "populationDescription": "Personer med utdannelse i Norge",
     "languageCode": "no",
-    "temporality": "FIXED",
+    "temporality": "STATUS",
     "sensitivityLevel": "PERSON_GENERAL",
     "subjectFields": [
-        "NEW VALUE",
-        "NEW VALUE"
+        "BEFOLKNING",
+        "UTDANNING"
     ],
     "temporalCoverage": {
-        "start": null
+        "start": 7305,
+        "stop": 8766
     },
     "identifierVariables": [
         {
@@ -21,8 +22,8 @@
                 {
                     "description": "Identifikator for person i Microdata",
                     "validPeriod": {
-                        "start": null,
-                        "stop": null
+                        "start": 7305,
+                        "stop": 8766
                     },
                     "valueDomain": {
                         "description": "Pseudonymisert personnummer",
@@ -32,33 +33,45 @@
             ],
             "format": "RandomUInt48",
             "keyType": {
-                "notPseudonym": false,
                 "name": "PERSON",
                 "label": "Person",
-                "description": "Statistisk enhet er person (individ, enkeltmenneske)"
+                "description": "Statistisk enhet er person (individ, enkeltmenneske)",
+                "notPseudonym": false
             }
         }
     ],
     "measureVariable": {
         "variableRole": "Measure",
-        "name": "KJOENN",
-        "label": "NEW VALUE",
+        "name": "UTDANNING",
+        "label": "Utdanning",
         "dataType": "String",
         "representedVariables": [
             {
-                "description": "NEW VALUE",
+                "description": "Utdanningsniv\u00e5 for person",
                 "validPeriod": {
-                    "start": -25567
+                    "start": -16071
                 },
                 "valueDomain": {
                     "codeList": [
                         {
-                            "category": "NEW VALUE",
+                            "category": "Grunnskole",
                             "code": "1"
                         },
                         {
-                            "category": "NEW VALUE",
+                            "category": "Videreg\u00e5ende skole",
                             "code": "2"
+                        },
+                        {
+                            "category": "Bachelorgrad",
+                            "code": "3"
+                        },
+                        {
+                            "category": "Mastergrad",
+                            "code": "4"
+                        },
+                        {
+                            "category": "Doktorgrad",
+                            "code": "5"
                         }
                     ],
                     "missingValues": []
@@ -76,8 +89,8 @@
                 {
                     "description": "Startdato/m\u00e5letidspunktet for hendelsen",
                     "validPeriod": {
-                        "start": null,
-                        "stop": null
+                        "start": 7305,
+                        "stop": 8766
                     },
                     "valueDomain": {
                         "description": "Dato oppgitt i dager siden 1970-01-01",
@@ -95,8 +108,8 @@
                 {
                     "description": "Startdato/m\u00e5letidspunktet for hendelsen",
                     "validPeriod": {
-                        "start": null,
-                        "stop": null
+                        "start": 7305,
+                        "stop": 8766
                     },
                     "valueDomain": {
                         "description": "Dato oppgitt i dager siden 1970-01-01",
@@ -105,5 +118,12 @@
                 }
             ]
         }
+    ],
+    "temporalStatusDates": [
+        7305,
+        7670,
+        8035,
+        8401,
+        8766
     ]
 }

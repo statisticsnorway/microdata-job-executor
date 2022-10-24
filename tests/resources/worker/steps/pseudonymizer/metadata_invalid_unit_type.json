@@ -20,7 +20,8 @@
           }
         ],
         "format": "RandomUInt48",
-        "keyType": { "name": "INVALID", "label": "Invalid", "description": "N/A" }
+        "keyType": { "name": "INVALID", "label": "Invalid", "description": "N/A",
+        "notPseudonym": false }
       }
     ],
     "measureVariable": {

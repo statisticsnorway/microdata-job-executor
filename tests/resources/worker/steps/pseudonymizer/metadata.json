@@ -20,7 +20,7 @@
         }
       ],
       "format": "RandomUInt48",
-      "keyType": { "name": "PERSON", "label": "Person", "description": "N/A" }
+      "keyType": { "name": "PERSON", "label": "Person", "description": "N/A", "notPseudonym": false }
     }
   ],
   "measureVariable": {

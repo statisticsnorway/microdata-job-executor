@@ -32,6 +32,7 @@
           {"languageCode": "no", "value": "Identifikator for sykdomstilfelle"}
         ],
         "unitType": {
+          "requiresPseudonymization": true,
           "shortName": "SYKDOMSTILFELLE",
           "name": [
             {"languageCode": "no", "value": "Sykdomstilfelle"}

@@ -68,6 +68,7 @@
               ]
             },
             "unitType": {
+              "requiresPseudonymization": true,
               "shortName": "SYKDOMSTILFELLE",
               "name": [
                 {"languageCode": "no", "value": "Sykdomstilfelle"}

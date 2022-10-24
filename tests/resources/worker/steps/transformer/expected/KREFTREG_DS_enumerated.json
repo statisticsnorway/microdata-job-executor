@@ -35,7 +35,8 @@
       "keyType": {
         "name": "SYKDOMSTILFELLE",
         "label": "Sykdomstilfelle",
-        "description": "Sykdomstilfelle(r) for personer."
+        "description": "Sykdomstilfelle(r) for personer.",
+        "notPseudonym": false
       }
     }
   ],
@@ -191,5 +192,12 @@
         }
       ]
     }
+  ],
+  "temporalStatusDates": [
+    16436,
+    16801,
+    17167,
+    17532,
+    17897
   ]
 }
