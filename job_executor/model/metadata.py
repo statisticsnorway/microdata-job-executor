@@ -24,6 +24,7 @@ class KeyType(CamelModel):
     name: str
     label: str
     description: str
+    not_pseudonym: bool
 
     def patch(self, other: 'KeyType'):
         if other is None:
@@ -35,10 +36,16 @@ class KeyType(CamelModel):
                 'Can not change keyType name from '
                 f'"{self.name}" to "{other.name}"'
             )
+        if self.not_pseudonym != other.not_pseudonym:
+            raise PatchingError(
+                'Can not change keyType pseudonym status from '
+                f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
+            )
         return KeyType(**{
             'name': self.name,
             'label': other.label,
-            'description': other.description
+            'description': other.description,
+            'notPseudonym': self.not_pseudonym
         })
 
 
@@ -200,7 +207,7 @@ class Variable(CamelModel):
         if self.format is not None:
             dict_representation["format"] = self.format
         if self.key_type is not None:
-            dict_representation["keyType"] = self.key_type.dict()
+            dict_representation["keyType"] = self.key_type.dict(by_alias=True)
         return dict_representation
 
     def patch(self, other: 'Variable'):
@@ -264,12 +271,14 @@ class Metadata(CamelModel):
     name: str
     temporality: str
     language_code: str
+    sensitivity_level: str
     population_description: str
     subject_fields: List[str]
     temporal_coverage: TimePeriod
     measure_variable: MeasureVariable
     identifier_variables: List[IdentifierVariable]
     attribute_variables: List[AttributeVariable]
+    temporal_status_dates: Optional[List[int]]
 
     def get_identifier_key_type_name(self):
         return self.identifier_variables[0].get_key_type_name()
@@ -293,6 +302,10 @@ class Metadata(CamelModel):
             )
         if len(self.attribute_variables) != len(other.attribute_variables):
             raise PatchingError('Can not delete or add attributeVariables')
+        
+        if self.sensitivity_level != other.sensitivity_level:
+            raise PatchingError('Can not change sensitivity level')
+
         patched_attribute_variables = []
         for idx, _ in enumerate(self.attribute_variables):
             patched_attribute_variables.append(
@@ -300,10 +313,11 @@ class Metadata(CamelModel):
                     other.attribute_variables[idx]
                 ).dict()
             )
-        return Metadata(**{
+        metadata_dict = {
             "name": self.name,
             "temporality": self.temporality,
             "languageCode": self.language_code,
+            "sensitivityLevel": self.sensitivity_level,
             "populationDescription": other.population_description,
             "subjectFields": [field for field in other.subject_fields],
             "temporalCoverage": self.temporal_coverage.dict(),
@@ -315,5 +329,32 @@ class Metadata(CamelModel):
                     other.identifier_variables[0]
                 ).dict()
             ],
-            "attributeVariables": patched_attribute_variables
-        })
+            "attributeVariables": patched_attribute_variables,
+            "temporalStatusDates": self.temporal_status_dates
+        }
+        if self.temporal_status_dates is None:
+            del metadata_dict['temporalStatusDates']
+        return Metadata(**metadata_dict)
+
+    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
+        metadata_dict = {
+            "name": self.name,
+            "temporality": self.temporality,
+            "languageCode": self.language_code,
+            "sensitivityLevel": self.sensitivity_level,
+            "populationDescription": self.population_description,
+            "subjectFields": [field for field in self.subject_fields],
+            "temporalCoverage": self.temporal_coverage.dict(),
+            "measureVariable": self.measure_variable.dict(),
+            "identifierVariables": [
+                self.identifier_variables[0].dict()
+            ],
+            "attributeVariables": [
+                self.attribute_variables[0].dict(),
+                self.attribute_variables[1].dict()
+            ],
+            "temporalStatusDates": self.temporal_status_dates
+        }
+        if self.temporal_status_dates is None:
+            del metadata_dict['temporalStatusDates']
+        return metadata_dict  

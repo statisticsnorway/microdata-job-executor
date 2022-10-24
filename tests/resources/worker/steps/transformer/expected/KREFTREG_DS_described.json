@@ -3,6 +3,7 @@
     "populationDescription": "Alle personer som har f\u00e5tt kreft.",
     "languageCode": "no",
     "temporality": "STATUS",
+    "sensitivityLevel": "PERSON_GENERAL",
     "subjectFields": [
       "Helse",
       "Helsetjenester"
@@ -34,7 +35,8 @@
         "keyType": {
           "name": "SYKDOMSTILFELLE",
           "label": "Sykdomstilfelle",
-          "description": "Sykdomstilfelle(r) for personer."
+          "description": "Sykdomstilfelle(r) for personer.",
+          "notPseudonym": false
         }
       }
     ],
@@ -96,5 +98,12 @@
           }
         ]
       }
+    ],
+    "temporalStatusDates": [
+      16436,
+      16801,
+      17167,
+      17532,
+      17897
     ]
   }

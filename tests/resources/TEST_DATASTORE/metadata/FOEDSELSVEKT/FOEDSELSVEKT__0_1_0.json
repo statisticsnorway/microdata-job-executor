@@ -4,6 +4,7 @@
   "languageCode": "no",
   "temporality": "FIXED",
   "subjectFields": ["Helse"],
+  "sensitivityLevel": "PERSON_GENERAL",
   "temporalCoverage": { "start": -25567, "stop": 18628 },
   "identifierVariables": [
     {
@@ -25,7 +26,8 @@
       "keyType": {
         "name": "PERSON",
         "label": "Person",
-        "description": "Statistisk enhet er person (individ, enkeltmenneske)"
+        "description": "Statistisk enhet er person (individ, enkeltmenneske)",
+        "notPseudonym": false
       }
     }
   ],

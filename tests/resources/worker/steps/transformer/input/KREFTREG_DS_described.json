@@ -1,7 +1,7 @@
 {
     "shortName": "KREFTREG_DS",
     "temporalityType": "STATUS",
-    "$comment": "populationDescription has been added by vak",
+    "sensitivityLevel": "PERSON_GENERAL",
     "populationDescription": [
       {"languageCode": "no", "value": "Alle personer som har fått kreft."},
       {"languageCode": "en", "value": "All persons who are suffering from cancer."}
@@ -9,11 +9,14 @@
     "spatialCoverageDescription": [
       {"languageCode": "no", "value": "Norge"}
     ],
+    "subjectFields": [
+      [{"languageCode": "no", "value": "Helse"}],
+      [{"languageCode": "no", "value": "Helsetjenester"}]
+    ],
     "dataRevision": {
       "description": [
         {"languageCode": "no", "value": "Første publisering."}
       ],
-      "$comment": "temporalCoverageStart, temporalCoverageLatest, temporalStatusDates have been added by vak",
       "temporalCoverageStart": "2015-01-01",
       "temporalCoverageLatest": "2020-12-31",
       "temporalStatusDates": ["2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01", "2019-01-01"],
@@ -21,7 +24,6 @@
     },
     "measureVariables": [
         {
-            "variableRole": "MEASURE",
             "shortName": "KREFTREG_DS",
             "name": [
               {"languageCode": "no", "value": "Diagnosens sikkerhet"}
@@ -31,26 +33,6 @@
             ],
             "populationDescription": [
               {"languageCode": "no", "value": "Alle krefttilfeller, forstadier til kreft og enkelte benigne svulster for personer i Norge."}
-            ],
-            "subjectFields": [
-              {
-                "shortName": "HELSE",
-                "name": [
-                  {"languageCode": "no", "value": "Helse"}
-                ],
-                "description": [
-                  {"languageCode": "no", "value": "Helse"}
-                ]
-              },
-              {
-                "shortName": "HELSETJENESTER",
-                "name": [
-                  {"languageCode": "no", "value": "Helsetjenester"}
-                ],
-                "description": [
-                  {"languageCode": "no", "value": "Helsetjenester"}
-                ]
-              }
             ],
             "dataType": "STRING",
             "uriDefinition": ["https://metadata.kreftregisteret.no/variables/detail/8"],
@@ -80,13 +62,13 @@
             ],
             "dataType": "STRING",
             "format": "RandomUInt48",
-            "$comment": "OBS! Ved pseudonymisering av identifiers (f.eks. fødselsnummer) korrigeres/settes dataType=NUMBER og format=RandomUInt48 automatisk!",
             "valueDomain": {
               "description": [
                 {"languageCode": "no", "value": "Pseudonymisert sykdomstilfellenummer"}
               ]
             },
             "unitType": {
+              "requiresPseudonymization": true,
               "shortName": "SYKDOMSTILFELLE",
               "name": [
                 {"languageCode": "no", "value": "Sykdomstilfelle"}

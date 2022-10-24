@@ -207,7 +207,7 @@ def test_build_partitioned_dataset(requests_mock):
         json=PSEUDONYM_DICT
     )
     run_worker(JOB_ID, PARTITIONED_DATASET_NAME, Queue())
-    print(os.listdir(f'{WORKING_DIR}'))
+
     assert os.path.isdir(
         f'{WORKING_DIR}/{PARTITIONED_DATASET_NAME}__DRAFT'
     )

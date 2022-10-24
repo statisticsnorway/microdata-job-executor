@@ -2,6 +2,7 @@
     "name": "INNTEKT",
     "populationDescription": "Alle rapporterte personinntekter i norge fra \u00e5r 1234 til \u00e5r 4321",
     "languageCode": "no",
+    "sensitivityLevel": "PERSON_GENERAL",
     "temporality": "ACCUMULATED",
     "subjectFields": ["\u00d8konomi", "Samfunn"],
     "temporalCoverage": { "start": 365, "stop": 18627 },
@@ -25,7 +26,8 @@
         "keyType": {
           "name": "PERSON",
           "label": "Person",
-          "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+          "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+          "notPseudonym": false
         }
       }
     ],

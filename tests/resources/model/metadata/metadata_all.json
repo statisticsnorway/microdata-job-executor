@@ -11,6 +11,7 @@
         "populationDescription": "Alle rapporterte personinntekter i norge fra \u00e5r 1234 til \u00e5r 4321",
         "languageCode": "no",
         "temporality": "ACCUMULATED",
+        "sensitivityLevel": "PERSON_GENERAL",
         "subjectFields": ["\u00d8konomi", "Samfunn"],
         "temporalCoverage": { "start": 365, "stop": 18627 },
         "identifierVariables": [
@@ -33,7 +34,8 @@
             "keyType": {
               "name": "PERSON",
               "label": "Person",
-              "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+              "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+              "notPseudonym": false
             }
           }
         ],
@@ -93,6 +95,7 @@
         "populationDescription": "Kj\u00f8nn for en populasjon",
         "languageCode": "no",
         "temporality": "FIXED",
+        "sensitivityLevel": "PERSON_GENERAL",
         "subjectFields": ["Helse", "Helsetjenester"],
         "temporalCoverage": { "start": -25567, "stop": 18628 },
         "identifierVariables": [
@@ -115,7 +118,8 @@
             "keyType": {
               "name": "PERSON",
               "label": "Person",
-              "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+              "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+              "notPseudonym": false
             }
           }
         ],
@@ -178,6 +182,7 @@
         "populationDescription": "Alle personer registrert bosatt i Norge",
         "languageCode": "no",
         "temporality": "EVENT",
+        "sensitivityLevel": "PERSON_GENERAL",
         "subjectFields": ["Befolkning"],
         "temporalCoverage": { "start": -18263, "stop": -6940 },
         "identifierVariables": [
@@ -200,7 +205,8 @@
             "keyType": {
               "name": "PERSON",
               "label": "Person",
-              "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+              "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+              "notPseudonym": false
             }
           }
         ],
@@ -286,6 +292,7 @@
         "populationDescription": "F\u00f8dselsvekt for en populasjon",
         "languageCode": "no",
         "temporality": "FIXED",
+        "sensitivityLevel": "PERSON_GENERAL",
         "subjectFields": ["Helse"],
         "temporalCoverage": { "start": -25567, "stop": 18628 },
         "identifierVariables": [
@@ -308,7 +315,8 @@
             "keyType": {
               "name": "PERSON",
               "label": "Person",
-              "description": "Statistisk enhet er person (individ, enkeltmenneske)"
+              "description": "Statistisk enhet er person (individ, enkeltmenneske)",
+              "notPseudonym": false
             }
           }
         ],
@@ -368,6 +376,7 @@
         "populationDescription": "Utdanningniv\u00e5 for en populasjon",
         "languageCode": "no",
         "temporality": "EVENT",
+        "sensitivityLevel": "PERSON_GENERAL",
         "subjectFields": ["Befolkning"],
         "temporalCoverage": { "start": -18263, "stop": -6940 },
         "identifierVariables": [
@@ -390,7 +399,8 @@
             "keyType": {
               "name": "PERSON",
               "label": "Person",
-              "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+              "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+              "notPseudonym": false
             }
           }
         ],

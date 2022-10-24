@@ -3,6 +3,7 @@
   "populationDescription": "N/A",
   "languageCode": "no",
   "temporality": "STATUS",
+  "sensitivityLevel": "PERSON_GENERAL",
   "subjectFields": [],
   "temporalCoverage": { "start": 16436, "stop": 18627 },
   "identifierVariables": [
@@ -19,7 +20,7 @@
         }
       ],
       "format": "RandomUInt48",
-      "keyType": { "name": "PERSON", "label": "Person", "description": "N/A" }
+      "keyType": { "name": "PERSON", "label": "Person", "description": "N/A", "notPseudonym": false }
     }
   ],
   "measureVariable": {

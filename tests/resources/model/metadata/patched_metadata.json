@@ -3,6 +3,7 @@
     "populationDescription": "new value",
     "languageCode": "no",
     "temporality": "FIXED",
+    "sensitivityLevel": "PERSON_GENERAL",
     "subjectFields": ["new value", "new value"],
     "temporalCoverage": { "start": -25567, "stop": 18628 },
     "identifierVariables": [
@@ -25,7 +26,8 @@
         "keyType": {
           "name": "PERSON",
           "label": "new value",
-          "description": "new value"
+          "description": "new value",
+          "notPseudonym": false
         }
       }
     ],

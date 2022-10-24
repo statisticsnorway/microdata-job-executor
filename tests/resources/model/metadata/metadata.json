@@ -3,6 +3,7 @@
     "populationDescription": "Kj\u00f8nn for en populasjon",
     "languageCode": "no",
     "temporality": "FIXED",
+    "sensitivityLevel": "PERSON_GENERAL",
     "subjectFields": ["Helse", "Helsetjenester"],
     "temporalCoverage": { "start": -25567, "stop": 18628 },
     "identifierVariables": [
@@ -25,7 +26,8 @@
         "keyType": {
           "name": "PERSON",
           "label": "Person",
-          "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+          "description": "Statistisk enhet er person (individ, enkeltmenenske)",
+          "notPseudonym": false
         }
       }
     ],
