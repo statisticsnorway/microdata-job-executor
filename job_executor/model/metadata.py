@@ -302,6 +302,10 @@ class Metadata(CamelModel):
             )
         if len(self.attribute_variables) != len(other.attribute_variables):
             raise PatchingError('Can not delete or add attributeVariables')
+        
+        if self.sensitivity_level != other.sensitivity_level:
+            raise PatchingError('Can not change sensitivity level')
+
         patched_attribute_variables = []
         for idx, _ in enumerate(self.attribute_variables):
             patched_attribute_variables.append(
