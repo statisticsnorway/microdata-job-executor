@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from typing import Union
 
 from job_executor.config import environment
 
@@ -61,13 +62,16 @@ def make_dataset_dir(dataset_name: str) -> None:
     os.makedirs(f'{DATASTORE_DIR}/data/{dataset_name}')
 
 
-def get_data_versions(version: str) -> dict:
+def get_data_versions(version: Union[str, None]) -> dict:
     """
     Returns the data_versions json file for the given version as a dict.
+    Returns an empty dictionary if given version is None.
 
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
+    if version is None:
+        return {}
     return _read_json(
         f'{DATASTORE_DIR}/datastore/data_versions__{version[:3]}.json'
     )

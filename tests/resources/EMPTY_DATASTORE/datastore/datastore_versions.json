@@ -1,0 +1,7 @@
+{
+    "name": "no.jobexecutor.test",
+    "label": "Test datastore",
+    "description": "Tom datastore for testing av job-executor",
+    "versions": []
+}
+  

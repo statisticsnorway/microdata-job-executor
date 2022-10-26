@@ -41,9 +41,11 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
                 )
             ) for data_structure in data_structure_updates
         ]
-        latest_version_number = self.versions[0].version
-        new_version_number = bump_dotted_version_number(
-                latest_version_number, update_type
+        new_version_number = (
+            '1.0.0' if self.versions == []
+            else bump_dotted_version_number(
+                self.versions[0].version, update_type
+            )
         )
         new_release_version = DatastoreVersion(
             version=new_version_number + '.0',
@@ -74,7 +76,7 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
                 self.versions[0].version
             )
         else:
-            return '0_0_0'
+            return None
 
 
 def dotted_to_underscored_version(version: str) -> str:
