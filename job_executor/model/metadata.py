@@ -24,7 +24,6 @@ class KeyType(CamelModel):
     name: str
     label: str
     description: str
-    not_pseudonym: bool
 
     def patch(self, other: 'KeyType'):
         if other is None:
@@ -36,16 +35,10 @@ class KeyType(CamelModel):
                 'Can not change keyType name from '
                 f'"{self.name}" to "{other.name}"'
             )
-        if self.not_pseudonym != other.not_pseudonym:
-            raise PatchingError(
-                'Can not change keyType pseudonym status from '
-                f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
-            )
         return KeyType(**{
             'name': self.name,
             'label': other.label,
-            'description': other.description,
-            'notPseudonym': self.not_pseudonym
+            'description': other.description
         })
 
 
@@ -176,6 +169,7 @@ class RepresentedVariable(CamelModel):
 class Variable(CamelModel):
     name: str
     label: str
+    not_pseudonym: bool
     data_type: str
     format: Optional[str]
     variable_role: str
@@ -197,6 +191,7 @@ class Variable(CamelModel):
         dict_representation = {
             "name": self.name,
             "label": self.label,
+            "notPseudonym": self.not_pseudonym,
             "dataType": self.data_type,
             "variableRole": self.variable_role,
             "representedVariables": [
@@ -232,6 +227,11 @@ class Variable(CamelModel):
             raise PatchingError(
                 'Can not add or delete represented variables.'
             )
+        if self.not_pseudonym != other.not_pseudonym:
+            raise PatchingError(
+                'Can not change keyType pseudonym status from '
+                f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
+            )
         patched_represented_variables = []
         for idx, _ in enumerate(self.represented_variables):
             patched_represented_variables.append(
@@ -242,6 +242,7 @@ class Variable(CamelModel):
         patched.update({
             "name": self.name,
             "label": other.label,
+            "notPseudonym": self.not_pseudonym,
             "dataType": self.data_type,
             "variableRole": self.variable_role,
             "representedVariables": patched_represented_variables
