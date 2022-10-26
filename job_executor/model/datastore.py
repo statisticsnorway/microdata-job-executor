@@ -1,10 +1,11 @@
+from job_executor.adapter import local_storage
+
 from job_executor.exception import VersioningException
 from job_executor.model.metadata import Metadata
 from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
 from job_executor.model.datastore_versions import DatastoreVersions
 from job_executor.model.datastore_version import DatastoreVersion, DraftVersion
 from job_executor.model.data_structure_update import DataStructureUpdate
-from job_executor.adapter import local_storage
 
 
 class Datastore():
@@ -21,11 +22,14 @@ class Datastore():
             self.datastore_versions.get_latest_version_number()
         )
         self.metadata_all_draft = MetadataAllDraft()
-        self.metadata_all_latest = MetadataAll(
-            **local_storage.get_metadata_all(
-                self.latest_version_number
+        if self.latest_version_number is None:
+            self.metadata_all_latest = None
+        else:
+            self.metadata_all_latest = MetadataAll(
+                **local_storage.get_metadata_all(
+                    self.latest_version_number
+                )
             )
-        )
 
     def _get_release_status(self, dataset_name: str):
         release_status = self.draft_version.get_dataset_release_status(
@@ -185,12 +189,16 @@ class Datastore():
                 'after bump was requested'
             )
         release_updates, update_type = self.draft_version.release_pending()
+        # If there are no released versions update type will always be MAJOR
+        if self.metadata_all_latest == None:
+            update_type = 'MAJOR'
         new_version = self.datastore_versions.add_new_release_version(
             release_updates, description, update_type
         )
-        new_metadata_datasets = [
-            dataset for dataset in self.metadata_all_latest
-        ]
+        new_metadata_datasets = (
+            [] if self.metadata_all_latest is None
+            else [ds for ds in self.metadata_all_latest]
+        )
         new_data_versions = {
             dataset_name: path
             for dataset_name, path in latest_data_versions.items()
@@ -223,7 +231,8 @@ class Datastore():
                 )
         if update_type in ['MINOR', 'MAJOR']:
             local_storage.write_data_versions(new_data_versions, new_version)
-        new_metadata_all_dict = self.metadata_all_latest.dict(by_alias=True)
+        new_metadata_all_dict = self.metadata_all_draft.dict(by_alias=True)
+        del new_metadata_all_dict['dataStructures']
         new_metadata_all_dict['dataStructures'] = [
             dataset.dict(by_alias=True) for dataset in new_metadata_datasets
         ]
