@@ -16,6 +16,7 @@
             "variableRole": "Identifier",
             "name": "PERSONID_1",
             "label": "Personidentifikator",
+            "notPseudonym": false,
             "dataType": "Long",
             "representedVariables": [
                 {
@@ -32,7 +33,6 @@
             ],
             "format": "RandomUInt48",
             "keyType": {
-                "notPseudonym": false,
                 "name": "PERSON",
                 "label": "Person",
                 "description": "Statistisk enhet er person (individ, enkeltmenneske)"
@@ -43,6 +43,7 @@
         "variableRole": "Measure",
         "name": "KJOENN",
         "label": "NEW VALUE",
+        "notPseudonym": true,
         "dataType": "String",
         "representedVariables": [
             {
@@ -71,6 +72,7 @@
             "variableRole": "START_TIME",
             "name": "START",
             "label": "Startdato",
+            "notPseudonym": true,
             "dataType": "Instant",
             "representedVariables": [
                 {
@@ -90,6 +92,7 @@
             "variableRole": "STOP_TIME",
             "name": "STOP",
             "label": "Stoppdato",
+            "notPseudonym": true,
             "dataType": "Instant",
             "representedVariables": [
                 {

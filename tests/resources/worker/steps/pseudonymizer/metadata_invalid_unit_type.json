@@ -11,6 +11,7 @@
         "variableRole": "Identifier",
         "name": "PERSON",
         "label": "Person",
+        "notPseudonym": false,
         "dataType": "String",
         "representedVariables": [
           {
@@ -20,14 +21,14 @@
           }
         ],
         "format": "RandomUInt48",
-        "keyType": { "name": "INVALID", "label": "Invalid", "description": "N/A",
-        "notPseudonym": false }
+        "keyType": { "name": "INVALID", "label": "Invalid", "description": "N/A"}
       }
     ],
     "measureVariable": {
       "variableRole": "Measure",
       "name": "input",
       "label": "input",
+      "notPseudonym": true,
       "dataType": "String",
       "representedVariables": [
         {
@@ -42,6 +43,7 @@
         "variableRole": "START_TIME",
         "name": "START",
         "label": "Startdato",
+        "notPseudonym": true,
         "dataType": "Instant",
         "representedVariables": [
           {
@@ -55,6 +57,7 @@
         "variableRole": "STOP_TIME",
         "name": "STOP",
         "label": "Stoppdato",
+        "notPseudonym": true,
         "dataType": "Instant",
         "representedVariables": [
           {

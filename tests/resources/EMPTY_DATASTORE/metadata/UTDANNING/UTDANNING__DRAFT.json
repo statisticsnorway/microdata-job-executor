@@ -16,6 +16,7 @@
         "variableRole": "Identifier",
         "name": "PERSON",
         "label": "Personidentifikator",
+        "notPseudonym": false,
         "dataType": "String",
         "representedVariables": [
           {
@@ -34,8 +35,7 @@
         "keyType": {
           "name": "PERSON",
           "label": "Person",
-          "description": "Statistisk enhet er person (individ, enkeltmenenske)",
-          "notPseudonym": false
+          "description": "Statistisk enhet er person (individ, enkeltmenenske)"
         }
       }
     ],
@@ -43,6 +43,7 @@
       "variableRole": "Measure",
       "name": "UTDANNING",
       "label": "Utdanning",
+      "notPseudonym": true,
       "dataType": "String",
       "representedVariables": [
         {
@@ -89,6 +90,7 @@
         "variableRole": "START_TIME",
         "name": "START",
         "label": "Startdato",
+        "notPseudonym": true,
         "dataType": "Instant",
         "representedVariables": [
           {
@@ -108,6 +110,7 @@
         "variableRole": "STOP_TIME",
         "name": "STOP",
         "label": "Stoppdato",
+        "notPseudonym": true,
         "dataType": "Instant",
         "representedVariables": [
           {

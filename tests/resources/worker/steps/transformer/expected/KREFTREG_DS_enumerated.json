@@ -17,6 +17,7 @@
       "variableRole": "Identifier",
       "name": "SYKDOMSTILFELLENUMMER",
       "label": "Sykdomstilfelle-nummer",
+      "notPseudonym": false,
       "dataType": "String",
       "representedVariables": [
         {
@@ -35,8 +36,7 @@
       "keyType": {
         "name": "SYKDOMSTILFELLE",
         "label": "Sykdomstilfelle",
-        "description": "Sykdomstilfelle(r) for personer.",
-        "notPseudonym": false
+        "description": "Sykdomstilfelle(r) for personer."
       }
     }
   ],
@@ -44,6 +44,7 @@
     "variableRole": "Measure",
     "name": "KREFTREG_DS",
     "label": "Diagnosens sikkerhet",
+    "notPseudonym": true,
     "dataType": "String",
     "representedVariables": [
       {
@@ -158,6 +159,7 @@
       "variableRole": "START_TIME",
       "name": "START",
       "label": "Startdato",
+      "notPseudonym": true,
       "dataType": "Instant",
       "representedVariables": [
         {
@@ -177,6 +179,7 @@
       "variableRole": "STOP_TIME",
       "name": "STOP",
       "label": "Stoppdato",
+      "notPseudonym": true,
       "dataType": "Instant",
       "representedVariables": [
         {
