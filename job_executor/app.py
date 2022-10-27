@@ -65,11 +65,17 @@ def main():
                 job_status='queued',
                 operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
             )
-            logger.info(f'Found '
-                        f'{len(queued_worker_jobs)}'
-                        f'/{len(built_jobs)}'
-                        f'/{len(queued_manager_jobs)}'
-                        f' (worker, built, queued manager jobs)')
+            available_jobs = (
+                len(queued_worker_jobs) +
+                len(built_jobs) +
+                len(queued_manager_jobs)
+            )
+            if available_jobs:
+                logger.info(
+                    f'Found {len(queued_worker_jobs)}/{len(built_jobs)}'
+                    f'/{len(queued_manager_jobs)}'
+                    f' (worker, built, queued manager jobs)'
+                )
             for job in built_jobs + queued_manager_jobs:
                 try:
                     _handle_manager_job(job)
