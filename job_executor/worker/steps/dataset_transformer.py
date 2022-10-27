@@ -161,11 +161,14 @@ def _transform_variable(
         _get_norwegian_text(variable['description'])
         if 'description' in variable else 'N/A'
     )
-
     transformed_variable = {
         'variableRole': role,
         'name': variable['shortName'],
         'label': _get_norwegian_text(variable['name']),
+        'notPseudonym': (
+            'unitType' not in variable
+            or not variable['unitType']['requiresPseudonymization']
+        ),
         'dataType': _transform_data_type(variable['dataType']),
         'representedVariables': _create_represented_variables(
             description=variable_description,
@@ -182,9 +185,6 @@ def _transform_variable(
             'label': _get_norwegian_text(variable['unitType']['name']),
             'description': _get_norwegian_text(
                 variable['unitType']['description']
-            ),
-            'notPseudonym': (
-                not variable['unitType']['requiresPseudonymization']
             )
         }
     return transformed_variable
