@@ -1,9 +1,13 @@
 
-import json
 import os
+import json
 import shutil
+import pytest
+from pathlib import Path
 
 from job_executor.adapter import local_storage
+from job_executor.exception import LocalStorageError
+
 
 WORKING_DIR = os.environ['WORKING_DIR']
 DATASTORE_DIR = os.environ['DATASTORE_DIR']
@@ -39,10 +43,8 @@ MOVED_WORKING_DIR_DATASET_DATA_PATH = (
 
 
 def setup_module():
-
     if os.path.isdir('tests/resources_backup'):
         shutil.rmtree('tests/resources_backup')
-
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'
@@ -158,3 +160,48 @@ def test_rename_parquet_draft_to_release():
 def test_move_working_dir_parquet_to_datastore():
     local_storage.move_working_dir_parquet_to_datastore(WORKING_DIR_DATASET)
     assert os.path.isfile(MOVED_WORKING_DIR_DATASET_DATA_PATH)
+
+
+def test_make_temp_directory():
+    datastore_content = os.listdir(DATASTORE_DIR)
+    local_storage.save_temporary_backup()
+    datastore_content_backup = os.listdir(DATASTORE_DIR)
+    assert len(datastore_content) == 3
+    assert len(datastore_content_backup) == 4
+    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    assert os.path.isdir(tmp_dir)
+    tmp_actual_content = os.listdir(tmp_dir)
+    tmp_expected_content = [
+        'metadata_all__DRAFT.json',
+        'datastore_versions.json',
+        'draft_version.json'
+    ]
+    assert len(tmp_actual_content) == 3
+    for content in tmp_expected_content:
+        assert content in tmp_actual_content
+
+
+def test_make_temp_directory_already_exists():
+    with pytest.raises(LocalStorageError) as e:
+        local_storage.save_temporary_backup()
+    assert '/tmp directory already exists' in str(e)
+
+
+def test_delete_temp_directory():
+    datastore_content = os.listdir(DATASTORE_DIR)
+    local_storage.delete_temporary_backup()
+    datastore_content_delete = os.listdir(DATASTORE_DIR)
+    assert len(datastore_content) == 4
+    assert len(datastore_content_delete) == 3
+    assert not os.path.isdir(Path(DATASTORE_DIR) / 'tmp')
+
+
+def test_delete_temp_directory_unrecognized_files():
+    local_storage.save_temporary_backup()
+    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    assert os.path.isdir(tmp_dir)
+    (tmp_dir / 'newfile.txt').touch()
+
+    with pytest.raises(LocalStorageError) as e:
+        local_storage.delete_temporary_backup()
+    assert 'Found unrecognized files' in str(e)
