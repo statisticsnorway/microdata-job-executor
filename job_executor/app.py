@@ -7,11 +7,12 @@ from multiprocessing import Process, Queue
 
 import json_logging
 
+from job_executor.adapter import local_storage
 from job_executor.model import Job, Datastore
 from job_executor.adapter import job_service
 from job_executor.config import environment
 from job_executor.config.log import CustomJSONLog
-from job_executor.exception import UnknownOperationException
+from job_executor.exception import LocalStorageError, UnknownOperationException
 from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker
@@ -75,10 +76,28 @@ def main():
                     job_service.update_job_status(
                         job.job_id, 'completed'
                     )
-                except Exception as e:
+                    if job.parameters.operation == 'BUMP':
+                        local_storage.delete_temporary_backup()
+                except LocalStorageError as e:
+                    logger.error(f'{job.job_id} failed')
+                    logger.exception(e)
                     job_service.update_job_status(
                         job.job_id, 'failed',
-                        log=str(e)
+                        log='Failed due to error with local storage'
+                    )
+                except UnknownOperationException as e:
+                    logger.error(f'{job.job_id} failed')
+                    logger.exception(e)
+                    job_service.update_job_status(
+                        job.job_id, 'failed',
+                        log='Unknown operation for job'
+                    )
+                except Exception as e:
+                    logger.error(f'{job.job_id} failed')
+                    logger.exception(e)
+                    job_service.update_job_status(
+                        job.job_id, 'failed',
+                        log='Failed due to unexpected error'
                     )
     except Exception as e:
         logger.exception(e)
@@ -117,6 +136,7 @@ def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
 def _handle_manager_job(job: Job):
     operation = job.parameters.operation
     if operation == 'BUMP':
+        local_storage.save_temporary_backup()
         datastore.bump_version(
             job.parameters.bump_manifesto,
             job.parameters.description
