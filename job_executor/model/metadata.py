@@ -303,7 +303,7 @@ class Metadata(CamelModel):
             )
         if len(self.attribute_variables) != len(other.attribute_variables):
             raise PatchingError('Can not delete or add attributeVariables')
-        
+
         if self.sensitivity_level != other.sensitivity_level:
             raise PatchingError('Can not change sensitivity level')
 
@@ -358,4 +358,4 @@ class Metadata(CamelModel):
         }
         if self.temporal_status_dates is None:
             del metadata_dict['temporalStatusDates']
-        return metadata_dict  
+        return metadata_dict

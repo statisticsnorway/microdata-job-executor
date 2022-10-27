@@ -2,20 +2,20 @@ import sys
 import threading
 import time
 import logging
-from multiprocessing import Process, Queue
 from typing import List
+from multiprocessing import Process, Queue
 
 import json_logging
 
+from job_executor.model import Job, Datastore
+from job_executor.adapter import job_service
+from job_executor.config import environment
 from job_executor.config.log import CustomJSONLog
 from job_executor.exception import UnknownOperationException
 from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker
 )
-from job_executor.model import Job, Datastore
-from job_executor.adapter import job_service
-from job_executor.config import environment
 
 
 NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')

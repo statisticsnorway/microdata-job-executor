@@ -291,7 +291,8 @@ def delete_parquet_draft(dataset_name: str) -> None:
     elif os.path.isfile(f'{parquet_path}.parquet'):
         os.remove(f'{parquet_path}.parquet')
 
-def delete_files(file_list : list[str]):
+
+def delete_files(file_list: list[str]):
     """
     Deletes a list of files. Intended to clean up left-over csv files
     * file_list: list[str] - list of csv files to delete

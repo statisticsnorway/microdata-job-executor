@@ -190,7 +190,7 @@ class Datastore():
             )
         release_updates, update_type = self.draft_version.release_pending()
         # If there are no released versions update type will always be MAJOR
-        if self.metadata_all_latest == None:
+        if self.metadata_all_latest is None:
             update_type = 'MAJOR'
         new_version = self.datastore_versions.add_new_release_version(
             release_updates, description, update_type
