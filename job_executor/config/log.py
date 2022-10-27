@@ -31,8 +31,8 @@ class ContextFilter(logging.Filter):
 def configure_worker_logger(queue: Queue, job_id: str):
     queue_handler = logging.handlers.QueueHandler(queue)
     queue_handler.setLevel(logging.INFO)
-    # use default formatter here so that the JSON formatter will be applied when
-    # reading from queue
+    # use default formatter here so that the JSON formatter will be
+    # applied when reading from queue
     queue_handler.formatter = logging.Formatter()
 
     log_filter = ContextFilter(job_id)

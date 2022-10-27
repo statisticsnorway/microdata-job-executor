@@ -1,9 +1,11 @@
 import json
 import os
 import shutil
+from pathlib import Path
 from typing import Union
 
 from job_executor.config import environment
+from job_executor.exception import LocalStorageError
 
 
 WORKING_DIR = environment.get('WORKING_DIR')
@@ -300,3 +302,61 @@ def delete_files(file_list: list[str]):
     for file in file_list:
         if os.path.isfile(file):
             os.remove(file)
+
+
+def save_temporary_backup() -> Union[None, LocalStorageError]:
+    """
+    Backs up metadata_all__DRAFT.json, datastore_versions.json and
+    draft_version.json from the datastore to a /tmp directory
+    inside the datastore directory.
+    Raises `LocalStorageError` if /tmp directory already exists.
+    """
+    with open(
+        f'{DATASTORE_DIR}/datastore/datastore_versions.json',
+        encoding='utf-8'
+    ) as f:
+        datastore_versions = json.load(f)
+    with open(
+        f'{DATASTORE_DIR}/datastore/draft_version.json',
+        encoding='utf-8'
+    ) as f:
+        draft_version = json.load(f)
+    with open(
+        f'{DATASTORE_DIR}/datastore/metadata_all__DRAFT.json',
+        encoding='utf-8'
+    ) as f:
+        metadata_all_draft = json.load(f)
+    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    if os.path.isdir(tmp_dir):
+        raise LocalStorageError('/tmp directory already exists')
+    os.mkdir(tmp_dir)
+    with open(tmp_dir / 'draft_version.json', 'w', encoding='utf-8') as f:
+        json.dump(draft_version, f)
+    with open(
+        tmp_dir / 'metadata_all__DRAFT.json', 'w', encoding='utf-8'
+    ) as f:
+        json.dump(metadata_all_draft, f)
+    with open(tmp_dir / 'datastore_versions.json', 'w', encoding='utf-8') as f:
+        json.dump(datastore_versions, f)
+
+
+def delete_temporary_backup() -> Union[None, LocalStorageError]:
+    """
+    Deletes the /tmp directory within the datastore if the directory
+    exists. Raises `LocalStorageError` if there are any unrecognized files
+    in the directory.
+    """
+    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    if not os.path.isdir(Path(DATASTORE_DIR) / 'tmp'):
+        return None
+    for content in os.listdir(tmp_dir):
+        if content not in [
+            'datastore_versions.json',
+            'metadata_all__DRAFT.json',
+            'draft_version.json'
+        ]:
+            raise LocalStorageError(
+                'Found unrecognized files and/or directories in the /tmp '
+                'directory. Aborting tmp deletion.'
+            )
+    shutil.rmtree(Path(DATASTORE_DIR) / 'tmp')
