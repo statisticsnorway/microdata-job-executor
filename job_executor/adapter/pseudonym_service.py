@@ -22,7 +22,7 @@ def pseudonymize(idents: List[str], unit_id_type: str, job_id: str) -> dict:
             'Content-Type': 'application/json',
             'X-API-Key': PSEUDONYM_SERVICE_API_KEY
         },
-        timeout=10
+        timeout=4000
     )
     if response.status_code != 200:
         raise HttpResponseError(
