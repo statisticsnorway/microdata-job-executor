@@ -34,7 +34,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
         )
-        description = input_metadata['dataRevision']['description'][0]['value']        
+        description = input_metadata['dataRevision']['description'][0]['value']
         job_service.update_description(job_id, description)
 
         job_service.update_job_status(job_id, 'transforming')

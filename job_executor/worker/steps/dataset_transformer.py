@@ -1,8 +1,7 @@
-import logging
 import json
-from datetime import datetime
-import os
+import logging
 from pathlib import Path
+from datetime import datetime
 
 from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
@@ -156,7 +155,11 @@ def _represented_variables_from_code_list(description: str,
 
 
 def _transform_variable(
-    variable: dict, role: str, start: str, stop: str):
+    variable: dict,
+    role: str,
+    start: str,
+    stop: str
+):
     variable_description = (
         _get_norwegian_text(variable['description'])
         if 'description' in variable else 'N/A'

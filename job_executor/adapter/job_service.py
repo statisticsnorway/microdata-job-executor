@@ -23,7 +23,7 @@ def get_jobs(
     if query_fields:
         request_url += f'?{"&".join(query_fields)}'
 
-    response = requests.get(request_url)
+    response = requests.get(request_url, timeout=10)
     if response.status_code != 200:
         raise HttpResponseError(f'{response.text}')
     return [Job(**job) for job in response.json()]
@@ -35,7 +35,8 @@ def update_job_status(job_id: str, new_status: JobStatus, log: str = None):
         payload.update({'log': log})
     response = requests.put(
         f'{JOB_SERVICE_URL}/jobs/{job_id}',
-        json=payload
+        json=payload,
+        timeout=10
     )
     if response.status_code != 200:
         raise HttpResponseError(f'{response.text}')
@@ -44,7 +45,8 @@ def update_job_status(job_id: str, new_status: JobStatus, log: str = None):
 def update_description(job_id: str, new_description: str):
     response = requests.put(
         f'{JOB_SERVICE_URL}/jobs/{job_id}',
-        json={'description': new_description}
+        json={'description': new_description},
+        timeout=10
     )
     if response.status_code != 200:
         raise HttpResponseError(f'{response.status_code}: {response.text}')

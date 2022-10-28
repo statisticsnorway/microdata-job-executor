@@ -24,7 +24,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
     logger = logging.getLogger()
     consumed_files: list[str] = []
-    
+
     try:
         configure_worker_logger(logging_queue, job_id)
         logger.info(
@@ -39,16 +39,16 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
         )
-        
+
         consumed_files.append(f'{WORKING_DIR}/{dataset_name}.db')
-        
+
         description = input_metadata['dataRevision']['description'][0]['value']
         job_service.update_description(job_id, description)
 
         job_service.update_job_status(job_id, 'transforming')
         transformed_metadata = dataset_transformer.run(metadata_file_path)
         consumed_files.append(metadata_file_path)
-        
+
         temporality_type = transformed_metadata.temporality
         temporal_coverage = transformed_metadata.temporal_coverage.dict()
         data_type = transformed_metadata.measure_variable.data_type

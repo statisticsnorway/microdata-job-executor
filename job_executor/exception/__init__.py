@@ -36,3 +36,7 @@ class MetadataException(Exception):
 
 class BumpException(Exception):
     ...
+
+
+class LocalStorageError(Exception):
+    ...
