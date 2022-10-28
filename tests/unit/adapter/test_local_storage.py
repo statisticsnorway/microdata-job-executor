@@ -42,7 +42,7 @@ MOVED_WORKING_DIR_DATASET_DATA_PATH = (
 )
 
 
-def setup_module():
+def setup_function():
     if os.path.isdir('tests/resources_backup'):
         shutil.rmtree('tests/resources_backup')
     shutil.copytree(
@@ -51,7 +51,7 @@ def setup_module():
     )
 
 
-def teardown_module():
+def teardown_function():
     shutil.rmtree('tests/resources')
     shutil.move(
         'tests/resources_backup',
@@ -158,6 +158,7 @@ def test_rename_parquet_draft_to_release():
 
 
 def test_move_working_dir_parquet_to_datastore():
+    local_storage.make_dataset_dir(WORKING_DIR_DATASET)
     local_storage.move_working_dir_parquet_to_datastore(WORKING_DIR_DATASET)
     assert os.path.isfile(MOVED_WORKING_DIR_DATASET_DATA_PATH)
 
@@ -182,12 +183,16 @@ def test_make_temp_directory():
 
 
 def test_make_temp_directory_already_exists():
+    local_storage.save_temporary_backup()
+    datastore_content = os.listdir(DATASTORE_DIR)
+    assert 'tmp' in datastore_content
     with pytest.raises(LocalStorageError) as e:
         local_storage.save_temporary_backup()
     assert '/tmp directory already exists' in str(e)
 
 
 def test_delete_temp_directory():
+    local_storage.save_temporary_backup()
     datastore_content = os.listdir(DATASTORE_DIR)
     local_storage.delete_temporary_backup()
     datastore_content_delete = os.listdir(DATASTORE_DIR)
