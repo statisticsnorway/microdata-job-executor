@@ -199,6 +199,9 @@ class Datastore():
             [] if self.metadata_all_latest is None
             else [ds for ds in self.metadata_all_latest]
         )
+
+        local_storage.archive_draft_version(new_version)
+
         new_data_versions = {
             dataset_name: path
             for dataset_name, path in latest_data_versions.items()

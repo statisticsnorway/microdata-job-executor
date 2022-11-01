@@ -4,6 +4,7 @@ import shutil
 
 from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
+from pathlib import Path
 
 datastore = Datastore()
 DATASTORE_DIR = os.environ['DATASTORE_DIR']
@@ -13,6 +14,7 @@ DATASTORE_INFO_DIR = f'{DATASTORE_DIR}/datastore'
 DATA_VERSIONS = f'{DATASTORE_INFO_DIR}/datastore_versions.json'
 DRAFT_VERSION = f'{DATASTORE_INFO_DIR}/draft_version.json'
 METADATA_ALL_DRAFT = f'{DATASTORE_INFO_DIR}/metadata_all__DRAFT.json'
+DATASTORE_ARCHIVE_DIR = f'{DATASTORE_DIR}/archive'
 
 
 def draft_metadata_path(name: str):
@@ -212,6 +214,7 @@ def test_bump_datastore_minor():
         'KJOENN': 'KJOENN__0_1.parquet',
         'SIVSTAND': 'SIVSTAND__0_1.parquet'
     }
+    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) > 0
 
 
 def test_bump_datastore_major():
@@ -265,3 +268,18 @@ def test_bump_datastore_major():
         'KJOENN': 'KJOENN__0_1.parquet',
         'SIVSTAND': 'SIVSTAND__0_1.parquet'
     }
+    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) > 0
+
+
+def _get_file_list_from_dir(directory: Path):
+    """
+    Returns a list of files found in the specified folder
+    """
+
+    file_list = []
+
+    for x in directory.iterdir():
+        if x.is_file():
+           file_list.append(x)
+
+    return file_list
