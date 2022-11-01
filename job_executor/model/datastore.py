@@ -48,12 +48,20 @@ class Datastore():
             )
         )
 
+    def _log(self, job_id, log_message, level='INFO'):
+        log_str = f'{job_id}: {log_message}'
+        if level == 'INFO':
+            logger.info(log_str)
+        elif level == 'ERROR':
+            logger.error(log_str)
+
     def patch_metadata(self, job_id: str, dataset_name: str, description: str):
         """
         Patch metadata for a released dataset with updated metadata
         file.
         """
-        job_service.update_job_status(job_id, 'initiated')
+        self._log(job_id, 'importing')
+        job_service.update_job_status(job_id, 'importing')
         dataset_release_status = self._get_release_status(dataset_name)
         if dataset_release_status != 'RELEASED':
             raise VersioningException(
@@ -79,13 +87,15 @@ class Datastore():
             patched_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
         )
         job_service.update_job_status(job_id, 'completed')
+        self._log(job_id, 'completed')
 
     def add(self, job_id: str, dataset_name: str, description: str):
         """
         Import metadata and data as draft for a new dataset that
         has not been released in a previous versions.
         """
-        job_service.update_job_status(job_id, 'initiated')
+        self._log(job_id, 'importing')
+        job_service.update_job_status(job_id, 'importing')
         dataset_release_status = self._get_release_status(dataset_name)
         if dataset_release_status is not None:
             raise VersioningException(
@@ -111,6 +121,7 @@ class Datastore():
             dataset_name
         )
         job_service.update_job_status(job_id, 'completed')
+        self._log(job_id, 'completed')
 
     def change_data(self, job_id: str, dataset_name: str, description: str):
         """
@@ -118,7 +129,8 @@ class Datastore():
         for a dataset that has already been released in a
         previous version.
         """
-        job_service.update_job_status(job_id, 'initiated')
+        self._log(job_id, 'importing')
+        job_service.update_job_status(job_id, 'importing')
         dataset_release_status = self._get_release_status(dataset_name)
         if dataset_release_status != 'RELEASED':
             raise VersioningException(
@@ -143,12 +155,14 @@ class Datastore():
         )
         local_storage.move_working_dir_parquet_to_datastore(dataset_name)
         job_service.update_job_status(job_id, 'completed')
+        self._log(job_id, 'completed')
 
     def remove(self, job_id: str, dataset_name: str, description: str):
         """
         Remove a released dataset that has been released in
         a previous version from future versions of the datastore.
         """
+        self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
         dataset_release_status = self._get_release_status(dataset_name)
         dataset_is_draft = (
@@ -160,16 +174,17 @@ class Datastore():
         )
         if dataset_is_draft and dataset_operation == 'REMOVE':
             self.metadata_all_draft.remove(dataset_name)
-            job_service.update_job_status(
-                job_id, 'completed',
-                'Dataset already in draft with operation REMOVE'
-            )
+            log_message = 'Dataset already in draft with operation REMOVE.'
+            self._log(job_id, log_message)
+            job_service.update_job_status(job_id, 'completed', log_message)
+            self._log(job_id, 'completed')
         elif dataset_release_status != 'RELEASED':
-            job_service.update_job_status(
-                job_id, 'failed',
-                'Can\'t remove dataset with release status '
-                f'{dataset_release_status}'
+            log_message = (
+                'Can\'t remove dataset with '
+                'release status {dataset_release_status}'
             )
+            self._log(job_id, log_message, level='ERROR')
+            job_service.update_job_status(job_id, 'failed', log_message)
         else:
             self.metadata_all_draft.remove(dataset_name)
             self.draft_version.add(
@@ -181,11 +196,13 @@ class Datastore():
                 )
             )
             job_service.update_job_status(job_id, 'completed')
+            self._log(job_id, 'completed')
 
     def delete_draft(self, job_id: str, dataset_name: str):
         """
         Delete a dataset from the draft version of the datastore.
         """
+        self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
         dataset_release_status = (
             self.draft_version.get_dataset_release_status(dataset_name)
@@ -194,17 +211,19 @@ class Datastore():
             self.draft_version.get_dataset_operation(dataset_name)
         )
         if dataset_release_status not in ['PENDING_RELEASE', 'DRAFT']:
-            job_service.update_job_status(
-                job_id, 'failed',
-                f'Draft not found for dataset name "{dataset_name}"'
-            )
+            log_message = f'Draft not found for dataset name "{dataset_name}"'
+            self._log(job_id, log_message, level='ERROR')
+            job_service.update_job_status(job_id, 'failed', log_message)
         else:
             if dataset_operation == 'REMOVE':
                 released_metadata = self.metadata_all_latest.get(dataset_name)
                 if released_metadata is None:
-                    job_service.update_job_status(
-                        job_id, 'failed',
+                    log_message = (
                         f'Can\'t find released metadata for {dataset_name}'
+                    )
+                    self._log(job_id, log_message, level='ERROR')
+                    job_service.update_job_status(
+                        job_id, 'failed', log_message
                     )
                 self.metadata_all_draft.remove(dataset_name)
                 self.metadata_all_draft.add(released_metadata)
@@ -217,7 +236,7 @@ class Datastore():
                 self.draft_version.delete_draft(dataset_name)
                 job_service.update_job_status(job_id, 'completed')
             except NoSuchDraftException as e:
-                logger.exception(e)
+                logger.exception(f'{job_id}: failed', exc_info=e)
                 job_service.update_job_status(job_id, 'failed', str(e))
 
     def set_draft_release_status(
@@ -227,16 +246,19 @@ class Datastore():
         Set a new release status for a dataset in the draft version.
         """
         try:
+            self._log(job_id, 'initiated')
             job_service.update_job_status(job_id, 'initiated')
             self.draft_version.set_draft_release_status(
                 dataset_name, new_status
             )
             job_service.update_job_status(job_id, 'completed')
+            self._log(job_id, 'completed')
         except UnnecessaryUpdateException as e:
-            logger.info(f'{e}')
             job_service.update_job_status(job_id, 'completed', f'{e}')
+            self._log(job_id, f'{e}')
+            self._log(job_id, 'completed')
         except NoSuchDraftException as e:
-            logger.info(f'{e}')
+            self._log(job_id, f'{e}', level='ERROR')
             job_service.update_job_status(job_id, 'failed', f'{e}')
 
     def bump_version(
@@ -246,6 +268,7 @@ class Datastore():
         Release a new version of the datastore with the pending
         operations in the draft version of the datastore.
         """
+        self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
         local_storage.save_temporary_backup()
         latest_data_versions = local_storage.get_data_versions(
