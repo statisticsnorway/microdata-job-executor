@@ -44,3 +44,7 @@ class LocalStorageError(Exception):
 
 class UnnecessaryUpdateException(Exception):
     ...
+
+
+class StartupException(Exception):
+    ...

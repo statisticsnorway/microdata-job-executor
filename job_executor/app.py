@@ -6,6 +6,7 @@ from typing import List
 from multiprocessing import Process, Queue
 
 import json_logging
+from job_executor.exception import StartupException
 
 from job_executor.model import Job, Datastore
 from job_executor.adapter import job_service
@@ -39,10 +40,10 @@ def logger_thread(logging_queue: Queue):
 def fix_interrupted_jobs():
     logger.info('Querying for interrupted jobs')
     in_progress_jobs = job_service.get_jobs(ignore_completed=True)
-    graceful_statuses = ['queued', 'built']
+    queued_statuses = ['queued', 'built']
     interrupted_jobs = [
         job for job in in_progress_jobs
-        if job.status not in graceful_statuses
+        if job.status not in queued_statuses
     ]
     logger.info(f'Found {len(interrupted_jobs)} interrupted jobs')
 
@@ -62,10 +63,12 @@ def fix_interrupted_jobs():
         elif job_operation == 'BUMP':
             ...  # TODO: implementation
         else:
-            job_service.update_job_status(
-                job.job_id, 'failed',
+            log_message = (
                 f'Unrecognized job operation {job_operation}'
+                f'for job {job.job_id}'
             )
+            logger.error(log_message)
+            raise StartupException(log_message)
 
 
 fix_interrupted_jobs()
