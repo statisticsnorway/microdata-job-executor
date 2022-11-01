@@ -121,7 +121,7 @@ def main():
                         log='Failed due to unexpected error'
                     )
     except Exception as e:
-        logger.exception(e)
+        logger.exception('Service stopped by exception', exc_info=e)
     finally:
         # Tell the logging thread to finish up
         logging_queue.put(None)
