@@ -11,13 +11,17 @@ JOB_SERVICE_URL = environment.get('JOB_SERVICE_URL')
 
 
 def get_jobs(
-    job_status: JobStatus = None, operations: List[Operation] = None
+    job_status: JobStatus = None,
+    operations: List[Operation] = None,
+    ignore_completed: bool = None
 ) -> List[Job]:
     query_fields = []
     if job_status is not None:
         query_fields.append(f'status={job_status}')
     if operations is not None:
         query_fields.append(f'operation={",".join(operations)}')
+    if ignore_completed is not None:
+        query_fields.append(f'ignoreCompleted={str(ignore_completed).lower()}')
 
     request_url = f'{JOB_SERVICE_URL}/jobs'
     if query_fields:
