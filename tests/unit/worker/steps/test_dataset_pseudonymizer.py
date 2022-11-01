@@ -22,12 +22,12 @@ PSEUDONYM_DICT = {
     'i3': '3',
     'i4': '4'
 }
-with open(f'{WORKING_DIR}/metadata.json', encoding='utf-8') as f:
-    METADATA = Metadata(**json.load(f))
+with open(f'{WORKING_DIR}/metadata.json', encoding='utf-8') as file:
+    METADATA = Metadata(**json.load(file))
 with open(
     f'{WORKING_DIR}/metadata_invalid_unit_type.json', encoding='utf-8'
-) as f:
-    INVALID_METADATA = Metadata(**json.load(f))
+) as file:
+    INVALID_METADATA = Metadata(**json.load(file))
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +36,6 @@ def set_working_dir(monkeypatch):
 
 
 def setup_function():
-
     if os.path.isdir(f'{WORKING_DIR}_backup'):
         shutil.rmtree(f'{WORKING_DIR}_backup')
 
