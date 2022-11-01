@@ -156,7 +156,8 @@ disable=raw-checker-failed,
         logging-fstring-interpolation, # use f-strings for logging
         C0114,    #missing-module-docstring      
         C0115,    #missing-class-docstring     
-        C0116     #missing-function-docstring
+        C0116,    #missing-function-docstring
+        invalid-name
 
 
 # Enable the message, report, category or checker with the given id(s). You can
