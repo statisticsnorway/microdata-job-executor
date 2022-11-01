@@ -17,7 +17,7 @@ JOB_LIST = [
             operation='CHANGE_DATA'
         ),
         logs=[],
-        created_at = '2022-05-18T11:40:22.519222'
+        created_at='2022-05-18T11:40:22.519222'
     ),
     Job(
         jobId=JOB_ID,
@@ -28,7 +28,7 @@ JOB_LIST = [
             releaseStatus='PENDING_RELEASE'
         ),
         logs=[],
-        created_at = '2022-05-18T11:40:22.519222'
+        created_at='2022-05-18T11:40:22.519222'
     )
 ]
 LOG_MESSAGE = 'log message'

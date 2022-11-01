@@ -2,8 +2,10 @@ import json
 import os
 import shutil
 from multiprocessing import Queue
+from requests_mock import Mocker as RequestsMocker
 
 from job_executor.worker.build_metadata_worker import run_worker, local_storage
+
 
 DATASET_NAME = 'KJOENN'
 JOB_ID = '1234-1234-1234-1234'
@@ -35,10 +37,8 @@ EXPECTED_REQUESTS = [
 
 
 def setup_function():
-
     if os.path.isdir('tests/resources_backup'):
         shutil.rmtree('tests/resources_backup')
-
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'
@@ -53,7 +53,7 @@ def teardown_function():
     )
 
 
-def test_import(requests_mock):
+def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
@@ -67,7 +67,7 @@ def test_import(requests_mock):
         f'{EXPECTED_DIR}/{DATASET_NAME}.json', 'r', encoding='utf-8'
     ) as f:
         expected_metadata = json.load(f)
-    
+
     assert actual_metadata == expected_metadata
     requests_made = [
         {
@@ -79,15 +79,12 @@ def test_import(requests_mock):
     ]
     assert requests_made == EXPECTED_REQUESTS
 
-def test_delete_files_is_called(requests_mock, mocker):
 
+def test_delete_files_is_called(requests_mock: RequestsMocker, mocker):
     spy = mocker.patch.object(
         local_storage, 'delete_files')
-
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
-
     run_worker(JOB_ID, DATASET_NAME, Queue())
-
     spy.assert_called()

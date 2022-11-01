@@ -1,10 +1,10 @@
 import os
 import shutil
 from multiprocessing import Queue
-
-
+from requests_mock import Mocker as RequestsMocker
 
 from job_executor.worker.build_dataset_worker import run_worker, local_storage
+
 
 PARTITIONED_DATASET_NAME = 'INNTEKT'
 DATASET_NAME = 'BOSTED'
@@ -198,7 +198,7 @@ def teardown_function():
     )
 
 
-def test_build_partitioned_dataset(requests_mock):
+def test_build_partitioned_dataset(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
@@ -229,7 +229,7 @@ def test_build_partitioned_dataset(requests_mock):
         )
 
 
-def test_import(requests_mock):
+def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
@@ -277,8 +277,8 @@ def request_matches(request: dict, other: dict):
             return False
     return True
 
-def test_delete_files_is_called(requests_mock, mocker):
 
+def test_delete_files_is_called(requests_mock: RequestsMocker, mocker):
     spy = mocker.patch.object(
         local_storage, 'delete_files')
 
@@ -289,8 +289,5 @@ def test_delete_files_is_called(requests_mock, mocker):
         f'{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}',
         json=PSEUDONYM_DICT
     )
-    
     run_worker(JOB_ID, DATASET_NAME, Queue())
-
     spy.assert_called()
-
