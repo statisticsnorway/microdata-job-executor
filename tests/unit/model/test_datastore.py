@@ -214,7 +214,7 @@ def test_bump_datastore_minor():
         'KJOENN': 'KJOENN__0_1.parquet',
         'SIVSTAND': 'SIVSTAND__0_1.parquet'
     }
-    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) > 0
+    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
 
 
 def test_bump_datastore_major():
@@ -268,7 +268,7 @@ def test_bump_datastore_major():
         'KJOENN': 'KJOENN__0_1.parquet',
         'SIVSTAND': 'SIVSTAND__0_1.parquet'
     }
-    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) > 0
+    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
 
 
 def _get_file_list_from_dir(directory: Path):

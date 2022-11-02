@@ -376,12 +376,9 @@ def archive_draft_version(version: str):
 
     timestamp = datetime.now()
 
-    archived_metadata_path = Path(
-        f'{archive_dir}/'
-        f'draft_version_{version}_'
-        f'{timestamp}'
-        f'.json'
+    archived_draft_version_path = (
+        archive_dir / f'draft_version_{version}_{timestamp}.json'
     )
 
     if archive_dir.exists():
-        shutil.copyfile(DRAFT_VERSION_PATH, archived_metadata_path)
+        shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)

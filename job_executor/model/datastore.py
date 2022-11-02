@@ -188,6 +188,7 @@ class Datastore():
                 'Invalid Bump: Changes were made to the datastore '
                 'after bump was requested'
             )
+        local_storage.archive_draft_version(self.latest_version_number)
         release_updates, update_type = self.draft_version.release_pending()
         # If there are no released versions update type will always be MAJOR
         if self.metadata_all_latest is None:
@@ -199,8 +200,6 @@ class Datastore():
             [] if self.metadata_all_latest is None
             else [ds for ds in self.metadata_all_latest]
         )
-
-        local_storage.archive_draft_version(new_version)
 
         new_data_versions = {
             dataset_name: path
