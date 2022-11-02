@@ -228,11 +228,11 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         }
     ]
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__0_1_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json', encoding='utf-8'
     ) as f:
         previous_metadata_all = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__0_2_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_1_0.json', encoding='utf-8'
     ) as f:
         released_metadata_all = json.load(f)
     assert (
@@ -243,18 +243,18 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
     ) as f:
         datastore_versions_json = json.load(f)
-    assert datastore_versions_json['versions'][0]['version'] == '0.2.0.0'
+    assert datastore_versions_json['versions'][0]['version'] == '1.1.0.0'
     with open(
-        f'{DATASTORE_DIR}/datastore/data_versions__0_2.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/data_versions__1_1.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
-        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__0_2',
-        'FOEDESTED': 'FOEDESTED__0_2.parquet',
-        'FOEDSELSVEKT': 'FOEDSELSVEKT__0_1.parquet',
-        'INNTEKT': 'INNTEKT__0_1',
-        'KJOENN': 'KJOENN__0_1.parquet',
-        'SIVSTAND': 'SIVSTAND__0_1.parquet'
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__1_1',
+        'FOEDESTED': 'FOEDESTED__1_1.parquet',
+        'FOEDSELSVEKT': 'FOEDSELSVEKT__1_0.parquet',
+        'INNTEKT': 'INNTEKT__1_0',
+        'KJOENN': 'KJOENN__1_0.parquet',
+        'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
 
 
@@ -288,33 +288,33 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
         }
     ]
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__0_2_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_1_0.json', encoding='utf-8'
     ) as f:
         previous_metadata_all = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__2_0_0.json', encoding='utf-8'
     ) as f:
         released_metadata_all = json.load(f)
     with open(
         f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
     ) as f:
         datastore_versions_json = json.load(f)
-    assert datastore_versions_json['versions'][0]['version'] == '1.0.0.0'
+    assert datastore_versions_json['versions'][0]['version'] == '2.0.0.0'
     assert (
         len(released_metadata_all['dataStructures']) ==
         len(previous_metadata_all['dataStructures'])
     )
     with open(
-        f'{DATASTORE_DIR}/datastore/data_versions__1_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/data_versions__2_0.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
-        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__0_2',
-        'FOEDESTED': 'FOEDESTED__0_2.parquet',
-        'FOEDSELSVEKT': 'FOEDSELSVEKT__1_0.parquet',
-        'INNTEKT': 'INNTEKT__0_1',
-        'KJOENN': 'KJOENN__0_1.parquet',
-        'SIVSTAND': 'SIVSTAND__0_1.parquet'
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__1_1',
+        'FOEDESTED': 'FOEDESTED__1_1.parquet',
+        'FOEDSELSVEKT': 'FOEDSELSVEKT__2_0.parquet',
+        'INNTEKT': 'INNTEKT__1_0',
+        'KJOENN': 'KJOENN__1_0.parquet',
+        'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
 
 
