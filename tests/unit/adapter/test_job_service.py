@@ -1,8 +1,9 @@
 import os
 import pytest
+from requests_mock import Mocker as RequestsMocker
 
-from job_executor.model.job import Job, JobParameters
 from job_executor.adapter import job_service
+from job_executor.model.job import Job, JobParameters
 from job_executor.exception import HttpResponseError
 
 
@@ -36,7 +37,7 @@ DESCRIPTION = 'new description'
 ERROR_RESPONSE = 'Internal Server Error'
 
 
-def test_get_jobs(requests_mock):
+def test_get_jobs(requests_mock: RequestsMocker):
     requests_mock.get(
         f'{JOB_SERVICE_URL}/jobs', json=[job.dict() for job in JOB_LIST]
     )
@@ -45,7 +46,7 @@ def test_get_jobs(requests_mock):
     assert len(requests_mock.request_history) == 1
 
 
-def test_update_job_status(requests_mock):
+def test_update_job_status(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
@@ -62,7 +63,7 @@ def test_update_job_status(requests_mock):
     }
 
 
-def test_update_description(requests_mock):
+def test_update_description(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
@@ -74,7 +75,7 @@ def test_update_description(requests_mock):
     }
 
 
-def test_no_connection(requests_mock):
+def test_no_connection(requests_mock: RequestsMocker):
     requests_mock.get(
         f'{JOB_SERVICE_URL}/jobs',
         status_code=500,
