@@ -204,22 +204,24 @@ class Datastore():
         """
         self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
-        dataset_release_status = (
+        dataset_is_draft = (
             self.draft_version.get_dataset_release_status(dataset_name)
+            is not None
         )
         dataset_operation = (
             self.draft_version.get_dataset_operation(dataset_name)
         )
-        if dataset_release_status not in ['PENDING_RELEASE', 'DRAFT']:
-            log_message = f'Draft not found for dataset name "{dataset_name}"'
+        if not dataset_is_draft:
+            log_message = f'Draft not found for dataset name: "{dataset_name}"'
             self._log(job_id, log_message, level='ERROR')
             job_service.update_job_status(job_id, 'failed', log_message)
         else:
-            if dataset_operation == 'REMOVE':
+            if dataset_operation in ['CHANGE_DATA', 'PATCH_METADATA', 'REMOVE']:
                 released_metadata = self.metadata_all_latest.get(dataset_name)
                 if released_metadata is None:
                     log_message = (
-                        f'Can\'t find released metadata for {dataset_name}'
+                        f'Can\'t find released metadata for {dataset_name} '
+                        'when attempting to delete draft.'
                     )
                     self._log(job_id, log_message, level='ERROR')
                     job_service.update_job_status(
@@ -227,8 +229,9 @@ class Datastore():
                     )
                 self.metadata_all_draft.remove(dataset_name)
                 self.metadata_all_draft.add(released_metadata)
-            if dataset_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
+            if dataset_operation == 'ADD':
                 self.metadata_all_draft.remove(dataset_name)
+            if dataset_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
                 local_storage.delete_metadata_draft(dataset_name)
             if dataset_operation in ['ADD', 'CHANGE_DATA']:
                 local_storage.delete_parquet_draft(dataset_name)
