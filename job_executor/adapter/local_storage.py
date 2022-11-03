@@ -6,7 +6,8 @@ from typing import Union
 
 from job_executor.config import environment
 from job_executor.exception import LocalStorageError
-
+from datetime import datetime
+from pathlib import Path
 
 WORKING_DIR = environment.get('WORKING_DIR')
 DATASTORE_DIR = environment.get('DATASTORE_DIR')
@@ -360,3 +361,24 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
                 'directory. Aborting tmp deletion.'
             )
     shutil.rmtree(Path(DATASTORE_DIR) / 'tmp')
+
+def archive_draft_version(version: str):
+    """
+    Archives the current draft json
+    * dataset_name: str - name of dataset draft
+    * version: str - version of the archived draft
+    """
+
+    archive_dir = Path(f'{DATASTORE_DIR}/archive')
+
+    if not archive_dir.exists():
+        os.makedirs(archive_dir, exist_ok = False)
+
+    timestamp = datetime.now()
+
+    archived_draft_version_path = (
+        archive_dir / f'draft_version_{version}_{timestamp}.json'
+    )
+
+    if archive_dir.exists():
+        shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
