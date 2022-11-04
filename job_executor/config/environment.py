@@ -9,7 +9,8 @@ def _initialize_environment() -> dict:
         'PSEUDONYM_SERVICE_URL': os.environ['PSEUDONYM_SERVICE_URL'],
         'JOB_SERVICE_URL': os.environ['JOB_SERVICE_URL'],
         'NUMBER_OF_WORKERS': int(os.environ['NUMBER_OF_WORKERS']),
-        'SECRETS_FILE': os.environ['SECRETS_FILE']
+        'SECRETS_FILE': os.environ['SECRETS_FILE'],
+        'DOCKER_HOST_NAME': os.environ['DOCKER_HOST_NAME']
     }
 
 
