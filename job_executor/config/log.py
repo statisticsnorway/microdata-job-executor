@@ -6,6 +6,7 @@ import sys
 import traceback
 from datetime import datetime
 from multiprocessing import Queue
+from job_executor.config import environment
 
 import tomlkit
 from json_logging import util
@@ -58,7 +59,7 @@ def _get_project_meta():
 
 pkg_meta = _get_project_meta()
 service_name = "job-executor"
-host = platform.node()
+host = environment.get('DOCKER_HOST_NAME')
 command = json.dumps(sys.argv)
 
 
