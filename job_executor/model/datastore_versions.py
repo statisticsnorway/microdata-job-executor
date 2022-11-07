@@ -42,13 +42,13 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
             ) for data_structure in data_structure_updates
         ]
         new_version_number = (
-            '1.0.0' if self.versions == []
+            '1.0.0.0' if self.versions == []
             else bump_dotted_version_number(
                 self.versions[0].version, update_type
             )
         )
         new_release_version = DatastoreVersion(
-            version=new_version_number + '.0',
+            version=new_version_number,
             description=description,
             release_time=(datetime.now() - datetime.utcfromtimestamp(0)).days,
             language_code='no',
@@ -80,7 +80,7 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
 
 
 def dotted_to_underscored_version(version: str) -> str:
-    return version.replace('.', '_')[:5]
+    return '_'.join(version.split('.')[:-1])
 
 
 def underscored_to_dotted_version(version: str) -> str:
@@ -93,19 +93,22 @@ def bump_dotted_version_number(version: str, update_type: str) -> str:
         return '.'.join([
             str(version_list[0] + 1),
             '0',
+            '0',
             '0'
         ])
     elif update_type == 'MINOR':
         return '.'.join([
             str(version_list[0]),
             str(version_list[1] + 1),
+            '0',
             '0'
         ])
     elif update_type == 'PATCH':
         return '.'.join([
             str(version_list[0]),
             str(version_list[1]),
-            str(version_list[2] + 1)
+            str(version_list[2] + 1),
+            '0'
         ])
     else:
         raise VersioningException(f'Invalid update_type {update_type}')

@@ -1,5 +1,5 @@
 import pytest
-
+from requests_mock import Mocker as RequestsMocker
 from job_executor.config import environment, secrets
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import HttpResponseError
@@ -15,7 +15,7 @@ IDENTIFIERS = ['test1', 'test2']
 PSEUDONYM_DICT = {'test1': 'value', 'test2': 'value'}
 
 
-def test_pseudonymize(requests_mock):
+def test_pseudonymize(requests_mock: RequestsMocker):
     requests_mock.post(
         URL, status_code=200,
         json=PSEUDONYM_DICT
@@ -34,7 +34,7 @@ def test_pseudonymize(requests_mock):
     assert request.headers['X-API-Key'] == API_KEY
 
 
-def test_pseudonymize_bad_status(requests_mock):
+def test_pseudonymize_bad_status(requests_mock: RequestsMocker):
     requests_mock.post(
         URL, status_code=500,
         text='error'

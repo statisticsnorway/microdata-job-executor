@@ -1,4 +1,3 @@
-import logging
 from typing import List
 
 import requests
@@ -9,9 +8,6 @@ from job_executor.exception import HttpResponseError
 
 PSEUDONYM_SERVICE_URL = environment.get('PSEUDONYM_SERVICE_URL')
 PSEUDONYM_SERVICE_API_KEY = secrets.get('PSEUDONYM_SERVICE_API_KEY')
-
-
-logger = logging.getLogger()
 
 
 def pseudonymize(idents: List[str], unit_id_type: str, job_id: str) -> dict:

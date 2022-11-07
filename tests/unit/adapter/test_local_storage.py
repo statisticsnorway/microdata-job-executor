@@ -17,8 +17,8 @@ DATASTORE_METADATA_DIR = f'{DATASTORE_DIR}/metadata'
 DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore/datastore_versions.json'
 DRAFT_METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__draft.json'
 DRAFT_VERSION_PATH = f'{DATASTORE_DIR}/datastore/draft_version.json'
-DATA_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore/data_versions__0_1.json'
-METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__0_1_0.json'
+DATA_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore/data_versions__1_0.json'
+METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json'
 
 DRAFT_DATASET_NAME = 'UTDANNING'
 DRAFT_DATA_PATH = (
@@ -30,10 +30,10 @@ DRAFT_METADATA_PATH = (
 
 DRAFT2_DATASET_NAME = 'BRUTTO_INNTEKT'
 RELEASED_DRAFT2_DATA_PATH = (
-    f'{DATASTORE_DATA_DIR}/BRUTTO_INNTEKT/BRUTTO_INNTEKT__0_2'
+    f'{DATASTORE_DATA_DIR}/BRUTTO_INNTEKT/BRUTTO_INNTEKT__1_1'
 )
 RELEASED_DRAFT2_METADATA_PATH = (
-    f'{DATASTORE_METADATA_DIR}/BRUTTO_INNTEKT/BRUTTO_INNTEKT__0_2_0.json'
+    f'{DATASTORE_METADATA_DIR}/BRUTTO_INNTEKT/BRUTTO_INNTEKT__1_1_0.json'
 )
 
 WORKING_DIR_DATASET = 'FOEDESTED'
@@ -72,13 +72,13 @@ def test_make_dataset_dir():
 
 def test_get_data_versions():
     assert (
-        local_storage.get_data_versions('0_1_0')
+        local_storage.get_data_versions('1_0_0')
         == read_json(DATA_VERSIONS_PATH)
     )
 
 
 def test_write_data_versions():
-    local_storage.write_data_versions({}, '0_1_0')
+    local_storage.write_data_versions({}, '1_0_0')
     assert read_json(DATA_VERSIONS_PATH) == {}
 
 
@@ -108,13 +108,13 @@ def test_write_datastore_versions():
 
 def test_get_metadata_all():
     assert (
-        local_storage.get_metadata_all('0_1_0')
+        local_storage.get_metadata_all('1_0_0')
         == read_json(METADATA_ALL_PATH)
     )
 
 
 def test_write_metadata_all():
-    local_storage.write_metadata_all({}, '0_1_0')
+    local_storage.write_metadata_all({}, '1_0_0')
     assert read_json(METADATA_ALL_PATH) == {}
 
 
@@ -144,17 +144,17 @@ def delete_parquet_draft():
 
 def test_rename_metadata_draft_to_release():
     local_storage.rename_metadata_draft_to_release(
-        DRAFT2_DATASET_NAME, '0_2_0'
+        DRAFT2_DATASET_NAME, '1_1_0'
     )
     assert os.path.isfile(RELEASED_DRAFT2_METADATA_PATH)
 
 
 def test_rename_parquet_draft_to_release():
     release_path = local_storage.rename_parquet_draft_to_release(
-        DRAFT2_DATASET_NAME, '0_2_0'
+        DRAFT2_DATASET_NAME, '1_1_0'
     )
     assert os.path.isdir(RELEASED_DRAFT2_DATA_PATH)
-    assert release_path == f'{DRAFT2_DATASET_NAME}__0_2'
+    assert release_path == f'{DRAFT2_DATASET_NAME}__1_1'
 
 
 def test_move_working_dir_parquet_to_datastore():

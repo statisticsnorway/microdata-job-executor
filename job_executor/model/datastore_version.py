@@ -9,7 +9,8 @@ from job_executor.adapter import local_storage
 from job_executor.exception import (
     BumpException,
     ExistingDraftException,
-    NoSuchDraftException
+    NoSuchDraftException,
+    UnnecessaryUpdateException
 )
 
 
@@ -51,6 +52,20 @@ class DatastoreVersion(CamelModel):
             if update.name == dataset_name:
                 return update.release_status
         return None
+
+    def get_dataset_operation(
+        self, dataset_name: str
+    ) -> Union[str, None]:
+        for update in self.data_structure_updates:
+            if update.name == dataset_name:
+                return update.operation
+        return None
+
+    def contains(self, dataset_name: str) -> bool:
+        return any([
+            update.name == dataset_name
+            for update in self.data_structure_updates
+        ])
 
 
 class DraftVersion(DatastoreVersion):
@@ -147,6 +162,10 @@ class DraftVersion(DatastoreVersion):
         )
         if dataset_update is None:
             raise NoSuchDraftException(f'No draft for dataset {dataset_name}')
+        if dataset_update.release_status == new_status:
+            raise UnnecessaryUpdateException(
+                f'Status already set to {new_status}'
+            )
         dataset_update.set_release_status(new_status)
         self.release_time = (
             (datetime.now() - datetime.utcfromtimestamp(0)).seconds

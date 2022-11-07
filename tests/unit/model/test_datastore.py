@@ -1,12 +1,15 @@
 import os
 import json
 import shutil
+from requests_mock import Mocker as RequestsMocker
 
 from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
 from pathlib import Path
 
 datastore = Datastore()
+JOB_SERVICE_URL = os.getenv('JOB_SERVICE_URL')
+JOB_ID = '123-123-123-123'
 DATASTORE_DIR = os.environ['DATASTORE_DIR']
 DATASTORE_DATA_DIR = f'{DATASTORE_DIR}/data'
 DATASTORE_METADATA_DIR = f'{DATASTORE_DIR}/metadata'
@@ -44,11 +47,14 @@ def teardown_module():
     )
 
 
-def test_patch_metadata():
+def test_patch_metadata(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     DATASET_NAME = 'SIVSTAND'
     DESCRIPTION = 'oppdaterte metadata'
-    datastore.patch_metadata(DATASET_NAME, DESCRIPTION)
-
+    datastore.patch_metadata(JOB_ID, DATASET_NAME, DESCRIPTION)
+    assert len(requests_mock.request_history) == 2
     with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
         sivstand_metadata = json.load(f)
     with open(METADATA_ALL_DRAFT, encoding='utf-8') as f:
@@ -65,11 +71,14 @@ def test_patch_metadata():
     assert sivstand_metadata in metadata_all_draft['dataStructures']
 
 
-def test_add():
+def test_add(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     DATASET_NAME = 'FOEDESTED'
     DESCRIPTION = 'første publisering'
-    datastore.add(DATASET_NAME, DESCRIPTION)
-
+    datastore.add(JOB_ID, DATASET_NAME, DESCRIPTION)
+    assert len(requests_mock.request_history) == 2
     assert os.path.exists(draft_data_path(DATASET_NAME))
     with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
         foedested_metadata = json.load(f)
@@ -87,11 +96,14 @@ def test_add():
     assert foedested_metadata in metadata_all_draft['dataStructures']
 
 
-def test_change_data():
+def test_change_data(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     DATASET_NAME = 'FOEDSELSVEKT'
     DESCRIPTION = 'oppdaterte data'
-    datastore.change_data(DATASET_NAME, DESCRIPTION)
-
+    datastore.change_data(JOB_ID, DATASET_NAME, DESCRIPTION)
+    assert len(requests_mock.request_history) == 2
     assert os.path.exists(draft_data_path(DATASET_NAME))
     with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
         foedested_metadata = json.load(f)
@@ -109,10 +121,14 @@ def test_change_data():
     assert foedested_metadata in metadata_all_draft['dataStructures']
 
 
-def test_remove():
+def test_remove(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     DATASET_NAME = 'INNTEKT'
     DESCRIPTION = 'Fjernet variabel'
-    datastore.remove(DATASET_NAME, DESCRIPTION)
+    datastore.remove(JOB_ID, DATASET_NAME, DESCRIPTION)
+    assert len(requests_mock.request_history) == 2
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_version = json.load(f)
@@ -125,9 +141,13 @@ def test_remove():
     } in draft_version['dataStructureUpdates']
 
 
-def test_delete_draft():
+def test_delete_draft(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     DATASET_NAME = 'UTDANNING'
-    datastore.delete_draft(DATASET_NAME)
+    datastore.delete_draft(JOB_ID, DATASET_NAME)
+    assert len(requests_mock.request_history) == 2
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_version = json.load(f)
@@ -141,12 +161,31 @@ def test_delete_draft():
     ]
 
 
-def test_set_draft_release_status():
+def test_set_draft_release_status(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     DATASET_NAME = 'FOEDESTED'
     DESCRIPTION = 'første publisering'
     NEW_STATUS = 'PENDING_RELEASE'
-    datastore.set_draft_release_status(DATASET_NAME, NEW_STATUS)
+    datastore.set_draft_release_status(JOB_ID, DATASET_NAME, NEW_STATUS)
+    assert len(requests_mock.request_history) == 2
+    with open(DRAFT_VERSION, encoding='utf-8') as f:
+        draft_version = json.load(f)
 
+    assert {
+        'name': DATASET_NAME,
+        'description': DESCRIPTION,
+        'operation': 'ADD',
+        'releaseStatus': 'PENDING_RELEASE'
+    } in draft_version['dataStructureUpdates']
+    # Try again after a possible interrupt
+    datastore.set_draft_release_status(JOB_ID, DATASET_NAME, NEW_STATUS)
+    assert len(requests_mock.request_history) == 4
+    assert requests_mock.request_history[3].json() == {
+        'status': 'completed',
+        'log': 'Status already set to PENDING_RELEASE'
+    }
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_version = json.load(f)
 
@@ -158,11 +197,16 @@ def test_set_draft_release_status():
     } in draft_version['dataStructureUpdates']
 
 
-def test_bump_datastore_minor():
+def test_bump_datastore_minor(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
 
-    datastore.bump_version(bump_manifesto, 'description')
+    datastore.bump_version(JOB_ID, bump_manifesto, 'description')
+    assert len(requests_mock.request_history) == 2
+
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
     assert draft_after_bump['dataStructureUpdates'] == [
@@ -186,11 +230,11 @@ def test_bump_datastore_minor():
         }
     ]
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__0_1_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json', encoding='utf-8'
     ) as f:
         previous_metadata_all = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__0_2_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_1_0.json', encoding='utf-8'
     ) as f:
         released_metadata_all = json.load(f)
     assert (
@@ -201,27 +245,34 @@ def test_bump_datastore_minor():
         f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
     ) as f:
         datastore_versions_json = json.load(f)
-    assert datastore_versions_json['versions'][0]['version'] == '0.2.0.0'
+    assert datastore_versions_json['versions'][0]['version'] == '1.1.0.0'
     with open(
-        f'{DATASTORE_DIR}/datastore/data_versions__0_2.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/data_versions__1_1.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
-        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__0_2',
-        'FOEDESTED': 'FOEDESTED__0_2.parquet',
-        'FOEDSELSVEKT': 'FOEDSELSVEKT__0_1.parquet',
-        'INNTEKT': 'INNTEKT__0_1',
-        'KJOENN': 'KJOENN__0_1.parquet',
-        'SIVSTAND': 'SIVSTAND__0_1.parquet'
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__1_1',
+        'FOEDESTED': 'FOEDESTED__1_1.parquet',
+        'FOEDSELSVEKT': 'FOEDSELSVEKT__1_0.parquet',
+        'INNTEKT': 'INNTEKT__1_0',
+        'KJOENN': 'KJOENN__1_0.parquet',
+        'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
     assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
 
 
-def test_bump_datastore_major():
-    datastore.set_draft_release_status('FOEDSELSVEKT', 'PENDING_RELEASE')
+def test_bump_datastore_major(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
+    datastore.set_draft_release_status(
+        JOB_ID, 'FOEDSELSVEKT', 'PENDING_RELEASE'
+    )
+    assert len(requests_mock.request_history) == 2
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
-    datastore.bump_version(bump_manifesto, 'description')
+    datastore.bump_version(JOB_ID, bump_manifesto, 'description')
+    assert len(requests_mock.request_history) == 4
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
@@ -240,35 +291,58 @@ def test_bump_datastore_major():
         }
     ]
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__0_2_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__1_1_0.json', encoding='utf-8'
     ) as f:
         previous_metadata_all = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__2_0_0.json', encoding='utf-8'
     ) as f:
         released_metadata_all = json.load(f)
     with open(
         f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
     ) as f:
         datastore_versions_json = json.load(f)
-    assert datastore_versions_json['versions'][0]['version'] == '1.0.0.0'
+    assert datastore_versions_json['versions'][0]['version'] == '2.0.0.0'
     assert (
         len(released_metadata_all['dataStructures']) ==
         len(previous_metadata_all['dataStructures'])
     )
     with open(
-        f'{DATASTORE_DIR}/datastore/data_versions__1_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/data_versions__2_0.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
-        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__0_2',
-        'FOEDESTED': 'FOEDESTED__0_2.parquet',
-        'FOEDSELSVEKT': 'FOEDSELSVEKT__1_0.parquet',
-        'INNTEKT': 'INNTEKT__0_1',
-        'KJOENN': 'KJOENN__0_1.parquet',
-        'SIVSTAND': 'SIVSTAND__0_1.parquet'
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__1_1',
+        'FOEDESTED': 'FOEDESTED__1_1.parquet',
+        'FOEDSELSVEKT': 'FOEDSELSVEKT__2_0.parquet',
+        'INNTEKT': 'INNTEKT__1_0',
+        'KJOENN': 'KJOENN__1_0.parquet',
+        'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
     assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
+
+
+
+def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
+    DATASET_NAME = 'SIVSTAND'
+    # Previous interrupted run deleted metadata
+    os.remove(draft_metadata_path(DATASET_NAME))
+    datastore.delete_draft(JOB_ID, DATASET_NAME)
+    assert len(requests_mock.request_history) == 2
+    assert requests_mock.request_history[1].json() == {
+        'status': 'completed'
+    }
+    with open(DRAFT_VERSION, encoding='utf-8') as f:
+        draft_version = json.load(f)
+
+    assert not os.path.exists(draft_metadata_path(DATASET_NAME))
+    assert not [
+        update for update in draft_version['dataStructureUpdates']
+        if update['name'] == DATASET_NAME
+    ]
 
 
 def _get_file_list_from_dir(directory: Path):

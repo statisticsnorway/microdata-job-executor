@@ -6,25 +6,23 @@ from typing import List
 from multiprocessing import Process, Queue
 
 import json_logging
+from job_executor.exception import StartupException
 
-from job_executor.adapter import local_storage
 from job_executor.model import Job, Datastore
 from job_executor.adapter import job_service
 from job_executor.config import environment
 from job_executor.config.log import CustomJSONLog
-from job_executor.exception import LocalStorageError, UnknownOperationException
 from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker
 )
 
 
-NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')
-datastore = Datastore()
 json_logging.init_non_web(custom_formatter=CustomJSONLog, enable_json=True)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
+NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')
 
 
 def logger_thread(logging_queue: Queue):
@@ -39,6 +37,44 @@ def logger_thread(logging_queue: Queue):
         logger.handle(record)
 
 
+def fix_interrupted_jobs():
+    logger.info('Querying for interrupted jobs')
+    in_progress_jobs = job_service.get_jobs(ignore_completed=True)
+    queued_statuses = ['queued', 'built']
+    interrupted_jobs = [
+        job for job in in_progress_jobs
+        if job.status not in queued_statuses
+    ]
+    logger.info(f'Found {len(interrupted_jobs)} interrupted jobs')
+
+    for job in interrupted_jobs:
+        job_operation = job.parameters.operation
+        if job_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
+            ...  # TODO: implementation
+        elif job_operation in ['SET_STATUS', 'DELETE_DRAFT', 'REMOVE']:
+            logger.info(
+                'Setting status to "queued" for '
+                f'interrupted job with id {job.job_id}'
+            )
+            job_service.update_job_status(
+                job.job_id, 'queued',
+                'Retrying due to an unexpected interruption.'
+            )
+        elif job_operation == 'BUMP':
+            ...  # TODO: implementation
+        else:
+            log_message = (
+                f'Unrecognized job operation {job_operation}'
+                f'for job {job.job_id}'
+            )
+            logger.error(log_message)
+            raise StartupException(log_message)
+
+
+fix_interrupted_jobs()
+datastore = Datastore()
+
+
 def main():
     workers: List[Process] = []
     logging_queue = Queue()
@@ -50,20 +86,14 @@ def main():
         while True:
             time.sleep(5)
             workers = [worker for worker in workers if worker.is_alive()]
-            queued_worker_jobs = job_service.get_jobs(
-                job_status='queued',
-                operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
-            )
-            for job in queued_worker_jobs:
-                if len(workers) < NUMBER_OF_WORKERS:
-                    _handle_worker_job(job, workers, logging_queue)
-
-            built_jobs = job_service.get_jobs(
-                job_status='built'
-            )
+            built_jobs = job_service.get_jobs(job_status='built')
             queued_manager_jobs = job_service.get_jobs(
                 job_status='queued',
                 operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
+            )
+            queued_worker_jobs = job_service.get_jobs(
+                job_status='queued',
+                operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
             )
             available_jobs = (
                 len(queued_worker_jobs) +
@@ -76,28 +106,13 @@ def main():
                     f'/{len(queued_manager_jobs)}'
                     f' (worker, built, queued manager jobs)'
                 )
+            for job in queued_worker_jobs:
+                if len(workers) < NUMBER_OF_WORKERS:
+                    _handle_worker_job(job, workers, logging_queue)
+
             for job in built_jobs + queued_manager_jobs:
                 try:
                     _handle_manager_job(job)
-                    job_service.update_job_status(
-                        job.job_id, 'completed'
-                    )
-                    if job.parameters.operation == 'BUMP':
-                        local_storage.delete_temporary_backup()
-                except LocalStorageError as e:
-                    logger.error(f'{job.job_id} failed')
-                    logger.exception(e)
-                    job_service.update_job_status(
-                        job.job_id, 'failed',
-                        log='Failed due to error with local storage'
-                    )
-                except UnknownOperationException as e:
-                    logger.error(f'{job.job_id} failed')
-                    logger.exception(e)
-                    job_service.update_job_status(
-                        job.job_id, 'failed',
-                        log='Unknown operation for job'
-                    )
                 except Exception as e:
                     logger.error(f'{job.job_id} failed')
                     logger.exception(e)
@@ -106,7 +121,7 @@ def main():
                         log='Failed due to unexpected error'
                     )
     except Exception as e:
-        logger.exception(e)
+        logger.exception('Service stopped by exception', exc_info=e)
     finally:
         # Tell the logging thread to finish up
         logging_queue.put(None)
@@ -140,42 +155,51 @@ def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
 
 
 def _handle_manager_job(job: Job):
+    job_id = job.job_id
     operation = job.parameters.operation
     if operation == 'BUMP':
-        local_storage.save_temporary_backup()
         datastore.bump_version(
+            job_id,
             job.parameters.bump_manifesto,
             job.parameters.description
         )
     elif operation == 'PATCH_METADATA':
         datastore.patch_metadata(
+            job_id,
             job.parameters.target,
             job.parameters.description
         )
     elif operation == 'SET_STATUS':
         datastore.set_draft_release_status(
+            job_id,
             job.parameters.target,
             job.parameters.release_status
         )
     elif operation == 'ADD':
         datastore.add(
+            job_id,
             job.parameters.target,
             job.parameters.description
         )
     elif operation == 'CHANGE_DATA':
         datastore.change_data(
+            job_id,
             job.parameters.target,
             job.parameters.description
         )
     elif operation == 'REMOVE':
         datastore.remove(
+            job_id,
             job.parameters.target,
             job.parameters.description
         )
     elif operation == 'DELETE_DRAFT':
-        datastore.delete_draft(job.parameters.target)
+        datastore.delete_draft(job_id, job.parameters.target)
     else:
-        raise UnknownOperationException(f'Unknown operation {operation}')
+        job_service.update_job_status(
+            job.job_id, 'failed',
+            log='Unknown operation for job'
+        )
 
 
 if __name__ == '__main__':
