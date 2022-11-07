@@ -165,10 +165,7 @@ class Datastore():
         self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
         dataset_release_status = self._get_release_status(dataset_name)
-        dataset_is_draft = (
-            self.draft_version.get_dataset_release_status(dataset_name)
-            is not None
-        )
+        dataset_is_draft = self.draft_version.contains(dataset_name)
         dataset_operation = (
             self.draft_version.get_dataset_operation(dataset_name)
         )
@@ -204,10 +201,7 @@ class Datastore():
         """
         self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
-        dataset_is_draft = (
-            self.draft_version.get_dataset_release_status(dataset_name)
-            is not None
-        )
+        dataset_is_draft = self.draft_version.contains(dataset_name)
         dataset_operation = (
             self.draft_version.get_dataset_operation(dataset_name)
         )

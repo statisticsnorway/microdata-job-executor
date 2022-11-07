@@ -61,6 +61,12 @@ class DatastoreVersion(CamelModel):
                 return update.operation
         return None
 
+    def contains(self, dataset_name: str) -> bool:
+        return any([
+            update.name == dataset_name
+            for update in self.data_structure_updates
+        ])
+
 
 class DraftVersion(DatastoreVersion):
 
