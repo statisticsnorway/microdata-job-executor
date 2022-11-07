@@ -34,6 +34,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
         )
+        local_storage.archive_input_files(dataset_name)
         description = input_metadata['dataRevision']['description'][0]['value']
         job_service.update_description(job_id, description)
 

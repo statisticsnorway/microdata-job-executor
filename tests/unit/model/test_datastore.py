@@ -6,6 +6,7 @@ from requests_mock import Mocker as RequestsMocker
 from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
 from pathlib import Path
+from test_util import get_file_list_from_dir
 
 datastore = Datastore()
 JOB_SERVICE_URL = os.getenv('JOB_SERVICE_URL')
@@ -258,7 +259,7 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         'KJOENN': 'KJOENN__1_0.parquet',
         'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
-    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
+    assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
 
 
 def test_bump_datastore_major(requests_mock: RequestsMocker):
@@ -319,7 +320,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
         'KJOENN': 'KJOENN__1_0.parquet',
         'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
-    assert len(_get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
+    assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
 
 
 
@@ -344,16 +345,3 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
         if update['name'] == DATASET_NAME
     ]
 
-
-def _get_file_list_from_dir(directory: Path):
-    """
-    Returns a list of files found in the specified folder
-    """
-
-    file_list = []
-
-    for x in directory.iterdir():
-        if x.is_file():
-           file_list.append(x)
-
-    return file_list

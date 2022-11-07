@@ -3,13 +3,15 @@ import os
 import shutil
 from multiprocessing import Queue
 from requests_mock import Mocker as RequestsMocker
-
+from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_metadata_worker import run_worker, local_storage
-
+from pathlib import Path
+from test_util import get_file_list_from_dir
 
 DATASET_NAME = 'KJOENN'
 JOB_ID = '1234-1234-1234-1234'
 WORKING_DIR = os.environ['WORKING_DIR']
+INPUT_DIR_ARCHIVE = f'{INPUT_DIR}/archive'
 EXPECTED_DIR = 'tests/resources/expected'
 JOB_SERVICE_URL = os.environ['JOB_SERVICE_URL']
 EXPECTED_REQUESTS = [
@@ -88,3 +90,4 @@ def test_delete_files_is_called(requests_mock: RequestsMocker, mocker):
     )
     run_worker(JOB_ID, DATASET_NAME, Queue())
     spy.assert_called()
+    assert len (get_file_list_from_dir(Path(INPUT_DIR_ARCHIVE / Path(f'{DATASET_NAME}')))) == 1
