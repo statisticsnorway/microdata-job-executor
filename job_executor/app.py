@@ -9,6 +9,7 @@ import json_logging
 from job_executor.exception import StartupException
 
 from job_executor.model import Job, Datastore
+from job_executor.domain import rollback
 from job_executor.adapter import job_service
 from job_executor.config import environment
 from job_executor.config.log import CustomJSONLog
@@ -61,7 +62,15 @@ def fix_interrupted_jobs():
                 'Retrying due to an unexpected interruption.'
             )
         elif job_operation == 'BUMP':
-            ...  # TODO: implementation
+            rollback.rollback_bump(job)
+            logger.info(
+                'Setting status to "failed" for '
+                f'interrupted job with id {job.job_id}'
+            )
+            job_service.update_job_status(
+                job.job_id, 'failed',
+                'Bump operation was interrupted and rolled back.'
+            )
         else:
             log_message = (
                 f'Unrecognized job operation {job_operation}'
