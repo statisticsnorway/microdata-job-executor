@@ -430,4 +430,4 @@ def archive_input_files(dataset_name: str):
     os.makedirs(archive_dir, exist_ok=True)
     shutil.copytree(
         f'{INPUT_DIR}/{dataset_name}', archive_dir, dirs_exist_ok=True
-    )    
+    )
