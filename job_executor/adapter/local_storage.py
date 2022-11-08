@@ -11,6 +11,7 @@ from pathlib import Path
 
 WORKING_DIR = environment.get('WORKING_DIR')
 DATASTORE_DIR = environment.get('DATASTORE_DIR')
+INPUT_DIR = environment.get('INPUT_DIR')
 
 DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore/datastore_versions.json'
 DRAFT_METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__draft.json'
@@ -382,3 +383,13 @@ def archive_draft_version(version: str):
 
     if archive_dir.exists():
         shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
+
+def archive_input_files(dataset_name: str):
+    """
+    Archives the input folder files
+    """
+    
+    archive_dir = Path(f'{INPUT_DIR}/archive/{dataset_name}')
+    os.makedirs(archive_dir, exist_ok = True)
+    shutil.copytree(f'{INPUT_DIR}/{dataset_name}', archive_dir, dirs_exist_ok=True)
+            
