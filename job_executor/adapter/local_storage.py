@@ -1,13 +1,16 @@
 import json
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Union
 
+from pydantic import ValidationError
+
 from job_executor.config import environment
 from job_executor.exception import LocalStorageError
-from datetime import datetime
-from pathlib import Path
+from job_executor.model import DraftVersion, MetadataAll, DatastoreVersions
+
 
 WORKING_DIR = environment.get('WORKING_DIR')
 DATASTORE_DIR = environment.get('DATASTORE_DIR')
@@ -342,6 +345,38 @@ def save_temporary_backup() -> Union[None, LocalStorageError]:
         json.dump(datastore_versions, f)
 
 
+def restore_from_temporary_backup() -> Union[str, LocalStorageError]:
+    """
+    Restores the datastore from the /tmp directory.
+    Returns version number of restored datastore.
+    Raises `LocalStorageError`if there are any missing backup files.
+    """
+    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    draft_version_backup = tmp_dir / 'draft_version.json'
+    metadata_all_draft_backup = tmp_dir / 'metadata_all__DRAFT.json'
+    datastore_versions_backup = tmp_dir / 'datastore_versions.json'
+    backup_exists = (
+        os.path.isdir(tmp_dir) and
+        os.path.isfile(draft_version_backup) and
+        os.path.isfile(metadata_all_draft_backup) and
+        os.path.isfile(datastore_versions_backup)
+    )
+    if not backup_exists:
+        raise LocalStorageError('Missing /tmp backup files')
+    try:
+        DraftVersion(_read_json(draft_version_backup))
+        MetadataAll(_read_json(metadata_all_draft_backup))
+        datastore_versions = DatastoreVersions(
+            _read_json(datastore_versions_backup)
+        )
+        shutil.move(draft_version_backup, DRAFT_VERSION_PATH)
+        shutil.move(metadata_all_draft_backup, DRAFT_METADATA_ALL_PATH)
+        shutil.move(datastore_versions_backup, DATASTORE_VERSIONS_PATH)
+        return datastore_versions.get_latest_version_number()
+    except ValidationError as e:
+        raise LocalStorageError('Invalid backup file') from e
+
+
 def delete_temporary_backup() -> Union[None, LocalStorageError]:
     """
     Deletes the /tmp directory within the datastore if the directory
@@ -363,6 +398,7 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
             )
     shutil.rmtree(Path(DATASTORE_DIR) / 'tmp')
 
+
 def archive_draft_version(version: str):
     """
     Archives the current draft json
@@ -373,7 +409,7 @@ def archive_draft_version(version: str):
     archive_dir = Path(f'{DATASTORE_DIR}/archive')
 
     if not archive_dir.exists():
-        os.makedirs(archive_dir, exist_ok = False)
+        os.makedirs(archive_dir, exist_ok=False)
 
     timestamp = datetime.now()
 
@@ -384,12 +420,14 @@ def archive_draft_version(version: str):
     if archive_dir.exists():
         shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
 
+
 def archive_input_files(dataset_name: str):
     """
     Archives the input folder files
     """
-    
+
     archive_dir = Path(f'{INPUT_DIR}/archive/{dataset_name}')
-    os.makedirs(archive_dir, exist_ok = True)
-    shutil.copytree(f'{INPUT_DIR}/{dataset_name}', archive_dir, dirs_exist_ok=True)
-            
+    os.makedirs(archive_dir, exist_ok=True)
+    shutil.copytree(
+        f'{INPUT_DIR}/{dataset_name}', archive_dir, dirs_exist_ok=True
+    )        

@@ -6,6 +6,7 @@ from microdata_validator import validate, validate_metadata
 from job_executor.exception import BuilderStepError
 from job_executor.config import environment
 
+
 logger = logging.getLogger()
 INPUT_DIR = environment.get('INPUT_DIR')
 WORKING_DIR = environment.get('WORKING_DIR')
