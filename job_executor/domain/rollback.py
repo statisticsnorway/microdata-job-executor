@@ -18,8 +18,7 @@ logger = logging.getLogger()
 
 def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
     try:
-        # Restore files from /tmp backup
-        logger.info(f'{job_id}: Restoring BUMP from backup')
+        logger.info(f'{job_id}: Restoring files from temporary backup')
         restored_version_number = local_storage.restore_from_temporary_backup()
         update_type = bump_manifesto.update_type
         bumped_version_number = (
