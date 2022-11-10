@@ -1,4 +1,6 @@
+import os
 from pathlib import Path
+import shutil
 
 from job_executor.adapter import local_storage
 from job_executor.exception import LocalStorageError
@@ -30,22 +32,49 @@ def rollback_bump(job: Job):
         pending_datasets = [
             dataset.name for dataset in bump_manifesto.data_structure_updates
         ]
-        # TODO: remove generated datastore files
-        #       ( data_versions, metadata_all__)
-        # rename files back to __DRAFT
+
+        # Remove generated datastore files
+        datastore_dir = Path(local_storage.DATASTORE_DIR)
+        data_versions_path = (
+            datastore_dir / f'data_versions__{bumped_version_data}.json'
+        )
+        if data_versions_path.exists():
+            os.remove(data_versions_path)
+        metadata_all_path = (
+            datastore_dir / f'metadata_all__{bumped_version_metadata}.json'
+        )
+        if metadata_all_path.exists():
+            os.remove(metadata_all_path)
+
+        # Revert name change of DRAFT files
         for dataset in pending_datasets:
-            datastore_dir = Path(local_storage.DATASTORE_DIR)
             dataset_data_dir = datastore_dir / 'data' / dataset
             dataset_metadata_dir = datastore_dir / 'metadata' / dataset
             partitioned_data_path = (
                 dataset_data_dir / f'{dataset}__{bumped_version_data}'
             )
+            if partitioned_data_path.exists():
+                shutil.move(
+                    partitioned_data_path,
+                    dataset_data_dir / f'{dataset}__DRAFT'
+                )
             data_path = (
                 dataset_data_dir / f'{dataset}__{bumped_version_data}.parquet'
             )
+            if data_path.exists():
+                shutil.move(
+                    data_path,
+                    dataset_data_dir / f'{dataset}__DRAFT.parquet'
+                )
             metadata_path = (
                 dataset_metadata_dir /
                 f'{dataset}__{bumped_version_metadata}.json'
             )
+            if metadata_path.exists():
+                shutil.move(
+                    metadata_path,
+                    dataset_metadata_dir / f'{dataset}__DRAFT.json'
+                )
+        local_storage.delete_temporary_backup()
     except LocalStorageError as e:
         raise e
