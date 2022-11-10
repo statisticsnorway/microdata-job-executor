@@ -1,10 +1,11 @@
 import os
-from pathlib import Path
+import logging
 import shutil
+from pathlib import Path
 
 from job_executor.adapter import local_storage
 from job_executor.exception import LocalStorageError
-from job_executor.model import Job
+from job_executor.model.datastore_version import DatastoreVersion
 from job_executor.model.datastore_versions import (
     underscored_to_dotted_version,
     bump_dotted_version_number,
@@ -12,11 +13,13 @@ from job_executor.model.datastore_versions import (
 )
 
 
-def rollback_bump(job: Job):
+logger = logging.getLogger()
+
+
+def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
     try:
         # Restore files from /tmp backup
         restored_version_number = local_storage.restore_from_temporary_backup()
-        bump_manifesto = job.parameters.bump_manifesto
         update_type = bump_manifesto.update_type
         bumped_version_number = (
             '1.0.0.0' if restored_version_number is None

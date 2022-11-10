@@ -62,7 +62,16 @@ def fix_interrupted_jobs():
                 'Retrying due to an unexpected interruption.'
             )
         elif job_operation == 'BUMP':
-            rollback.rollback_bump(job)
+            try:
+                rollback.rollback_bump(
+                    job.job_id, job.parameters.bump_manifesto
+                )
+            except Exception as e:
+                logger.exception(e)
+                logger.error(f'Failed rollback for {job.job_id}')
+                raise StartupException(
+                    f'Failed rollback for {job.job_id}'
+                ) from e
             logger.info(
                 'Setting status to "failed" for '
                 f'interrupted job with id {job.job_id}'
