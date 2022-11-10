@@ -19,6 +19,7 @@ logger = logging.getLogger()
 def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
     try:
         # Restore files from /tmp backup
+        logger.info(f'{job_id}: Restoring BUMP from backup')
         restored_version_number = local_storage.restore_from_temporary_backup()
         update_type = bump_manifesto.update_type
         bumped_version_number = (
@@ -28,6 +29,10 @@ def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
                 update_type
             )
         )
+        logger.info(
+            f'{job_id}: Rolling back to {restored_version_number} '
+            f'from bump to {bumped_version_number}'
+        )
         bumped_version_metadata = dotted_to_underscored_version(
             bumped_version_number
         )
@@ -35,21 +40,27 @@ def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
         pending_datasets = [
             dataset.name for dataset in bump_manifesto.data_structure_updates
         ]
+        logger.info(
+            f'{job_id}: Found {len(pending_datasets)} '
+            'pending datasets in bump_manifesto'
+        )
 
-        # Remove generated datastore files
+        logger.info(f'{job_id}: Removing generated datastore files')
         datastore_dir = Path(local_storage.DATASTORE_DIR)
         data_versions_path = (
             datastore_dir / f'data_versions__{bumped_version_data}.json'
         )
         if data_versions_path.exists():
+            logger.info(f'{job_id}: Deleting {data_versions_path}')
             os.remove(data_versions_path)
         metadata_all_path = (
             datastore_dir / f'metadata_all__{bumped_version_metadata}.json'
         )
         if metadata_all_path.exists():
+            logger.info(f'{job_id}: Deleting {metadata_all_path}')
             os.remove(metadata_all_path)
 
-        # Revert name change of DRAFT files
+        logger.info(f'{job_id}: Reverting name change of DRAFT files')
         for dataset in pending_datasets:
             dataset_data_dir = datastore_dir / 'data' / dataset
             dataset_metadata_dir = datastore_dir / 'metadata' / dataset
@@ -57,14 +68,20 @@ def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
                 dataset_data_dir / f'{dataset}__{bumped_version_data}'
             )
             if partitioned_data_path.exists():
+                logger.info(
+                    f'{job_id}: Renaming {partitioned_data_path} '
+                    'back to draft'
+                )
                 shutil.move(
                     partitioned_data_path,
                     dataset_data_dir / f'{dataset}__DRAFT'
                 )
+
             data_path = (
                 dataset_data_dir / f'{dataset}__{bumped_version_data}.parquet'
             )
             if data_path.exists():
+                logger.info(f'{job_id}: Renaming {data_path} back to draft')
                 shutil.move(
                     data_path,
                     dataset_data_dir / f'{dataset}__DRAFT.parquet'
@@ -74,10 +91,19 @@ def rollback_bump(job_id: str, bump_manifesto: DatastoreVersion):
                 f'{dataset}__{bumped_version_metadata}.json'
             )
             if metadata_path.exists():
+                logger.info(
+                    f'{job_id}: Renaming {metadata_path} back to draft'
+                )
                 shutil.move(
                     metadata_path,
                     dataset_metadata_dir / f'{dataset}__DRAFT.json'
                 )
+        logger.info(f'{job_id}: Deleting temporary backup')
         local_storage.delete_temporary_backup()
     except LocalStorageError as e:
+        logger.error(f'{job_id}: LocalStorageError when rolling back job')
+        logger.exception(e)
         raise e
+    except Exception as e:
+        logger.error(f'{job_id}: Unexpected error when rolling back job')
+        logger.exception(e)
