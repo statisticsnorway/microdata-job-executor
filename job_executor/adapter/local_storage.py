@@ -405,20 +405,15 @@ def archive_draft_version(version: str):
     * dataset_name: str - name of dataset draft
     * version: str - version of the archived draft
     """
-
     archive_dir = Path(f'{DATASTORE_DIR}/archive')
-
-    if not archive_dir.exists():
-        os.makedirs(archive_dir, exist_ok=False)
+    os.makedirs(archive_dir, exist_ok=True)
 
     timestamp = datetime.now()
 
     archived_draft_version_path = (
         archive_dir / f'draft_version_{version}_{timestamp}.json'
     )
-
-    if archive_dir.exists():
-        shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
+    shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
 
 
 def archive_input_files(dataset_name: str):
