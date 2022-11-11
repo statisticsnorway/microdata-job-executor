@@ -1,9 +1,11 @@
 from typing import List, Union
 from pydantic import root_validator
+from job_executor.exception import BumpException
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import Metadata
 from job_executor.adapter import local_storage
+from job_executor.model.datastore_version import DatastoreVersion
 
 
 class DataStoreInfo(CamelModel):
@@ -56,4 +58,30 @@ class MetadataAllDraft(MetadataAll):
 
     def add(self, metadata: Metadata):
         self.data_structures.append(metadata)
+        self._write_to_file()
+
+    def rebuild(
+        self,
+        released_metadata: List[Metadata],
+        draft_version: DatastoreVersion
+    ):
+        previous_data_structures = [ds for ds in self.data_structures]
+        self.data_structures = [
+            Metadata(**m.dict(by_alias=True))
+            for m in released_metadata
+        ]
+        for draft in draft_version:
+            self.remove(draft.name)
+            if draft.operation != 'REMOVE':
+                draft_metadata = next(
+                    ds for ds in previous_data_structures
+                    if ds.name == draft.name
+                )
+                if draft_metadata is None:
+                    raise BumpException(
+                        'Could not rebuild metadata_all__DRAFT. '
+                        f'No metadata for {draft.name} in previous '
+                        'metadata_all__DRAFT'
+                    )
+                self.add(draft_metadata)
         self._write_to_file()
