@@ -16,7 +16,7 @@ DATASTORE_DIR = environment.get('DATASTORE_DIR')
 INPUT_DIR = environment.get('INPUT_DIR')
 
 DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore/datastore_versions.json'
-DRAFT_METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__draft.json'
+DRAFT_METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__DRAFT.json'
 DRAFT_VERSION_PATH = f'{DATASTORE_DIR}/datastore/draft_version.json'
 
 

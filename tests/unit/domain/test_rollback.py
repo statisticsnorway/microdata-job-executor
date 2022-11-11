@@ -96,6 +96,7 @@ def test_rollback_interrupted_bump():
     assert restored_datastore_versions == datastore_versions_backup
     assert restored_metadata_all_draft == metadata_all_draft_backup
     assert not (DATASTORE_INFO_DIR / 'metadata_all__1_0_0.json').exists()
+    assert not (DATASTORE_INFO_DIR / 'data_versions__1_0.json').exists()
 
     assert (
         os.listdir(DATASTORE_DATA_DIR / 'KJOENN')
