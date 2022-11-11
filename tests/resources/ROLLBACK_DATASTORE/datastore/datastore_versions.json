@@ -10,7 +10,7 @@
       "languageCode": "no",
       "dataStructureUpdates": [
         {
-          "name": "UTDANNING",
+          "name": "FOEDSELSVEKT",
           "description": "Første publisering",
           "operation": "ADD",
           "releaseStatus": "PENDING_RELEASE"

@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from pathlib import Path
@@ -14,7 +15,7 @@ BUMP_MANIFESTO = {
     'languageCode': 'no',
     'dataStructureUpdates': [
       {
-        'name': 'UTDANNING',
+        'name': 'FOEDSELSVEKT',
         'description': 'Første publisering',
         'operation': 'ADD',
         'releaseStatus': 'PENDING_RELEASE'
@@ -34,9 +35,17 @@ BUMP_MANIFESTO = {
     ],
     'updateType': 'MINOR'
 }
+
+
+def _read_json(file_path: str) -> dict:
+    with open(file_path, encoding='utf-8') as f:
+        return json.load(f)
+
+
 DATASTORE_INFO_DIR = Path(DATASTORE_DIR) / 'datastore'
 DATASTORE_DATA_DIR = Path(DATASTORE_DIR) / 'data'
 DATASTORE_METADATA_DIR = Path(DATASTORE_DIR) / 'metadata'
+DATASTORE_TEMP_DIR = Path(DATASTORE_DIR) / 'tmp'
 
 
 def setup_function():
@@ -62,19 +71,31 @@ def teardown_function():
 
 
 def test_rollback_interrupted_bump():
-    backup_draft_version = ''
-    backup_datastore_versions = ''
-    backup_metadata_all_draft = ''
-
+    draft_version_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'draft_version.json'
+    )
+    metadata_all_draft_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'metadata_all__DRAFT.json'
+    )
+    datastore_versions_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'datastore_versions.json'
+    )
     rollback.rollback_bump(JOB_ID, BUMP_MANIFESTO)
 
-    restored_draft_version = ''
-    restored_datastore_versions = ''
-    restored_metadata_all_draft = ''
+    restored_draft_version = _read_json(
+        DATASTORE_INFO_DIR / 'draft_version.json'
+    )
+    restored_datastore_versions = _read_json(
+        DATASTORE_INFO_DIR / 'datastore_versions.json'
+    )
+    restored_metadata_all_draft = _read_json(
+        DATASTORE_INFO_DIR / 'metadata_all__DRAFT.json'
+    )
 
-    assert restored_draft_version == backup_draft_version
-    assert restored_datastore_versions == backup_datastore_versions
-    assert restored_metadata_all_draft == backup_metadata_all_draft
+    assert restored_draft_version == draft_version_backup
+    assert restored_datastore_versions == datastore_versions_backup
+    assert restored_metadata_all_draft == metadata_all_draft_backup
+    assert not (DATASTORE_INFO_DIR / 'metadata_all__1_0_0.json').exists()
 
     assert (
         os.listdir(DATASTORE_DATA_DIR / 'KJOENN')

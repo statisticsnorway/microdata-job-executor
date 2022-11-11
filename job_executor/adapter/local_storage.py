@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from job_executor.config import environment
 from job_executor.exception import LocalStorageError
-from job_executor.model import DraftVersion, MetadataAll, DatastoreVersions
 
 
 WORKING_DIR = environment.get('WORKING_DIR')
@@ -345,11 +344,13 @@ def save_temporary_backup() -> Union[None, LocalStorageError]:
         json.dump(datastore_versions, f)
 
 
-def restore_from_temporary_backup() -> Union[str, LocalStorageError]:
+def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
     """
     Restores the datastore from the /tmp directory.
-    Returns version number of restored datastore.
     Raises `LocalStorageError`if there are any missing backup files.
+
+    Returns None if no released version in backup, else returns the
+    latest release version number as dotted four part version.
     """
     tmp_dir = Path(DATASTORE_DIR) / 'tmp'
     draft_version_backup = tmp_dir / 'draft_version.json'
@@ -364,15 +365,14 @@ def restore_from_temporary_backup() -> Union[str, LocalStorageError]:
     if not backup_exists:
         raise LocalStorageError('Missing /tmp backup files')
     try:
-        DraftVersion(_read_json(draft_version_backup))
-        MetadataAll(_read_json(metadata_all_draft_backup))
-        datastore_versions = DatastoreVersions(
-            _read_json(datastore_versions_backup)
-        )
+        datastore_versions = _read_json(datastore_versions_backup)
         shutil.move(draft_version_backup, DRAFT_VERSION_PATH)
         shutil.move(metadata_all_draft_backup, DRAFT_METADATA_ALL_PATH)
         shutil.move(datastore_versions_backup, DATASTORE_VERSIONS_PATH)
-        return datastore_versions.get_latest_version_number()
+        if datastore_versions['versions'] == []:
+            return None
+        else:
+            return datastore_versions['versions'][0]['version']
     except ValidationError as e:
         raise LocalStorageError('Invalid backup file') from e
 

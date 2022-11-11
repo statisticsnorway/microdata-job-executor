@@ -1,12 +1,15 @@
 import os
 import json
 import shutil
+from pathlib import Path
+
 from requests_mock import Mocker as RequestsMocker
+from test_util import get_file_list_from_dir
 
 from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
-from pathlib import Path
-from test_util import get_file_list_from_dir
+
+
 
 datastore = Datastore()
 JOB_SERVICE_URL = os.getenv('JOB_SERVICE_URL')
