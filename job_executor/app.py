@@ -134,6 +134,8 @@ def main():
                 except Exception as e:
                     logger.error(f'{job.job_id} failed')
                     logger.exception(e)
+                    # TODO: Catch errors in Datastore
+                    #       Only fatal errors should make it here
                     job_service.update_job_status(
                         job.job_id, 'failed',
                         log='Failed due to unexpected error'

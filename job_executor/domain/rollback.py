@@ -37,13 +37,13 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
             bumped_version_number
         )
         bumped_version_data = '_'.join(bumped_version_metadata.split('_')[:-1])
-        pending_datasets = [
+        manifesto_datasets = [
             dataset['name']
             for dataset in bump_manifesto['dataStructureUpdates']
         ]
         logger.info(
-            f'{job_id}: Found {len(pending_datasets)} '
-            'pending datasets in bump_manifesto'
+            f'{job_id}: Found {len(manifesto_datasets)} '
+            ' datasets in bump_manifesto'
         )
 
         logger.info(f'{job_id}: Removing generated datastore files')
@@ -65,8 +65,8 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
             os.remove(metadata_all_path)
 
         logger.info(f'{job_id}: Reverting name change of DRAFT files')
-        for dataset in pending_datasets:
-            logger.info(f'{job_id}: Reverting name change for {dataset}')
+        for dataset in manifesto_datasets:
+            logger.info(f'{job_id}: Reverting files to draft for {dataset}')
             dataset_data_dir = datastore_dir / 'data' / dataset
             dataset_metadata_dir = datastore_dir / 'metadata' / dataset
             partitioned_data_path = (
