@@ -267,7 +267,6 @@ class Datastore():
         new_version: str,
         new_version_metadata: list[Metadata]
     ):
-        self._log(job_id, 'Writing new metadata_all to file')
         new_metadata_all_dict = self.metadata_all_draft.dict(by_alias=True)
         del new_metadata_all_dict['dataStructures']
         new_metadata_all_dict['dataStructures'] = [
