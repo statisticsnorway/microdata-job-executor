@@ -263,7 +263,6 @@ class Datastore():
 
     def _generate_new_metadata_all(
         self,
-        job_id: str,
         new_version: str,
         new_version_metadata: list[Metadata]
     ):
@@ -394,9 +393,7 @@ class Datastore():
                 )
 
             self._log(job_id, 'Writing new metadata_all to file')
-            self._generate_new_metadata_all(
-                job_id, new_version, new_metadata_datasets
-            )
+            self._generate_new_metadata_all(new_version, new_metadata_datasets)
             self.latest_version_number = new_version
 
             self._log(job_id, 'Rebuilding metadata_all_DRAFT')
