@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 import requests
-from requests import RequestException
+from requests import RequestException, Response
 
 from job_executor.config import environment
 from job_executor.model.job import Job, JobStatus, Operation
@@ -60,7 +60,7 @@ def update_description(job_id: str, new_description: str):
         raise HttpResponseError(f'{response.status_code}: {response.text}')
 
 
-def execute_request(method, url, **kwargs):
+def execute_request(method: str, url: str, **kwargs) -> Response:
     try:
         return requests.request(
             method=method,
