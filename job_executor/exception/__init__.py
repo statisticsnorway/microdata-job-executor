@@ -6,6 +6,10 @@ class HttpResponseError(Exception):
     ...
 
 
+class HttpRequestError(Exception):
+    ...
+
+
 class VersioningException(Exception):
     ...
 
