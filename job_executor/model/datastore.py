@@ -1,6 +1,7 @@
 import logging
 
 from job_executor.adapter import local_storage, job_service
+from job_executor.domain.rollback import rollback_bump
 from job_executor.model.metadata import Metadata
 from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
 from job_executor.model.datastore_versions import DatastoreVersions
@@ -210,7 +211,9 @@ class Datastore():
             self._log(job_id, log_message, level='ERROR')
             job_service.update_job_status(job_id, 'failed', log_message)
         else:
-            if dataset_operation in ['CHANGE_DATA', 'PATCH_METADATA', 'REMOVE']:
+            if dataset_operation in [
+                'CHANGE_DATA', 'PATCH_METADATA', 'REMOVE'
+            ]:
                 released_metadata = self.metadata_all_latest.get(dataset_name)
                 if released_metadata is None:
                     log_message = (
@@ -258,73 +261,16 @@ class Datastore():
             self._log(job_id, f'{e}', level='ERROR')
             job_service.update_job_status(job_id, 'failed', f'{e}')
 
-    def bump_version(
-        self, job_id: str, bump_manifesto: DatastoreVersion, description: str
+    def _generate_new_metadata_all(
+        self,
+        new_version: str,
+        new_version_metadata: list[Metadata]
     ):
-        """
-        Release a new version of the datastore with the pending
-        operations in the draft version of the datastore.
-        """
-        self._log(job_id, 'initiated')
-        job_service.update_job_status(job_id, 'initiated')
-        local_storage.save_temporary_backup()
-        latest_data_versions = local_storage.get_data_versions(
-            self.latest_version_number
-        )
-        if not self.draft_version.validate_bump_manifesto(bump_manifesto):
-            raise VersioningException(
-                'Invalid Bump: Changes were made to the datastore '
-                'after bump was requested'
-            )
-        local_storage.archive_draft_version(self.latest_version_number)
-        release_updates, update_type = self.draft_version.release_pending()
-        # If there are no released versions update type will always be MAJOR
-        if self.metadata_all_latest is None:
-            update_type = 'MAJOR'
-        new_version = self.datastore_versions.add_new_release_version(
-            release_updates, description, update_type
-        )
-        new_metadata_datasets = (
-            [] if self.metadata_all_latest is None
-            else [ds for ds in self.metadata_all_latest]
-        )
-
-        new_data_versions = {
-            dataset_name: path
-            for dataset_name, path in latest_data_versions.items()
-        }
-        for release_update in release_updates:
-            operation = release_update.operation
-            dataset_name = release_update.name
-            if operation == 'REMOVE':
-                new_metadata_datasets = [
-                    dataset for dataset in new_metadata_datasets
-                    if dataset.name != dataset_name
-                ]
-                del new_data_versions[dataset_name]
-            if operation in ['PATCH_METADATA', 'CHANGE_DATA', 'ADD']:
-                released_metadata = (
-                    local_storage.rename_metadata_draft_to_release(
-                        dataset_name, new_version
-                    )
-                )
-                new_metadata_datasets = [
-                    dataset for dataset in new_metadata_datasets
-                    if dataset.name != dataset_name
-                ]
-                new_metadata_datasets.append(Metadata(**released_metadata))
-            if operation in ['ADD', 'CHANGE_DATA']:
-                new_data_versions[dataset_name] = (
-                    local_storage.rename_parquet_draft_to_release(
-                        dataset_name, new_version
-                    )
-                )
-        if update_type in ['MINOR', 'MAJOR']:
-            local_storage.write_data_versions(new_data_versions, new_version)
         new_metadata_all_dict = self.metadata_all_draft.dict(by_alias=True)
         del new_metadata_all_dict['dataStructures']
         new_metadata_all_dict['dataStructures'] = [
-            dataset.dict(by_alias=True) for dataset in new_metadata_datasets
+            dataset.dict(by_alias=True)
+            for dataset in new_version_metadata
         ]
         local_storage.write_metadata_all(
             new_metadata_all_dict, new_version
@@ -332,17 +278,135 @@ class Datastore():
         self.metadata_all_latest = MetadataAll(
             **local_storage.get_metadata_all(new_version)
         )
-        self.latest_version_number = new_version
-        self.metadata_all_draft.remove_all()
-        for metadata in self.metadata_all_latest:
-            self.metadata_all_draft.add(metadata)
-        for draft in self.draft_version:
-            self.metadata_all_draft.remove(draft.name)
-            if draft.operation == 'REMOVE':
-                continue
-            else:
-                self.metadata_all_draft.add(
-                    Metadata(**local_storage.get_metadata(draft.name, 'DRAFT'))
+
+    def _version_pending_operations(
+        self,
+        job_id: str,
+        release_updates: list[DataStructureUpdate],
+        new_version: str
+    ) -> tuple[list[Metadata], dict]:
+        self._log(job_id, 'Generating new metadata_all')
+        new_metadata_datasets = (
+            [] if self.metadata_all_latest is None
+            else [ds for ds in self.metadata_all_latest]
+        )
+
+        self._log(job_id, 'Generating new data_versions')
+        latest_data_versions = local_storage.get_data_versions(
+            self.latest_version_number
+        )
+        new_data_versions = {
+            dataset_name: path
+            for dataset_name, path in latest_data_versions.items()
+        }
+        self._log(job_id, 'Versioning each pending operation in BUMP')
+        for release_update in release_updates:
+            operation = release_update.operation
+            dataset_name = release_update.name
+            self._log(
+                job_id,
+                f'Versioning {dataset_name} with operation {operation}'
+            )
+
+            if operation == 'REMOVE':
+                self._log(job_id, 'Removing from metadata_all')
+                new_metadata_datasets = [
+                    dataset for dataset in new_metadata_datasets
+                    if dataset.name != dataset_name
+                ]
+                self._log(job_id, 'Removing from data_versions')
+                del new_data_versions[dataset_name]
+
+            if operation in ['PATCH_METADATA', 'CHANGE_DATA', 'ADD']:
+                self._log(job_id, 'Renaming metadata file')
+                released_metadata = (
+                    local_storage.rename_metadata_draft_to_release(
+                        dataset_name, new_version
+                    )
                 )
-        job_service.update_job_status(job_id, 'completed')
-        local_storage.delete_temporary_backup()
+                self._log(job_id, 'Updating metadata into metadata_all')
+                new_metadata_datasets = [
+                    dataset for dataset in new_metadata_datasets
+                    if dataset.name != dataset_name
+                ]
+                new_metadata_datasets.append(Metadata(**released_metadata))
+            if operation in ['ADD', 'CHANGE_DATA']:
+                self._log(
+                    job_id, 'Renaming data file and updating data_versions'
+                )
+                new_data_versions[dataset_name] = (
+                    local_storage.rename_parquet_draft_to_release(
+                        dataset_name, new_version
+                    )
+                )
+        return new_metadata_datasets, new_data_versions
+
+    def bump_version(
+        self, job_id: str, bump_manifesto: DatastoreVersion, description: str
+    ):
+        """
+        Release a new version of the datastore with the pending
+        operations in the draft version of the datastore.
+        """
+        self._log(job_id, 'Saving temporary backup')
+        local_storage.save_temporary_backup()
+
+        try:
+            self._log(job_id, 'initiated')
+            job_service.update_job_status(job_id, 'initiated')
+
+            self._log(job_id, 'Validating bump manifesto')
+            if not self.draft_version.validate_bump_manifesto(bump_manifesto):
+                log_message = (
+                    'Changes were made to the datastore '
+                    'after bump was requested'
+                )
+                self._log(job_id, log_message, 'ERROR')
+                job_service.update_job_status(job_id, 'failed', log_message)
+                return
+
+            self._log(job_id, 'Archiving draft version')
+            local_storage.archive_draft_version(self.latest_version_number)
+
+            self._log(job_id, 'Release pending operations from draft_version')
+            release_updates, update_type = self.draft_version.release_pending()
+            # If there are no released versions update type is MAJOR
+            if self.metadata_all_latest is None:
+                update_type = 'MAJOR'
+            new_version = self.datastore_versions.add_new_release_version(
+                release_updates, description, update_type
+            )
+            self._log(
+                job_id,
+                f'Bumping from {self.latest_version_number} => {new_version}'
+                f'({update_type})'
+            )
+            new_metadata_datasets, new_data_versions = (
+                self._version_pending_operations(
+                    job_id, release_updates, new_version
+                )
+            )
+            if update_type in ['MINOR', 'MAJOR']:
+                self._log(job_id, 'Writing new data_versions to file')
+                local_storage.write_data_versions(
+                    new_data_versions, new_version
+                )
+
+            self._log(job_id, 'Writing new metadata_all to file')
+            self._generate_new_metadata_all(new_version, new_metadata_datasets)
+            self.latest_version_number = new_version
+
+            self._log(job_id, 'Rebuilding metadata_all_DRAFT')
+            self.metadata_all_draft.rebuild(
+                self.metadata_all_latest.data_structures,
+                self.draft_version
+            )
+
+            self._log(job_id, 'completed BUMP')
+            job_service.update_job_status(job_id, 'completed')
+            self._log(job_id, 'Deleting temporary backup')
+            local_storage.delete_temporary_backup()
+        except Exception as e:
+            self._log(job_id, 'An unexpected error occured', 'ERROR')
+            self._log(job_id, str(e), 'ERROR')
+            rollback_bump(job_id, bump_manifesto.dict(by_alias=True))

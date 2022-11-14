@@ -1,12 +1,14 @@
 import os
 import json
 import shutil
+from pathlib import Path
+
 from requests_mock import Mocker as RequestsMocker
+from tests.unit.test_util import get_file_list_from_dir
 
 from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
-from pathlib import Path
-from test_util import get_file_list_from_dir
+
 
 datastore = Datastore()
 JOB_SERVICE_URL = os.getenv('JOB_SERVICE_URL')
@@ -323,7 +325,6 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
     assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
 
 
-
 def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
@@ -344,4 +345,3 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
         update for update in draft_version['dataStructureUpdates']
         if update['name'] == DATASET_NAME
     ]
-
