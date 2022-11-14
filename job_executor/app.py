@@ -89,8 +89,12 @@ def fix_interrupted_jobs():
             raise StartupException(log_message)
 
 
-fix_interrupted_jobs()
-datastore = Datastore()
+try:
+    fix_interrupted_jobs()
+    datastore = Datastore()
+except Exception as e:
+    logger.exception('Exception when initializing', exc_info=e)
+    sys.exit("Exception when initializing")
 
 
 def main():
