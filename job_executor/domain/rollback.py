@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 from job_executor.adapter import local_storage
+from job_executor.adapter.local_storage import WORKING_DIR
 from job_executor.exception import LocalStorageError
 from job_executor.model.datastore_versions import (
     underscored_to_dotted_version,
@@ -11,7 +12,7 @@ from job_executor.model.datastore_versions import (
     dotted_to_underscored_version
 )
 
-
+WORKING_DIR_PATH = Path(WORKING_DIR)
 logger = logging.getLogger()
 
 
@@ -113,3 +114,58 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
     except Exception as e:
         logger.error(f'{job_id}: Unexpected error when rolling back job')
         logger.exception(e)
+
+
+def rollback_worker_job(job_id: str, operation: str, dataset_name: str):
+    logger.info(
+        f'{job_id}: Rolling back worker job '
+        f'with target: "{dataset_name}" and operation "{operation}"'
+    )
+    generated_metadata_files = [
+        f'{dataset_name}.json',
+        f'{dataset_name}__DRAFT.json'
+    ]
+    generated_data_files = [
+        f'{dataset_name}.db',
+        f'{dataset_name}.csv',
+        f'{dataset_name}_pseudonymized.csv',
+        f'{dataset_name}_pseudonymized_enriched.csv',
+        f'{dataset_name}__DRAFT.parquet'
+    ]
+    generated_data_directory = f'{dataset_name}__DRAFT'
+
+    for file in generated_metadata_files:
+        filepath = WORKING_DIR_PATH / file
+        if filepath.exists:
+            logger.info(f'{job_id}: Deleting metadata file "{filepath}"')
+            os.remove(filepath)
+
+    if operation in ['ADD', 'CHANGE_DATA']:
+        for file in generated_data_files:
+            filepath = WORKING_DIR_PATH / file
+        if filepath.exists:
+            logger.info(f'{job_id}: Deleting data file "{filepath}"')
+            os.remove(filepath)
+        parquet_directory = WORKING_DIR_PATH / generated_data_directory
+        if parquet_directory.exists and os.path.isdir():
+            logger.info(
+                f'{job_id}: Deleting data directory "{parquet_directory}"'
+            )
+            shutil.rmtree(parquet_directory)
+
+
+def rollback_import_job(job_id: str, operation: str, dataset_name: str):
+    logger.info(
+        f'{job_id}: Rolling back import job '
+        f'with target: "{dataset_name}" and operation "{operation}"'
+    )
+    logger.info(f'{job_id}: Restoring files from temporary backup')
+    local_storage.restore_from_temporary_backup()
+
+    logger.info(f'{job_id}: Deleting metadata draft file')
+    local_storage.delete_metadata_draft(dataset_name)
+    if operation in ['ADD', 'CHANGE_DATA']:
+        logger.info(f'{job_id}: Deleting data file/directory')
+        local_storage.delete_parquet_draft(dataset_name)
+    logger.info(f'{job_id}: Deleting temporary backup')
+    local_storage.delete_temporary_backup()
