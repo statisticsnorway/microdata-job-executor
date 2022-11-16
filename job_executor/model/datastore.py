@@ -1,7 +1,9 @@
 import logging
 
 from job_executor.adapter import local_storage, job_service
-from job_executor.domain.rollback import rollback_bump
+from job_executor.domain.rollback import (
+    rollback_bump, rollback_import_job
+)
 from job_executor.model.metadata import Metadata
 from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
 from job_executor.model.datastore_versions import DatastoreVersions
@@ -61,68 +63,88 @@ class Datastore():
         Patch metadata for a released dataset with updated metadata
         file.
         """
-        self._log(job_id, 'importing')
-        job_service.update_job_status(job_id, 'importing')
-        dataset_release_status = self._get_release_status(dataset_name)
-        if dataset_release_status != 'RELEASED':
-            raise VersioningException(
-                'Can\'t patch metadata of dataset with status '
-                f'{dataset_release_status}'
+        self._log(job_id, 'Saving temporary backup')
+        local_storage.save_temporary_backup()
+        try:
+            self._log(job_id, 'importing')
+            job_service.update_job_status(job_id, 'importing')
+            dataset_release_status = self._get_release_status(dataset_name)
+            if dataset_release_status != 'RELEASED':
+                raise VersioningException(
+                    'Can\'t patch metadata of dataset with status '
+                    f'{dataset_release_status}'
+                )
+            draft_metadata = Metadata(
+                **local_storage.get_working_dir_metadata(dataset_name)
             )
-        draft_metadata = Metadata(
-            **local_storage.get_working_dir_metadata(dataset_name)
-        )
-        released_metadata = self.metadata_all_latest.get(dataset_name)
-        patched_metadata = released_metadata.patch(draft_metadata)
-        self.metadata_all_draft.remove(dataset_name)
-        self.metadata_all_draft.add(patched_metadata)
-        self.draft_version.add(
-            DataStructureUpdate(
-                name=dataset_name,
-                operation='PATCH_METADATA',
-                description=description,
-                releaseStatus='DRAFT'
+            released_metadata = self.metadata_all_latest.get(dataset_name)
+            patched_metadata = released_metadata.patch(draft_metadata)
+            self.metadata_all_draft.remove(dataset_name)
+            self.metadata_all_draft.add(patched_metadata)
+            self.draft_version.add(
+                DataStructureUpdate(
+                    name=dataset_name,
+                    operation='PATCH_METADATA',
+                    description=description,
+                    releaseStatus='DRAFT'
+                )
             )
-        )
-        local_storage.write_metadata(
-            patched_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
-        )
-        job_service.update_job_status(job_id, 'completed')
-        self._log(job_id, 'completed')
+            local_storage.write_metadata(
+                patched_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
+            )
+            self._log(job_id, 'completed')
+            job_service.update_job_status(job_id, 'completed')
+            self._log(job_id, 'Deleting temporary backup')
+            local_storage.delete_temporary_backup()
+        except Exception as e:
+            self._log(job_id, 'An unexpected error occured', 'ERROR')
+            self._log(job_id, str(e), 'ERROR')
+            rollback_import_job(job_id, 'PATCH_METADATA', dataset_name)
+            job_service.update_job_status(job_id, 'failed')
 
     def add(self, job_id: str, dataset_name: str, description: str):
         """
         Import metadata and data as draft for a new dataset that
         has not been released in a previous versions.
         """
-        self._log(job_id, 'importing')
-        job_service.update_job_status(job_id, 'importing')
-        dataset_release_status = self._get_release_status(dataset_name)
-        if dataset_release_status is not None:
-            raise VersioningException(
-                f'Can\'t add dataset with status {dataset_release_status}'
+        self._log(job_id, 'Saving temporary backup')
+        local_storage.save_temporary_backup()
+        try:
+            self._log(job_id, 'importing')
+            job_service.update_job_status(job_id, 'importing')
+            dataset_release_status = self._get_release_status(dataset_name)
+            if dataset_release_status is not None:
+                raise VersioningException(
+                    f'Can\'t add dataset with status {dataset_release_status}'
+                )
+            self.draft_version.add(
+                DataStructureUpdate(
+                    name=dataset_name,
+                    operation='ADD',
+                    description=description,
+                    releaseStatus='DRAFT'
+                )
             )
-        self.draft_version.add(
-            DataStructureUpdate(
-                name=dataset_name,
-                operation='ADD',
-                description=description,
-                releaseStatus='DRAFT'
+            draft_metadata = Metadata(
+                **local_storage.get_working_dir_metadata(dataset_name)
             )
-        )
-        draft_metadata = Metadata(
-            **local_storage.get_working_dir_metadata(dataset_name)
-        )
-        local_storage.make_dataset_dir(dataset_name)
-        local_storage.write_metadata(
-            draft_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
-        )
-        self.metadata_all_draft.add(draft_metadata)
-        local_storage.move_working_dir_parquet_to_datastore(
-            dataset_name
-        )
-        job_service.update_job_status(job_id, 'completed')
-        self._log(job_id, 'completed')
+            local_storage.make_dataset_dir(dataset_name)
+            local_storage.write_metadata(
+                draft_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
+            )
+            self.metadata_all_draft.add(draft_metadata)
+            local_storage.move_working_dir_parquet_to_datastore(
+                dataset_name
+            )
+            self._log(job_id, 'completed')
+            job_service.update_job_status(job_id, 'completed')
+            self._log(job_id, 'Deleting temporary backup')
+            local_storage.delete_temporary_backup()
+        except Exception as e:
+            self._log(job_id, 'An unexpected error occured', 'ERROR')
+            self._log(job_id, str(e), 'ERROR')
+            rollback_import_job(job_id, 'ADD', dataset_name)
+            job_service.update_job_status(job_id, 'failed')
 
     def change_data(self, job_id: str, dataset_name: str, description: str):
         """
@@ -130,33 +152,44 @@ class Datastore():
         for a dataset that has already been released in a
         previous version.
         """
-        self._log(job_id, 'importing')
-        job_service.update_job_status(job_id, 'importing')
-        dataset_release_status = self._get_release_status(dataset_name)
-        if dataset_release_status != 'RELEASED':
-            raise VersioningException(
-                'Can\'t change data for dataset with release status'
-                f'{dataset_release_status}'
+        try:
+            self._log(job_id, 'Saving temporary backup')
+            local_storage.save_temporary_backup()
+
+            self._log(job_id, 'importing')
+            job_service.update_job_status(job_id, 'importing')
+            dataset_release_status = self._get_release_status(dataset_name)
+            if dataset_release_status != 'RELEASED':
+                raise VersioningException(
+                    'Can\'t change data for dataset with release status'
+                    f'{dataset_release_status}'
+                )
+            draft_metadata = Metadata(
+                **local_storage.get_working_dir_metadata(dataset_name)
             )
-        draft_metadata = Metadata(
-            **local_storage.get_working_dir_metadata(dataset_name)
-        )
-        self.metadata_all_draft.remove(dataset_name)
-        self.metadata_all_draft.add(draft_metadata)
-        self.draft_version.add(
-            DataStructureUpdate(
-                name=dataset_name,
-                operation='CHANGE_DATA',
-                description=description,
-                releaseStatus='DRAFT'
+            self.metadata_all_draft.remove(dataset_name)
+            self.metadata_all_draft.add(draft_metadata)
+            self.draft_version.add(
+                DataStructureUpdate(
+                    name=dataset_name,
+                    operation='CHANGE_DATA',
+                    description=description,
+                    releaseStatus='DRAFT'
+                )
             )
-        )
-        local_storage.write_metadata(
-            draft_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
-        )
-        local_storage.move_working_dir_parquet_to_datastore(dataset_name)
-        job_service.update_job_status(job_id, 'completed')
-        self._log(job_id, 'completed')
+            local_storage.write_metadata(
+                draft_metadata.dict(by_alias=True), dataset_name, 'DRAFT'
+            )
+            local_storage.move_working_dir_parquet_to_datastore(dataset_name)
+            self._log(job_id, 'completed')
+            job_service.update_job_status(job_id, 'completed')
+            self._log(job_id, 'Deleting temporary backup')
+            local_storage.delete_temporary_backup()
+        except Exception as e:
+            self._log(job_id, 'An unexpected error occured', 'ERROR')
+            self._log(job_id, str(e), 'ERROR')
+            rollback_import_job(job_id, 'CHANGE_DATA', dataset_name)
+            job_service.update_job_status(job_id, 'failed')
 
     def remove(self, job_id: str, dataset_name: str, description: str):
         """
@@ -410,3 +443,4 @@ class Datastore():
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
             rollback_bump(job_id, bump_manifesto.dict(by_alias=True))
+            job_service.update_job_status(job_id, 'failed')
