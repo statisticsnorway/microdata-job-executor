@@ -154,4 +154,33 @@ def test_rollback_interrupted_worker():
 
 
 def test_rollback_interrupted_import():
-    ...
+    draft_version_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'draft_version.json'
+    )
+    metadata_all_draft_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'metadata_all__DRAFT.json'
+    )
+    datastore_versions_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'datastore_versions.json'
+    )
+    rollback.rollback_import_job(JOB_ID, 'ADD', 'SIVSTAND')
+
+    restored_draft_version = _read_json(
+        DATASTORE_INFO_DIR / 'draft_version.json'
+    )
+    restored_datastore_versions = _read_json(
+        DATASTORE_INFO_DIR / 'datastore_versions.json'
+    )
+    restored_metadata_all_draft = _read_json(
+        DATASTORE_INFO_DIR / 'metadata_all__DRAFT.json'
+    )
+
+    assert restored_draft_version == draft_version_backup
+    assert restored_datastore_versions == datastore_versions_backup
+    assert restored_metadata_all_draft == metadata_all_draft_backup
+    assert not os.path.isfile(
+        DATASTORE_DATA_DIR / 'SIVSTAND' / 'SIVSTAND__DRAFT.parquet'
+    )
+    assert not os.path.isfile(
+        DATASTORE_METADATA_DIR / 'SIVSTAND' / 'SIVSTAND__DRAFT.json'
+    )
