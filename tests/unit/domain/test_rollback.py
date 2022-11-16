@@ -3,7 +3,7 @@ import os
 import shutil
 from pathlib import Path
 
-from job_executor.adapter.local_storage import DATASTORE_DIR
+from job_executor.adapter.local_storage import DATASTORE_DIR, WORKING_DIR
 from job_executor.domain import rollback
 
 
@@ -46,6 +46,7 @@ DATASTORE_INFO_DIR = Path(DATASTORE_DIR) / 'datastore'
 DATASTORE_DATA_DIR = Path(DATASTORE_DIR) / 'data'
 DATASTORE_METADATA_DIR = Path(DATASTORE_DIR) / 'metadata'
 DATASTORE_TEMP_DIR = Path(DATASTORE_DIR) / 'tmp'
+WORKING_DIR_PATH = Path(WORKING_DIR)
 
 
 def setup_function():
@@ -122,3 +123,35 @@ def test_rollback_interrupted_bump():
         os.listdir(DATASTORE_METADATA_DIR / 'BRUTTO_INNTEKT')
         == ['BRUTTO_INNTEKT__DRAFT.json']
     )
+
+
+def test_rollback_interrupted_worker():
+    pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    rollback.rollback_worker_job(JOB_ID, 'PATCH_METADATA', 'SIVSTAND')
+    post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    assert len(pre_rollback_working_dir) - len(post_rollback_working_dir) == 2
+    assert not os.path.isfile(WORKING_DIR_PATH / 'SIVSTAND.JSON')
+    assert not os.path.isfile(WORKING_DIR_PATH / 'SIVSTAND__DRAFT.JSON')
+
+    generated_files_foedested = [
+        'FOEDESTED.json',
+        'FOEDESTED__DRAFT.json',
+        'FOEDESTED.db',
+        'FOEDESTED.csv',
+        'FOEDESTED_pseudonymized.csv',
+        'FOEDESTED_pseudonymized_enriched.csv',
+        'FOEDESTED__DRAFT.parquet'
+    ]
+    pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    rollback.rollback_worker_job(JOB_ID, 'ADD', 'FOEDESTED')
+    post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    assert (
+        len(pre_rollback_working_dir) - len(generated_files_foedested)
+        == len(post_rollback_working_dir)
+    )
+    for generated_file in generated_files_foedested:
+        assert not os.path.isfile(WORKING_DIR_PATH / generated_file)
+
+
+def test_rollback_interrupted_import():
+    ...
