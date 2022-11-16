@@ -163,13 +163,11 @@ def main():
                 try:
                     _handle_manager_job(job)
                 except Exception as exc:
-                    logger.exception(f'{job.job_id} failed', exc_info=exc)
-                    # TODO: Catch errors in Datastore
-                    #       Only fatal errors should make it here
-                    job_service.update_job_status(
-                        job.job_id, 'failed',
-                        log='Failed due to unexpected error'
+                    logger.exception(
+                        f'{job.job_id} failed and could not roll back',
+                        exc_info=exc
                     )
+                    raise exc
     except Exception as exc:
         logger.exception('Service stopped by exception', exc_info=exc)
     finally:
