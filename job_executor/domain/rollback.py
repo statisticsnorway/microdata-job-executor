@@ -136,7 +136,7 @@ def rollback_worker_job(job_id: str, operation: str, dataset_name: str):
 
     for file in generated_metadata_files:
         filepath = WORKING_DIR_PATH / file
-        if filepath.exists:
+        if filepath.exists():
             logger.info(f'{job_id}: Deleting metadata file "{filepath}"')
             os.remove(filepath)
 
