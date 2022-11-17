@@ -143,7 +143,7 @@ def rollback_worker_job(job_id: str, operation: str, dataset_name: str):
     if operation in ['ADD', 'CHANGE_DATA']:
         for file in generated_data_files:
             filepath = WORKING_DIR_PATH / file
-            if filepath.exists:
+            if filepath.exists():
                 logger.info(f'{job_id}: Deleting data file "{filepath}"')
                 os.remove(filepath)
         parquet_directory = WORKING_DIR_PATH / generated_data_directory
