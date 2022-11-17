@@ -147,7 +147,7 @@ def rollback_worker_job(job_id: str, operation: str, dataset_name: str):
                 logger.info(f'{job_id}: Deleting data file "{filepath}"')
                 os.remove(filepath)
         parquet_directory = WORKING_DIR_PATH / generated_data_directory
-        if parquet_directory.exists and os.path.isdir(parquet_directory):
+        if parquet_directory.exists() and os.path.isdir(parquet_directory):
             logger.info(
                 f'{job_id}: Deleting data directory "{parquet_directory}"'
             )
