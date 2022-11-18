@@ -5,7 +5,7 @@ from multiprocessing import Queue
 from pathlib import Path
 
 from requests_mock import Mocker as RequestsMocker
-from test_util import get_file_list_from_dir
+from tests.unit.test_util import get_file_list_from_dir
 
 from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_metadata_worker import run_worker, local_storage
