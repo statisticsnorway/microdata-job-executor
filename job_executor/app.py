@@ -50,8 +50,37 @@ def fix_interrupted_jobs():
 
     for job in interrupted_jobs:
         job_operation = job.parameters.operation
+        logger.info(
+            f'{job.job_id}: Rolling back job with operation '
+            f'"{job_operation}"'
+        )
         if job_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
-            ...  # TODO: implementation
+            if job.status == 'importing':
+                rollback.rollback_manager_phase_import_job(
+                    job.job_id, job_operation, job.parameters.target
+                )
+                logger.info(
+                    f'{job.job_id}: Rolled back importing of job with '
+                    f'operation "{job_operation}". Retrying from status '
+                    '"built"'
+                )
+                job_service.update_job_status(
+                    job.job_id, 'built',
+                    'Reset to built status will be due to '
+                    'unexpected interruption'
+                )
+            else:
+                rollback.rollback_worker_phase_import_job(
+                    job.job_id, job_operation, job.parameters.target
+                )
+                logger.info(
+                    f'{job.job_id}: Setting status to "failed" for '
+                    f'interrupted job'
+                )
+                job_service.update_job_status(
+                    job.job_id, 'failed',
+                    'Job was failed due to an unexpected interruption'
+                )
         elif job_operation in ['SET_STATUS', 'DELETE_DRAFT', 'REMOVE']:
             logger.info(
                 'Setting status to "queued" for '
@@ -66,12 +95,10 @@ def fix_interrupted_jobs():
                 rollback.rollback_bump(
                     job.job_id, job.parameters.bump_manifesto
                 )
-            except Exception as e:
-                logger.exception(e)
-                logger.error(f'Failed rollback for {job.job_id}')
-                raise StartupException(
-                    f'Failed rollback for {job.job_id}'
-                ) from e
+            except Exception as exc:
+                error_message = f'Failed rollback for {job.job_id}'
+                logger.exception(error_message, exc_info=exc)
+                raise StartupException(error_message) from exc
             logger.info(
                 'Setting status to "failed" for '
                 f'interrupted job with id {job.job_id}'
@@ -135,17 +162,17 @@ def main():
             for job in built_jobs + queued_manager_jobs:
                 try:
                     _handle_manager_job(job)
-                except Exception as e:
-                    logger.error(f'{job.job_id} failed')
-                    logger.exception(e)
-                    # TODO: Catch errors in Datastore
-                    #       Only fatal errors should make it here
-                    job_service.update_job_status(
-                        job.job_id, 'failed',
-                        log='Failed due to unexpected error'
+                except Exception as exc:
+                    # All exceptions that occur during the handling of a job
+                    # are resolved by rolling back. The exceptions that
+                    # reach here are exceptions raised by the rollback.
+                    logger.exception(
+                        f'{job.job_id} failed and could not roll back',
+                        exc_info=exc
                     )
-    except Exception as e:
-        logger.exception('Service stopped by exception', exc_info=e)
+                    raise exc
+    except Exception as exc:
+        logger.exception('Service stopped by exception', exc_info=exc)
     finally:
         # Tell the logging thread to finish up
         logging_queue.put(None)

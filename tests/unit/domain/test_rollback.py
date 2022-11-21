@@ -3,7 +3,7 @@ import os
 import shutil
 from pathlib import Path
 
-from job_executor.adapter.local_storage import DATASTORE_DIR
+from job_executor.adapter.local_storage import DATASTORE_DIR, WORKING_DIR
 from job_executor.domain import rollback
 
 
@@ -46,6 +46,7 @@ DATASTORE_INFO_DIR = Path(DATASTORE_DIR) / 'datastore'
 DATASTORE_DATA_DIR = Path(DATASTORE_DIR) / 'data'
 DATASTORE_METADATA_DIR = Path(DATASTORE_DIR) / 'metadata'
 DATASTORE_TEMP_DIR = Path(DATASTORE_DIR) / 'tmp'
+WORKING_DIR_PATH = Path(WORKING_DIR)
 
 
 def setup_function():
@@ -121,4 +122,67 @@ def test_rollback_interrupted_bump():
     assert (
         os.listdir(DATASTORE_METADATA_DIR / 'BRUTTO_INNTEKT')
         == ['BRUTTO_INNTEKT__DRAFT.json']
+    )
+
+
+def test_rollback_interrupted_worker():
+    pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    rollback.rollback_worker_phase_import_job(
+        JOB_ID, 'PATCH_METADATA', 'SIVSTAND'
+    )
+    post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    assert len(pre_rollback_working_dir) - len(post_rollback_working_dir) == 2
+    assert not os.path.isfile(WORKING_DIR_PATH / 'SIVSTAND.JSON')
+    assert not os.path.isfile(WORKING_DIR_PATH / 'SIVSTAND__DRAFT.JSON')
+
+    generated_files_foedested = [
+        'FOEDESTED.json',
+        'FOEDESTED__DRAFT.json',
+        'FOEDESTED.db',
+        'FOEDESTED.csv',
+        'FOEDESTED_pseudonymized.csv',
+        'FOEDESTED_pseudonymized_enriched.csv',
+        'FOEDESTED__DRAFT.parquet'
+    ]
+    pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    rollback.rollback_worker_phase_import_job(JOB_ID, 'ADD', 'FOEDESTED')
+    post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
+    assert (
+        len(pre_rollback_working_dir) - len(generated_files_foedested)
+        == len(post_rollback_working_dir)
+    )
+    for generated_file in generated_files_foedested:
+        assert not os.path.isfile(WORKING_DIR_PATH / generated_file)
+
+
+def test_rollback_interrupted_import():
+    draft_version_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'draft_version.json'
+    )
+    metadata_all_draft_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'metadata_all__DRAFT.json'
+    )
+    datastore_versions_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'datastore_versions.json'
+    )
+    rollback.rollback_manager_phase_import_job(JOB_ID, 'ADD', 'SIVSTAND')
+
+    restored_draft_version = _read_json(
+        DATASTORE_INFO_DIR / 'draft_version.json'
+    )
+    restored_datastore_versions = _read_json(
+        DATASTORE_INFO_DIR / 'datastore_versions.json'
+    )
+    restored_metadata_all_draft = _read_json(
+        DATASTORE_INFO_DIR / 'metadata_all__DRAFT.json'
+    )
+
+    assert restored_draft_version == draft_version_backup
+    assert restored_datastore_versions == datastore_versions_backup
+    assert restored_metadata_all_draft == metadata_all_draft_backup
+    assert not os.path.isfile(
+        DATASTORE_DATA_DIR / 'SIVSTAND' / 'SIVSTAND__DRAFT.parquet'
+    )
+    assert not os.path.isfile(
+        DATASTORE_METADATA_DIR / 'SIVSTAND' / 'SIVSTAND__DRAFT.json'
     )

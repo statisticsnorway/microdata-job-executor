@@ -1,15 +1,15 @@
 import json
 import logging
 import logging.handlers
-import platform
 import sys
 import traceback
 from datetime import datetime
 from multiprocessing import Queue
-from job_executor.config import environment
 
-import tomlkit
 from json_logging import util
+import tomlkit
+
+from job_executor.config import environment
 
 
 class ContextFilter(logging.Filter):
