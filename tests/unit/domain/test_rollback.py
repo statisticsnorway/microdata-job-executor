@@ -127,7 +127,9 @@ def test_rollback_interrupted_bump():
 
 def test_rollback_interrupted_worker():
     pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
-    rollback.rollback_worker_job(JOB_ID, 'PATCH_METADATA', 'SIVSTAND')
+    rollback.rollback_worker_phase_import_job(
+        JOB_ID, 'PATCH_METADATA', 'SIVSTAND'
+    )
     post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     assert len(pre_rollback_working_dir) - len(post_rollback_working_dir) == 2
     assert not os.path.isfile(WORKING_DIR_PATH / 'SIVSTAND.JSON')
@@ -143,7 +145,7 @@ def test_rollback_interrupted_worker():
         'FOEDESTED__DRAFT.parquet'
     ]
     pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
-    rollback.rollback_worker_job(JOB_ID, 'ADD', 'FOEDESTED')
+    rollback.rollback_worker_phase_import_job(JOB_ID, 'ADD', 'FOEDESTED')
     post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     assert (
         len(pre_rollback_working_dir) - len(generated_files_foedested)
@@ -163,7 +165,7 @@ def test_rollback_interrupted_import():
     datastore_versions_backup = _read_json(
         DATASTORE_TEMP_DIR / 'datastore_versions.json'
     )
-    rollback.rollback_import_job(JOB_ID, 'ADD', 'SIVSTAND')
+    rollback.rollback_manager_phase_import_job(JOB_ID, 'ADD', 'SIVSTAND')
 
     restored_draft_version = _read_json(
         DATASTORE_INFO_DIR / 'draft_version.json'

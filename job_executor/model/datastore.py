@@ -2,7 +2,7 @@ import logging
 
 from job_executor.adapter import local_storage, job_service
 from job_executor.domain.rollback import (
-    rollback_bump, rollback_import_job
+    rollback_bump, rollback_manager_phase_import_job
 )
 from job_executor.model.metadata import Metadata
 from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
@@ -99,7 +99,9 @@ class Datastore():
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
-            rollback_import_job(job_id, 'PATCH_METADATA', dataset_name)
+            rollback_manager_phase_import_job(
+                job_id, 'PATCH_METADATA', dataset_name
+            )
             job_service.update_job_status(job_id, 'failed')
 
     def add(self, job_id: str, dataset_name: str, description: str):
@@ -143,7 +145,7 @@ class Datastore():
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
-            rollback_import_job(job_id, 'ADD', dataset_name)
+            rollback_manager_phase_import_job(job_id, 'ADD', dataset_name)
             job_service.update_job_status(job_id, 'failed')
 
     def change_data(self, job_id: str, dataset_name: str, description: str):
@@ -188,7 +190,9 @@ class Datastore():
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
-            rollback_import_job(job_id, 'CHANGE_DATA', dataset_name)
+            rollback_manager_phase_import_job(
+                job_id, 'CHANGE_DATA', dataset_name
+            )
             job_service.update_job_status(job_id, 'failed')
 
     def remove(self, job_id: str, dataset_name: str, description: str):
