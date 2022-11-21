@@ -56,7 +56,7 @@ def fix_interrupted_jobs():
         )
         if job_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
             if job.status == 'importing':
-                rollback.rollback_import_job(
+                rollback.rollback_manager_phase_import_job(
                     job.job_id, job_operation, job.parameters.target
                 )
                 logger.info(
@@ -70,7 +70,7 @@ def fix_interrupted_jobs():
                     'unexpected interruption'
                 )
             else:
-                rollback.rollback_worker_job(
+                rollback.rollback_worker_phase_import_job(
                     job.job_id, job_operation, job.parameters.target
                 )
                 logger.info(
@@ -163,6 +163,9 @@ def main():
                 try:
                     _handle_manager_job(job)
                 except Exception as exc:
+                    # All exceptions that occur during the handling of a job
+                    # are resolved by rolling back. The exceptions that
+                    # reach here are exceptions raised by the rollback.
                     logger.exception(
                         f'{job.job_id} failed and could not roll back',
                         exc_info=exc

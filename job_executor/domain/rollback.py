@@ -116,7 +116,9 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
         logger.exception(e)
 
 
-def rollback_worker_job(job_id: str, operation: str, dataset_name: str):
+def rollback_worker_phase_import_job(
+    job_id: str, operation: str, dataset_name: str
+):
     logger.info(
         f'{job_id}: Rolling back worker job '
         f'with target: "{dataset_name}" and operation "{operation}"'
@@ -154,7 +156,9 @@ def rollback_worker_job(job_id: str, operation: str, dataset_name: str):
             shutil.rmtree(parquet_directory)
 
 
-def rollback_import_job(job_id: str, operation: str, dataset_name: str):
+def rollback_manager_phase_import_job(
+    job_id: str, operation: str, dataset_name: str
+):
     logger.info(
         f'{job_id}: Rolling back import job '
         f'with target: "{dataset_name}" and operation "{operation}"'
