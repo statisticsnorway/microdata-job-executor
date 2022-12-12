@@ -82,8 +82,8 @@ class DraftVersion(DatastoreVersion):
                 f'Draft for {data_structure_update.name} already exists'
             )
         self.data_structure_updates.append(data_structure_update)
-        self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
+        self.release_time = int(
+            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
         )
         self._calculate_update_type()
         self._write_to_file()
@@ -105,8 +105,8 @@ class DraftVersion(DatastoreVersion):
             update for update in self.data_structure_updates
             if update.name != dataset_name
         ]
-        self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
+        self.release_time = int(
+            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
         )
         self._calculate_update_type()
         self._write_to_file()
@@ -142,8 +142,8 @@ class DraftVersion(DatastoreVersion):
                 pending_updates.append(update)
         update_type = self.update_type
         self.data_structure_updates = draft_updates
-        self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
+        self.release_time = int(
+            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
         )
         self._calculate_update_type()
         self._write_to_file()
@@ -164,8 +164,8 @@ class DraftVersion(DatastoreVersion):
                 f'Status already set to {new_status}'
             )
         dataset_update.set_release_status(new_status)
-        self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
+        self.release_time = int(
+            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
         )
         self._calculate_update_type()
         self._write_to_file()
