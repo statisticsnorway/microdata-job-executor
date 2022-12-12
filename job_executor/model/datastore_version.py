@@ -83,7 +83,7 @@ class DraftVersion(DatastoreVersion):
             )
         self.data_structure_updates.append(data_structure_update)
         self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).days
+            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
         )
         self._calculate_update_type()
         self._write_to_file()
@@ -106,7 +106,7 @@ class DraftVersion(DatastoreVersion):
             if update.name != dataset_name
         ]
         self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).days
+            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
         )
         self._calculate_update_type()
         self._write_to_file()
@@ -143,10 +143,7 @@ class DraftVersion(DatastoreVersion):
         update_type = self.update_type
         self.data_structure_updates = draft_updates
         self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).days
-        )
-        self.release_time = (
-            (datetime.now() - datetime.utcfromtimestamp(0)).days
+            (datetime.now() - datetime.utcfromtimestamp(0)).seconds
         )
         self._calculate_update_type()
         self._write_to_file()

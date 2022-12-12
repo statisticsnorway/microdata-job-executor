@@ -50,7 +50,9 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
         new_release_version = DatastoreVersion(
             version=new_version_number,
             description=description,
-            release_time=(datetime.now() - datetime.utcfromtimestamp(0)).days,
+            release_time=(
+                (datetime.now() - datetime.utcfromtimestamp(0)).seconds
+            ),
             language_code='no',
             updateType=update_type,
             data_structure_updates=released_data_structure_updates
