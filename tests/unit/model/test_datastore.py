@@ -218,6 +218,7 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
+    assert draft_after_bump['releaseTime'] > 1_000_000
     assert draft_after_bump['dataStructureUpdates'] == [
         {
             'description': 'oppdaterte metadata',
@@ -285,6 +286,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
 
     with open(DRAFT_VERSION, encoding='utf-8') as f:
         draft_after_bump = json.load(f)
+    assert draft_after_bump['releaseTime'] > 1_000_000
     assert draft_after_bump['dataStructureUpdates'] == [
         {
             'description': 'oppdaterte metadata',

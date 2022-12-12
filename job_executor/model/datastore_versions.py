@@ -24,6 +24,11 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
     def _write_to_file(self):
         local_storage.write_datastore_versions(self.dict(by_alias=True))
 
+    def _get_current_epoch_seconds(self):
+        return int(
+            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
+        )
+
     def add_new_release_version(
         self,
         data_structure_updates: List[DataStructureUpdate],
@@ -50,9 +55,7 @@ class DatastoreVersions(CamelModel, extra=Extra.forbid):
         new_release_version = DatastoreVersion(
             version=new_version_number,
             description=description,
-            release_time=(
-                (datetime.now() - datetime.utcfromtimestamp(0)).seconds
-            ),
+            release_time=self._get_current_epoch_seconds(),
             language_code='no',
             updateType=update_type,
             data_structure_updates=released_data_structure_updates
