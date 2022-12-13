@@ -174,6 +174,17 @@ def get_working_dir_metadata(dataset_name: str) -> dict:
     return _read_json(f'{WORKING_DIR}/{dataset_name}__DRAFT.json')
 
 
+def delete_working_dir_metadata(dataset_name: str) -> None:
+    """
+    Deletes the metadata in working directory with postfix __DRAFT.json
+
+    * dataset_name: str - name of dataset
+    """
+    metadata_path = f'{WORKING_DIR}/{dataset_name}__DRAFT.json'
+    if os.path.isfile(metadata_path):
+        os.remove(metadata_path)
+
+
 def get_working_dir_input_metadata(dataset_name: str) -> dict:
     """
     Returns the working dir metadata json file for given dataset_name.
@@ -420,9 +431,11 @@ def archive_input_files(dataset_name: str):
     """
     Archives the input folder files
     """
-
     archive_dir = Path(f'{INPUT_DIR}/archive/{dataset_name}')
+    move_dir = f'{INPUT_DIR}/{dataset_name}'
     os.makedirs(archive_dir, exist_ok=True)
     shutil.copytree(
-        f'{INPUT_DIR}/{dataset_name}', archive_dir, dirs_exist_ok=True
+        move_dir, archive_dir, dirs_exist_ok=True
     )
+    if os.path.isdir(move_dir):
+        shutil.rmtree(move_dir)
