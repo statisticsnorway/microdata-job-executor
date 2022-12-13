@@ -185,10 +185,8 @@ EXPECTED_REQUESTS_IMPORT = [
 
 
 def setup_function():
-
     if os.path.isdir('tests/resources_backup'):
         shutil.rmtree('tests/resources_backup')
-
     shutil.copytree(
         'tests/resources',
         'tests/resources_backup'
@@ -212,7 +210,7 @@ def test_build_partitioned_dataset(requests_mock: RequestsMocker):
         json=PSEUDONYM_DICT
     )
     run_worker(JOB_ID, PARTITIONED_DATASET_NAME, Queue())
-
+    assert not os.path.exists(f'{INPUT_DIR}/{PARTITIONED_DATASET_NAME}')
     assert os.path.isdir(
         f'{WORKING_DIR}/{PARTITIONED_DATASET_NAME}__DRAFT'
     )
@@ -243,7 +241,7 @@ def test_import(requests_mock: RequestsMocker):
         json=PSEUDONYM_DICT
     )
     run_worker(JOB_ID, DATASET_NAME, Queue())
-
+    assert not os.path.exists(f'{INPUT_DIR}/{DATASET_NAME}')
     assert os.path.isfile(
         f'{WORKING_DIR}/{DATASET_NAME}__DRAFT.parquet'
     )
