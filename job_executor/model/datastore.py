@@ -96,6 +96,7 @@ class Datastore():
             job_service.update_job_status(job_id, 'completed')
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
+            local_storage.delete_working_dir_metadata(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
@@ -142,6 +143,7 @@ class Datastore():
             job_service.update_job_status(job_id, 'completed')
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
+            local_storage.delete_working_dir_metadata(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
@@ -187,6 +189,7 @@ class Datastore():
             job_service.update_job_status(job_id, 'completed')
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
+            local_storage.delete_working_dir_metadata(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
