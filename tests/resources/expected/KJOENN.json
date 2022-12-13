@@ -20,7 +20,7 @@
             "dataType": "Long",
             "representedVariables": [
                 {
-                    "description": "Identifikator for person i Microdata",
+                    "description": "Identifikator for person i microdata",
                     "validPeriod": {
                         "start": null,
                         "stop": null
@@ -35,7 +35,7 @@
             "keyType": {
                 "name": "PERSON",
                 "label": "Person",
-                "description": "Statistisk enhet er person (individ, enkeltmenneske)"
+                "description": "Person er et enkeltmenneske, individ."
             }
         }
     ],
