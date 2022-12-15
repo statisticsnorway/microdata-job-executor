@@ -4,7 +4,7 @@
     "description": "Syntetiske data for unit testing av job-manager",
     "versions": [
       {
-        "version": "0.1.0.0",
+        "version": "0.1.0.1635299291",
         "description": "Første release",
         "releaseTime": 1635299291,
         "languageCode": "no",

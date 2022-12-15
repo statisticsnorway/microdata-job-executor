@@ -87,7 +87,7 @@ class DraftVersion(DatastoreVersion):
                 f'Draft for {data_structure_update.name} already exists'
             )
         self.data_structure_updates.append(data_structure_update)
-        self.release_time = self._get_current_epoch_seconds()
+        self._set_release_time()
         self._calculate_update_type()
         self._write_to_file()
 
@@ -108,7 +108,7 @@ class DraftVersion(DatastoreVersion):
             update for update in self.data_structure_updates
             if update.name != dataset_name
         ]
-        self.release_time = self._get_current_epoch_seconds()
+        self._set_release_time()
         self._calculate_update_type()
         self._write_to_file()
         return deleted_draft
@@ -143,7 +143,7 @@ class DraftVersion(DatastoreVersion):
                 pending_updates.append(update)
         update_type = self.update_type
         self.data_structure_updates = draft_updates
-        self.release_time = self._get_current_epoch_seconds()
+        self._set_release_time()
         self._calculate_update_type()
         self._write_to_file()
         return pending_updates, update_type
@@ -163,6 +163,12 @@ class DraftVersion(DatastoreVersion):
                 f'Status already set to {new_status}'
             )
         dataset_update.set_release_status(new_status)
-        self.release_time = self._get_current_epoch_seconds()
+        self._set_release_time()
         self._calculate_update_type()
         self._write_to_file()
+
+    def _set_release_time(self):
+        self.release_time = self._get_current_epoch_seconds()
+        version_list = list(self.version.split('.'))
+        version_list[-1] = str(self.release_time)
+        self.version = '.'.join(version_list)

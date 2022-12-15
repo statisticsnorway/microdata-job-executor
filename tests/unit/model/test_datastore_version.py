@@ -30,7 +30,7 @@ DRAFT_VERSION_ADDED_PENDING = load_json(
 DATASTORE_DIR = f'{os.environ["DATASTORE_DIR"]}/datastore'
 DRAFT_VERSION_PATH = f'{DATASTORE_DIR}/draft_version.json'
 DATASTORE_VERSION = {
-    "version": "0.1.0.0",
+    "version": "0.1.0.1635299291",
     "description": "Første release",
     "releaseTime": 1635299291,
     "languageCode": "no",
@@ -95,6 +95,8 @@ def test_draft_version():
 
 def test_draft_version_delete_draft():
     draft_version = DraftVersion()
+    release_time = draft_version.release_time
+    version = draft_version.version
     draft_version.delete_draft('BRUTTO_INNTEKT')
     draft_version_file = load_json(DRAFT_VERSION_PATH)
     update_names = [
@@ -102,6 +104,8 @@ def test_draft_version_delete_draft():
     ]
     assert 'BRUTTO_INNTEKT' not in update_names
     assert len(update_names) == 1
+    assert release_time != draft_version.release_time
+    assert version != draft_version.version
 
     with pytest.raises(NoSuchDraftException) as e:
         draft_version.delete_draft('NO_SUCH_DATASET')
@@ -145,6 +149,8 @@ def test_draft_version_validate_bump_manifesto():
 
 def test_draft_version_release_pending():
     draft_version = DraftVersion()
+    release_time = draft_version.release_time
+    version = draft_version.version
     updates, update_type = draft_version.release_pending()
     assert update_type == 'MINOR'
     assert (
@@ -158,16 +164,23 @@ def test_draft_version_release_pending():
             }
         ]
     )
+    assert release_time != draft_version.release_time
+    assert version != draft_version.version
     with pytest.raises(BumpException):
         draft_version.release_pending()
 
 
 def test_set_draft_release_status():
     draft_version = DraftVersion()
+    release_time = draft_version.release_time
+    version = draft_version.version
     draft_version.set_draft_release_status('UTDANNING', 'PENDING_RELEASE')
     for update in draft_version:
         if update.name == 'UTDANNING':
             assert update.release_status == 'PENDING_RELEASE'
+    assert release_time != draft_version.release_time
+    assert version != draft_version.version
+
     draft_version.set_draft_release_status('UTDANNING', 'DRAFT')
     for update in draft_version:
         if update.name == 'UTDANNING':
