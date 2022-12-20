@@ -116,7 +116,7 @@ class Datastore():
             self._log(job_id, 'importing')
             job_service.update_job_status(job_id, 'importing')
             dataset_release_status = self._get_release_status(dataset_name)
-            if dataset_release_status is not None:
+            if dataset_release_status not in [None, 'DELETED']:
                 raise VersioningException(
                     f'Can\'t add dataset with status {dataset_release_status}'
                 )
