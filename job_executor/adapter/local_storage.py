@@ -64,8 +64,8 @@ def make_dataset_dir(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    os.makedirs(f'{DATASTORE_DIR}/metadata/{dataset_name}')
-    os.makedirs(f'{DATASTORE_DIR}/data/{dataset_name}')
+    os.makedirs(f'{DATASTORE_DIR}/metadata/{dataset_name}', exist_ok=True)
+    os.makedirs(f'{DATASTORE_DIR}/data/{dataset_name}', exist_ok=True)
 
 
 def get_data_versions(version: Union[str, None]) -> dict:

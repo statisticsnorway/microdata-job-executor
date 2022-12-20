@@ -107,6 +107,33 @@ def test_add(requests_mock: RequestsMocker):
     assert foedested_metadata in metadata_all_draft['dataStructures']
 
 
+def test_add_previously_deleted(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
+    DATASET_NAME = 'INNTEKT'
+    DESCRIPTION = 'Ny variabel tidligere DELETED'
+    datastore.add(JOB_ID, DATASET_NAME, DESCRIPTION)
+    assert len(requests_mock.request_history) == 2
+    assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
+    assert os.path.exists(partitioned_draft_data_path(DATASET_NAME))
+    with open(draft_metadata_path(DATASET_NAME), encoding='utf-8') as f:
+        inntekt_metadata = json.load(f)
+    with open(METADATA_ALL_DRAFT, encoding='utf-8') as f:
+        metadata_all_draft = json.load(f)
+    with open(DRAFT_VERSION, encoding='utf-8') as f:
+        draft_version = json.load(f)
+
+    assert {
+        'name': DATASET_NAME,
+        'description': DESCRIPTION,
+        'operation': 'ADD',
+        'releaseStatus': 'DRAFT'
+    } in draft_version['dataStructureUpdates']
+    assert draft_version['releaseTime'] > 1_000_000
+    assert inntekt_metadata in metadata_all_draft['dataStructures']
+
+
 def test_change_data(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
@@ -138,7 +165,7 @@ def test_remove(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
-    DATASET_NAME = 'INNTEKT'
+    DATASET_NAME = 'KJOENN'
     DESCRIPTION = 'Fjernet variabel'
     datastore.remove(JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
@@ -234,6 +261,12 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
             'releaseStatus': 'DRAFT'
         },
         {
+            'description': 'Ny variabel tidligere DELETED',
+            'name': 'INNTEKT',
+            'operation': 'ADD',
+            'releaseStatus': 'DRAFT'
+        },
+        {
             'description': 'oppdaterte data',
             'name': 'FOEDSELSVEKT',
             'operation': 'CHANGE_DATA',
@@ -241,17 +274,17 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         },
         {
             'description': 'Fjernet variabel',
-            'name': 'INNTEKT',
+            'name': 'KJOENN',
             'operation': 'REMOVE',
             'releaseStatus': 'DRAFT'
         }
     ]
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__2_0_0.json', encoding='utf-8'
     ) as f:
         previous_metadata_all = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__1_1_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__2_1_0.json', encoding='utf-8'
     ) as f:
         released_metadata_all = json.load(f)
     assert (
@@ -262,16 +295,15 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
     ) as f:
         datastore_versions_json = json.load(f)
-    assert datastore_versions_json['versions'][0]['version'] == '1.1.0.0'
+    assert datastore_versions_json['versions'][0]['version'] == '2.1.0.0'
     with open(
-        f'{DATASTORE_DIR}/datastore/data_versions__1_1.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/data_versions__2_1.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
-        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__1_1',
-        'FOEDESTED': 'FOEDESTED__1_1.parquet',
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__2_1',
+        'FOEDESTED': 'FOEDESTED__2_1.parquet',
         'FOEDSELSVEKT': 'FOEDSELSVEKT__1_0.parquet',
-        'INNTEKT': 'INNTEKT__1_0',
         'KJOENN': 'KJOENN__1_0.parquet',
         'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }
@@ -302,38 +334,43 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
             'releaseStatus': 'DRAFT'
         },
         {
-            'description': 'Fjernet variabel',
+            'description': 'Ny variabel tidligere DELETED',
             'name': 'INNTEKT',
+            'operation': 'ADD',
+            'releaseStatus': 'DRAFT'
+        },
+        {
+            'description': 'Fjernet variabel',
+            'name': 'KJOENN',
             'operation': 'REMOVE',
             'releaseStatus': 'DRAFT'
         }
     ]
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__1_1_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__2_1_0.json', encoding='utf-8'
     ) as f:
         previous_metadata_all = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__2_0_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/metadata_all__3_0_0.json', encoding='utf-8'
     ) as f:
         released_metadata_all = json.load(f)
     with open(
         f'{DATASTORE_DIR}/datastore/datastore_versions.json', encoding='utf-8'
     ) as f:
         datastore_versions_json = json.load(f)
-    assert datastore_versions_json['versions'][0]['version'] == '2.0.0.0'
+    assert datastore_versions_json['versions'][0]['version'] == '3.0.0.0'
     assert (
         len(released_metadata_all['dataStructures']) ==
         len(previous_metadata_all['dataStructures'])
     )
     with open(
-        f'{DATASTORE_DIR}/datastore/data_versions__2_0.json', encoding='utf-8'
+        f'{DATASTORE_DIR}/datastore/data_versions__3_0.json', encoding='utf-8'
     ) as f:
         data_versions = json.load(f)
     assert data_versions == {
-        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__1_1',
-        'FOEDESTED': 'FOEDESTED__1_1.parquet',
-        'FOEDSELSVEKT': 'FOEDSELSVEKT__2_0.parquet',
-        'INNTEKT': 'INNTEKT__1_0',
+        'BRUTTO_INNTEKT': 'BRUTTO_INNTEKT__2_1',
+        'FOEDESTED': 'FOEDESTED__2_1.parquet',
+        'FOEDSELSVEKT': 'FOEDSELSVEKT__3_0.parquet',
         'KJOENN': 'KJOENN__1_0.parquet',
         'SIVSTAND': 'SIVSTAND__1_0.parquet'
     }

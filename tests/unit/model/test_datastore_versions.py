@@ -54,13 +54,16 @@ def test_add_new_release_version():
         "new datastore version",
         "MAJOR"
     )
-    assert len(datastore_versions.versions) == 2
+    assert len(datastore_versions.versions) == 3
 
 
 def test_get_dataset_release_status():
     datastore_versions = DatastoreVersions()
     assert (
-        datastore_versions.get_dataset_release_status('INNTEKT') == 'RELEASED'
+        datastore_versions.get_dataset_release_status('SIVSTAND') == 'RELEASED'
+    )
+    assert (
+        datastore_versions.get_dataset_release_status('INNTEKT') == 'DELETED'
     )
     assert (
         datastore_versions.get_dataset_release_status('DOES_NOT_EXIST') is None
