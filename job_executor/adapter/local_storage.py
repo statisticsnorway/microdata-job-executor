@@ -105,7 +105,7 @@ def get_draft_version() -> dict:
     return _read_json(f'{DATASTORE_DIR}/datastore/draft_version.json')
 
 
-def write_draft_version(draft_version: dict) -> dict:
+def write_draft_version(draft_version: dict) -> None:
     """
     Writes given dict to the draft version json file.
 
@@ -126,7 +126,7 @@ def get_datastore_versions() -> dict:
     )
 
 
-def write_datastore_versions(datastore_versions: dict) -> dict:
+def write_datastore_versions(datastore_versions: dict) -> None:
     """
     Writes given dict to the datastore versions json file.
 
@@ -319,7 +319,7 @@ def delete_files(file_list: list[str]):
             os.remove(file)
 
 
-def save_temporary_backup() -> Union[None, LocalStorageError]:
+def save_temporary_backup() -> None:
     """
     Backs up metadata_all__DRAFT.json, datastore_versions.json and
     draft_version.json from the datastore to a tmp directory
