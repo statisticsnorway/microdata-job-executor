@@ -1,13 +1,13 @@
 
-import os
 import json
+import os
 import shutil
-import pytest
 from pathlib import Path
+
+import pytest
 
 from job_executor.adapter import local_storage
 from job_executor.exception import LocalStorageError
-
 
 WORKING_DIR = os.environ['WORKING_DIR']
 DATASTORE_DIR = os.environ['DATASTORE_DIR']
@@ -188,7 +188,7 @@ def test_make_temp_directory_already_exists():
     assert 'tmp' in datastore_content
     with pytest.raises(LocalStorageError) as e:
         local_storage.save_temporary_backup()
-    assert '/tmp directory already exists' in str(e)
+    assert 'tmp directory already exists' in str(e)
 
 
 def test_delete_temp_directory():

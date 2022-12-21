@@ -1,7 +1,9 @@
+import os
 import sys
 import threading
 import time
 import logging
+from pathlib import Path
 from typing import List
 from multiprocessing import Process, Queue
 
@@ -24,6 +26,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 NUMBER_OF_WORKERS = environment.get('NUMBER_OF_WORKERS')
+DATASTORE_DIR = environment.get('DATASTORE_DIR')
 
 
 def logger_thread(logging_queue: Queue):
@@ -116,8 +119,15 @@ def fix_interrupted_jobs():
             raise StartupException(log_message)
 
 
+def check_tmp_directory():
+    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    if os.path.isdir(tmp_dir):
+        raise StartupException('tmp directory exists')
+
+
 try:
     fix_interrupted_jobs()
+    check_tmp_directory()
     datastore = Datastore()
 except Exception as e:
     logger.exception('Exception when initializing', exc_info=e)

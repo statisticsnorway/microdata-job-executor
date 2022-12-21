@@ -105,7 +105,7 @@ def get_draft_version() -> dict:
     return _read_json(f'{DATASTORE_DIR}/datastore/draft_version.json')
 
 
-def write_draft_version(draft_version: dict) -> dict:
+def write_draft_version(draft_version: dict) -> None:
     """
     Writes given dict to the draft version json file.
 
@@ -126,7 +126,7 @@ def get_datastore_versions() -> dict:
     )
 
 
-def write_datastore_versions(datastore_versions: dict) -> dict:
+def write_datastore_versions(datastore_versions: dict) -> None:
     """
     Writes given dict to the datastore versions json file.
 
@@ -319,12 +319,12 @@ def delete_files(file_list: list[str]):
             os.remove(file)
 
 
-def save_temporary_backup() -> Union[None, LocalStorageError]:
+def save_temporary_backup() -> None:
     """
     Backs up metadata_all__DRAFT.json, datastore_versions.json and
-    draft_version.json from the datastore to a /tmp directory
+    draft_version.json from the datastore to a tmp directory
     inside the datastore directory.
-    Raises `LocalStorageError` if /tmp directory already exists.
+    Raises `LocalStorageError` if tmp directory already exists.
     """
     with open(
         f'{DATASTORE_DIR}/datastore/datastore_versions.json',
@@ -343,7 +343,7 @@ def save_temporary_backup() -> Union[None, LocalStorageError]:
         metadata_all_draft = json.load(f)
     tmp_dir = Path(DATASTORE_DIR) / 'tmp'
     if os.path.isdir(tmp_dir):
-        raise LocalStorageError('/tmp directory already exists')
+        raise LocalStorageError('tmp directory already exists')
     os.mkdir(tmp_dir)
     with open(tmp_dir / 'draft_version.json', 'w', encoding='utf-8') as f:
         json.dump(draft_version, f)
@@ -357,7 +357,7 @@ def save_temporary_backup() -> Union[None, LocalStorageError]:
 
 def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
     """
-    Restores the datastore from the /tmp directory.
+    Restores the datastore from the tmp directory.
     Raises `LocalStorageError`if there are any missing backup files.
 
     Returns None if no released version in backup, else returns the
@@ -374,7 +374,7 @@ def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
         os.path.isfile(datastore_versions_backup)
     )
     if not backup_exists:
-        raise LocalStorageError('Missing /tmp backup files')
+        raise LocalStorageError('Missing tmp backup files')
     try:
         datastore_versions = _read_json(datastore_versions_backup)
         shutil.move(draft_version_backup, DRAFT_VERSION_PATH)
@@ -390,7 +390,7 @@ def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
 
 def delete_temporary_backup() -> Union[None, LocalStorageError]:
     """
-    Deletes the /tmp directory within the datastore if the directory
+    Deletes the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files
     in the directory.
     """
@@ -404,7 +404,7 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
             'draft_version.json'
         ]:
             raise LocalStorageError(
-                'Found unrecognized files and/or directories in the /tmp '
+                'Found unrecognized files and/or directories in the tmp '
                 'directory. Aborting tmp deletion.'
             )
     shutil.rmtree(Path(DATASTORE_DIR) / 'tmp')

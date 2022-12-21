@@ -403,6 +403,8 @@ class Datastore():
                 )
                 self._log(job_id, log_message, 'ERROR')
                 job_service.update_job_status(job_id, 'failed', log_message)
+                self._log(job_id, 'Deleting temporary backup')
+                local_storage.delete_temporary_backup()
                 return
 
             self._log(job_id, 'Archiving draft version')
