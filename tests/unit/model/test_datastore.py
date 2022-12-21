@@ -397,3 +397,19 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
         update for update in draft_version['dataStructureUpdates']
         if update['name'] == DATASET_NAME
     ]
+
+
+def test_invalid_bump_manifesto_delete_tmp_dir(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
+
+    datastore.set_draft_release_status(JOB_ID, "INNTEKT", "PENDING_RELEASE")
+    with open(DRAFT_VERSION, encoding='utf-8') as f:
+        bump_manifesto = DatastoreVersion(**json.load(f))
+    # introduce a change in bump manifesto
+    bump_manifesto.data_structure_updates = \
+        [ds for ds in bump_manifesto.data_structure_updates
+         if ds.release_status == "DRAFT"]
+    datastore.bump_version(JOB_ID, bump_manifesto, 'description')
+    assert not os.path.exists(Path(DATASTORE_DIR) / 'tmp')
