@@ -20,7 +20,6 @@ WORKING_DIR = environment.get('WORKING_DIR')
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
     logger = logging.getLogger()
-    consumed_files: list[str] = []
 
     try:
         configure_worker_logger(logging_queue, job_id)
@@ -40,7 +39,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         job_service.update_job_status(job_id, 'transforming')
         dataset_transformer.run(metadata_file_path)
-        consumed_files.append(metadata_file_path)
+        local_storage.delete_files([metadata_file_path])
         job_service.update_job_status(job_id, 'built')
     except BuilderStepError as e:
         logger.error(str(e))
@@ -57,7 +56,6 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             job_id, 'failed', log='Unexpected exception when building dataset'
         )
     finally:
-        local_storage.delete_files(consumed_files)
         delta = perf_counter() - start
         logger.info(
             f'Metadata worker for dataset {dataset_name} and job {job_id}'
