@@ -85,9 +85,12 @@ def test_import(requests_mock: RequestsMocker):
     assert requests_made == EXPECTED_REQUESTS
 
 
-def test_delete_files_is_called(requests_mock: RequestsMocker, mocker):
+def test_delete_working_dir_file_is_called(
+    requests_mock: RequestsMocker, mocker
+):
     spy = mocker.patch.object(
-        local_storage, 'delete_files')
+        local_storage, 'delete_working_dir_file'
+    )
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )

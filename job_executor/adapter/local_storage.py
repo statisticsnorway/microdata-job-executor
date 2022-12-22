@@ -309,14 +309,19 @@ def delete_parquet_draft(dataset_name: str) -> None:
         os.remove(f'{parquet_path}.parquet')
 
 
-def delete_files(file_list: list[str]):
+def delete_working_dir_file(file_name: str) -> None:
     """
-    Deletes a list of files. Intended to clean up left-over csv files
-    * file_list: list[str] - list of csv files to delete
+    Deletes a file from the working directory.
+    Intended to clean up left-over files.
+    Raises a LocalStorageError if filepath is not in
+    the working directory.
+    
+    * file_name: str - name of temporary file
     """
-    for file in file_list:
-        if os.path.isfile(file):
-            os.remove(file)
+    if not file_name.startswith(WORKING_DIR):
+        raise LocalStorageError(f'Filepath is not in {WORKING_DIR}')
+    if os.path.isfile(file_name):
+        os.remove(file_name)
 
 
 def save_temporary_backup() -> None:
