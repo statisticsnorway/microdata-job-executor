@@ -5,6 +5,9 @@
       "description": "Syntetiske data for unit testing av job-manager",
       "languageCode": "no"
     },
+    "languages": [
+      {"code": "no", "label": "Norsk"}
+    ],
     "dataStructures": [
       {
         "name": "BRUTTO_INNTEKT",
