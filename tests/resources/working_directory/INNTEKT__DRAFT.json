@@ -51,7 +51,7 @@
     },
     "attributeVariables": [
       {
-        "variableRole": "START_TIME",
+        "variableRole": "Start",
         "name": "START",
         "notPseudonym": true,
         "label": "Startdato",
@@ -68,7 +68,7 @@
         ]
       },
       {
-        "variableRole": "STOP_TIME",
+        "variableRole": "Stop",
         "name": "STOP",
         "notPseudonym": true,
         "label": "Stoppdato",

@@ -144,7 +144,7 @@
     ],
     "attributeVariables" : [
       {
-        "variableRole": "START_TIME",
+        "variableRole": "Start",
         "shortName": "START",
         "name": [
           {"languageCode": "no", "value": "Startdato"}
@@ -160,7 +160,7 @@
         }
       },
       {
-        "variableRole": "STOP_TIME",
+        "variableRole": "Stop",
         "shortName": "STOP",
         "name": [
           {"languageCode": "no", "value": "Stoppdato"},
