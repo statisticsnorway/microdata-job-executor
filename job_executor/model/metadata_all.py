@@ -15,9 +15,15 @@ class DataStoreInfo(CamelModel):
     language_code: str
 
 
+class LanguageInfo(CamelModel):
+    code: str
+    label: str
+
+
 class MetadataAll(CamelModel):
     data_store: DataStoreInfo
     data_structures: List[Metadata]
+    languages: List[LanguageInfo]
 
     def __iter__(self):
         return iter([

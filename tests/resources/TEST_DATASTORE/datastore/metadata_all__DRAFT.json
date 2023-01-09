@@ -5,6 +5,9 @@
     "description": "Syntetiske data for unit testing av job-manager",
     "languageCode": "no"
   },
+  "languages": [
+    {"code": "no", "label": "Norsk"}
+  ],
   "dataStructures": [
     {
       "name": "KJOENN",
@@ -61,7 +64,7 @@
       },
       "attributeVariables": [
         {
-          "variableRole": "START_TIME",
+          "variableRole": "Start",
           "name": "START",
           "label": "Startdato",
           "notPseudonym": true,
@@ -78,7 +81,7 @@
           ]
         },
         {
-          "variableRole": "STOP_TIME",
+          "variableRole": "Stop",
           "name": "STOP",
           "label": "Stoppdato",
           "notPseudonym": true,
@@ -174,7 +177,7 @@
       },
       "attributeVariables": [
         {
-          "variableRole": "START_TIME",
+          "variableRole": "Start",
           "name": "START",
           "label": "Startdato",
           "notPseudonym": true,
@@ -191,7 +194,7 @@
           ]
         },
         {
-          "variableRole": "STOP_TIME",
+          "variableRole": "Stop",
           "name": "STOP",
           "label": "Stoppdato",
           "notPseudonym": true,
@@ -261,7 +264,7 @@
       },
       "attributeVariables": [
         {
-          "variableRole": "START_TIME",
+          "variableRole": "Start",
           "name": "START",
           "label": "Startdato",
           "notPseudonym": true,
@@ -278,7 +281,7 @@
           ]
         },
         {
-          "variableRole": "STOP_TIME",
+          "variableRole": "Stop",
           "name": "STOP",
           "label": "Stoppdato",
           "notPseudonym": true,
@@ -355,7 +358,7 @@
       },
       "attributeVariables": [
         {
-          "variableRole": "START_TIME",
+          "variableRole": "Start",
           "name": "START",
           "label": "Startdato",
           "notPseudonym": true,
@@ -372,7 +375,7 @@
           ]
         },
         {
-          "variableRole": "STOP_TIME",
+          "variableRole": "Stop",
           "name": "STOP",
           "label": "Stoppdato",
           "notPseudonym": true,
@@ -442,7 +445,7 @@
       },
       "attributeVariables": [
         {
-          "variableRole": "START_TIME",
+          "variableRole": "Start",
           "name": "START",
           "label": "Startdato",
           "notPseudonym": true,
@@ -459,7 +462,7 @@
           ]
         },
         {
-          "variableRole": "STOP_TIME",
+          "variableRole": "Stop",
           "name": "STOP",
           "label": "Stoppdato",
           "notPseudonym": true,

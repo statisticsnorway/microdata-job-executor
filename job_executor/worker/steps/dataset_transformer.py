@@ -198,14 +198,14 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
         next(
             (
                 variable for variable in metadata['attributeVariables']
-                if variable['variableRole'] == 'START_TIME'
+                if variable['variableRole'] == 'Start'
             ),
             None
         ),
         next(
             (
                 variable for variable in metadata['attributeVariables']
-                if variable['variableRole'] == 'STOP_TIME'
+                if variable['variableRole'] == 'Stop'
             ),
             None
         )
