@@ -54,7 +54,5 @@ def test_patch_dataset_with_status_type():
 def teardown_function():
     working_files = os.listdir(f'{WORKING_DIR}/input')
     for file in working_files:
-        if '_transformed.json' in file:
-            os.remove(f'{WORKING_DIR}/input/{file}')
         if '__DRAFT.json' in file:
             os.remove(f'{WORKING_DIR}/input/{file}')
