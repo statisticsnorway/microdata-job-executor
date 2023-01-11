@@ -2,6 +2,7 @@ import json
 import logging
 from pathlib import Path
 from datetime import datetime
+from typing import Union
 
 from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
@@ -10,8 +11,8 @@ from job_executor.model import Metadata
 logger = logging.getLogger()
 
 
-def _transform_temporal_status_dates(status_dates: list) -> list:
-    return [
+def _transform_temporal_status_dates(status_dates: Union[list, None]) -> list:
+    return None if status_dates is None else [
         _days_since_epoch(status_date)
         for status_date in status_dates
     ]
@@ -306,7 +307,7 @@ def _transform_metadata(metadata_file_path: Path) -> str:
     if metadata['temporalityType'] == 'STATUS':
         transformed['temporalStatusDates'] = (
             _transform_temporal_status_dates(
-                metadata['dataRevision']['temporalStatusDates']
+                metadata['dataRevision'].get('temporalStatusDates', None)
             )
         )
     transformed_metadata_file_path = str(metadata_file_path).replace(
