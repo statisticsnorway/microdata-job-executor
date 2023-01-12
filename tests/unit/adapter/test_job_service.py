@@ -17,7 +17,7 @@ JOB_LIST = [
             target='INNTEKT',
             operation='CHANGE_DATA'
         ),
-        logs=[],
+        log=[],
         created_at='2022-05-18T11:40:22.519222',
         created_by=UserInfo(
             user_id='123-123-123',
@@ -33,7 +33,7 @@ JOB_LIST = [
             target='KJOENN',
             releaseStatus='PENDING_RELEASE'
         ),
-        logs=[],
+        log=[],
         created_at='2022-05-18T11:40:22.519222',
         created_by=UserInfo(
             user_id='123-123-123',
