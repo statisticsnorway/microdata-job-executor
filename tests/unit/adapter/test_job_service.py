@@ -3,7 +3,7 @@ import pytest
 from requests_mock import Mocker as RequestsMocker
 
 from job_executor.adapter import job_service
-from job_executor.model.job import Job, JobParameters
+from job_executor.model.job import Job, JobParameters, UserInfo
 from job_executor.exception import HttpResponseError
 
 
@@ -18,7 +18,12 @@ JOB_LIST = [
             operation='CHANGE_DATA'
         ),
         logs=[],
-        created_at='2022-05-18T11:40:22.519222'
+        created_at='2022-05-18T11:40:22.519222',
+        created_by=UserInfo(
+            user_id='123-123-123',
+            first_name='Data',
+            last_name='Admin'
+        )
     ),
     Job(
         jobId=JOB_ID,
@@ -29,7 +34,12 @@ JOB_LIST = [
             releaseStatus='PENDING_RELEASE'
         ),
         logs=[],
-        created_at='2022-05-18T11:40:22.519222'
+        created_at='2022-05-18T11:40:22.519222',
+        created_by=UserInfo(
+            user_id='123-123-123',
+            first_name='Data',
+            last_name='Admin'
+        )
     )
 ]
 LOG_MESSAGE = 'log message'
