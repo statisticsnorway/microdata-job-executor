@@ -38,12 +38,20 @@ class ReleaseStatus(str, Enum):
     PENDING_DELETE = 'PENDING_DELETE'
 
 
+class UserInfo(CamelModel, extra=Extra.forbid):
+    user_id: str
+    first_name: str
+    last_name: str
+
+
 class JobParameters(CamelModel, use_enum_values=True):
     operation: Operation
     target: str
     bump_manifesto: Optional[DatastoreVersion]
     description: Optional[str]
     release_status: Optional[ReleaseStatus]
+    bump_from_version: Optional[str]
+    bump_to_version: Optional[str]
 
     @root_validator(skip_on_failure=True)
     @classmethod
@@ -53,7 +61,10 @@ class JobParameters(CamelModel, use_enum_values=True):
             operation == Operation.BUMP
             and (
                 values.get('bump_manifesto') is None or
-                values.get('description') is None
+                values.get('description') is None or
+                values.get('bump_from_version') is None or
+                values.get('bump_to_version') is None or
+                values.get('target') != 'DATASTORE'
             )
         ):
             raise ValueError(
@@ -92,5 +103,6 @@ class Job(CamelModel, use_enum_values=True):
     job_id: str
     status: JobStatus
     parameters: JobParameters
-    logs: Optional[List[Log]] = []
+    log: Optional[List[Log]] = []
     created_at: str
+    created_by: UserInfo
