@@ -219,7 +219,7 @@ class Datastore():
         elif dataset_release_status != 'RELEASED':
             log_message = (
                 'Can\'t remove dataset with '
-                'release status {dataset_release_status}'
+                f'release status {dataset_release_status}'
             )
             self._log(job_id, log_message, level='ERROR')
             job_service.update_job_status(job_id, 'failed', log_message)
