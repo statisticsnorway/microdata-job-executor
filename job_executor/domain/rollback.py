@@ -142,7 +142,7 @@ def rollback_worker_phase_import_job(
             logger.info(f'{job_id}: Deleting metadata file "{filepath}"')
             os.remove(filepath)
 
-    if operation in ['ADD', 'CHANGE_DATA']:
+    if operation in ['ADD', 'CHANGE']:
         for file in generated_data_files:
             filepath = WORKING_DIR_PATH / file
             if filepath.exists():
@@ -168,7 +168,7 @@ def rollback_manager_phase_import_job(
 
     logger.info(f'{job_id}: Deleting metadata draft file')
     local_storage.delete_metadata_draft(dataset_name)
-    if operation in ['ADD', 'CHANGE_DATA']:
+    if operation in ['ADD', 'CHANGE']:
         logger.info(f'{job_id}: Deleting data file/directory')
         local_storage.delete_parquet_draft(dataset_name)
     logger.info(f'{job_id}: Deleting temporary backup')

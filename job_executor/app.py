@@ -57,7 +57,7 @@ def fix_interrupted_jobs():
             f'{job.job_id}: Rolling back job with operation '
             f'"{job_operation}"'
         )
-        if job_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
+        if job_operation in ['ADD', 'CHANGE', 'PATCH_METADATA']:
             if job.status == 'importing':
                 rollback.rollback_manager_phase_import_job(
                     job.job_id, job_operation, job.parameters.target
@@ -152,7 +152,7 @@ def main():
             )
             queued_worker_jobs = job_service.get_jobs(
                 job_status='queued',
-                operations=['PATCH_METADATA', 'ADD', 'CHANGE_DATA']
+                operations=['PATCH_METADATA', 'ADD', 'CHANGE']
             )
             available_jobs = (
                 len(queued_worker_jobs) +
@@ -193,7 +193,7 @@ def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
     dataset_name = job.parameters.target
     job_id = job.job_id
     operation = job.parameters.operation
-    if operation in ['ADD', 'CHANGE_DATA']:
+    if operation in ['ADD', 'CHANGE']:
         worker = Process(
             target=build_dataset_worker.run_worker,
             args=(job_id, dataset_name, logging_queue,)
@@ -242,8 +242,8 @@ def _handle_manager_job(job: Job):
             job.parameters.target,
             job.parameters.description
         )
-    elif operation == 'CHANGE_DATA':
-        datastore.change_data(
+    elif operation == 'CHANGE':
+        datastore.change(
             job_id,
             job.parameters.target,
             job.parameters.description

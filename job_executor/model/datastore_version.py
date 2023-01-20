@@ -39,7 +39,7 @@ class DatastoreVersion(CamelModel):
             if update.release_status != 'DRAFT'
         ]
         if (
-            'CHANGE_DATA' in pending_operations or
+            'CHANGE' in pending_operations or
             'REMOVE' in pending_operations
         ):
             self.update_type = 'MAJOR'

@@ -4,7 +4,7 @@
       "scenarioName": "foo",
       "request": {
         "method": "GET",
-        "url": "/jobs?status=queued&operation=PATCH_METADATA,ADD,CHANGE_DATA"
+        "url": "/jobs?status=queued&operation=PATCH_METADATA,ADD,CHANGE"
       },
       "response": {
         "status": 200,
