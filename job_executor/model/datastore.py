@@ -150,7 +150,7 @@ class Datastore():
             rollback_manager_phase_import_job(job_id, 'ADD', dataset_name)
             job_service.update_job_status(job_id, 'failed')
 
-    def change_data(self, job_id: str, dataset_name: str, description: str):
+    def change(self, job_id: str, dataset_name: str, description: str):
         """
         Import metadata and data as draft for as an update
         for a dataset that has already been released in a
@@ -176,7 +176,7 @@ class Datastore():
             self.draft_version.add(
                 DataStructureUpdate(
                     name=dataset_name,
-                    operation='CHANGE_DATA',
+                    operation='CHANGE',
                     description=description,
                     releaseStatus='DRAFT'
                 )
@@ -194,7 +194,7 @@ class Datastore():
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
             rollback_manager_phase_import_job(
-                job_id, 'CHANGE_DATA', dataset_name
+                job_id, 'CHANGE', dataset_name
             )
             job_service.update_job_status(job_id, 'failed')
 
@@ -252,7 +252,7 @@ class Datastore():
             job_service.update_job_status(job_id, 'failed', log_message)
         else:
             if dataset_operation in [
-                'CHANGE_DATA', 'PATCH_METADATA', 'REMOVE'
+                'CHANGE', 'PATCH_METADATA', 'REMOVE'
             ]:
                 released_metadata = self.metadata_all_latest.get(dataset_name)
                 if released_metadata is None:
@@ -268,9 +268,9 @@ class Datastore():
                 self.metadata_all_draft.add(released_metadata)
             if dataset_operation == 'ADD':
                 self.metadata_all_draft.remove(dataset_name)
-            if dataset_operation in ['ADD', 'CHANGE_DATA', 'PATCH_METADATA']:
+            if dataset_operation in ['ADD', 'CHANGE', 'PATCH_METADATA']:
                 local_storage.delete_metadata_draft(dataset_name)
-            if dataset_operation in ['ADD', 'CHANGE_DATA']:
+            if dataset_operation in ['ADD', 'CHANGE']:
                 local_storage.delete_parquet_draft(dataset_name)
             try:
                 self.draft_version.delete_draft(dataset_name)
@@ -357,7 +357,7 @@ class Datastore():
                 self._log(job_id, 'Removing from data_versions')
                 del new_data_versions[dataset_name]
 
-            if operation in ['PATCH_METADATA', 'CHANGE_DATA', 'ADD']:
+            if operation in ['PATCH_METADATA', 'CHANGE', 'ADD']:
                 self._log(job_id, 'Renaming metadata file')
                 released_metadata = (
                     local_storage.rename_metadata_draft_to_release(
@@ -370,7 +370,7 @@ class Datastore():
                     if dataset.name != dataset_name
                 ]
                 new_metadata_datasets.append(Metadata(**released_metadata))
-            if operation in ['ADD', 'CHANGE_DATA']:
+            if operation in ['ADD', 'CHANGE']:
                 self._log(
                     job_id, 'Renaming data file and updating data_versions'
                 )

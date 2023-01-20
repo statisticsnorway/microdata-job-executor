@@ -134,13 +134,13 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
     assert inntekt_metadata in metadata_all_draft['dataStructures']
 
 
-def test_change_data(requests_mock: RequestsMocker):
+def test_change(requests_mock: RequestsMocker):
     requests_mock.put(
         f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
     )
     DATASET_NAME = 'FOEDSELSVEKT'
     DESCRIPTION = 'oppdaterte data'
-    datastore.change_data(JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastore.change(JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
@@ -154,7 +154,7 @@ def test_change_data(requests_mock: RequestsMocker):
     assert {
         'name': DATASET_NAME,
         'description': DESCRIPTION,
-        'operation': 'CHANGE_DATA',
+        'operation': 'CHANGE',
         'releaseStatus': 'DRAFT'
     } in draft_version['dataStructureUpdates']
     assert draft_version['releaseTime'] > 1_000_000
@@ -269,7 +269,7 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         {
             'description': 'oppdaterte data',
             'name': 'FOEDSELSVEKT',
-            'operation': 'CHANGE_DATA',
+            'operation': 'CHANGE',
             'releaseStatus': 'DRAFT'
         },
         {

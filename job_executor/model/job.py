@@ -25,7 +25,7 @@ class JobStatus(str, Enum):
 class Operation(str, Enum):
     BUMP = 'BUMP'
     ADD = 'ADD'
-    CHANGE_DATA = 'CHANGE_DATA'
+    CHANGE = 'CHANGE'
     PATCH_METADATA = 'PATCH_METADATA'
     SET_STATUS = 'SET_STATUS'
     DELETE_DRAFT = 'DELETE_DRAFT'

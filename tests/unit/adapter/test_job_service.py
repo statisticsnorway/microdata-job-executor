@@ -15,7 +15,7 @@ JOB_LIST = [
         status='queued',
         parameters=JobParameters(
             target='INNTEKT',
-            operation='CHANGE_DATA'
+            operation='CHANGE'
         ),
         log=[],
         created_at='2022-05-18T11:40:22.519222',
