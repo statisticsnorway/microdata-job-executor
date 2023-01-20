@@ -264,6 +264,7 @@ class Datastore():
                     job_service.update_job_status(
                         job_id, 'failed', log_message
                     )
+                    return
                 self.metadata_all_draft.remove(dataset_name)
                 self.metadata_all_draft.add(released_metadata)
             if dataset_operation == 'ADD':
