@@ -264,6 +264,7 @@ class Datastore():
                     job_service.update_job_status(
                         job_id, 'failed', log_message
                     )
+                    return
                 self.metadata_all_draft.remove(dataset_name)
                 self.metadata_all_draft.add(released_metadata)
             if dataset_operation == 'ADD':
@@ -312,8 +313,9 @@ class Datastore():
             dataset.dict(by_alias=True)
             for dataset in new_version_metadata
         ]
+        new_metadata_all = MetadataAll(**new_metadata_all_dict)
         local_storage.write_metadata_all(
-            new_metadata_all_dict, new_version
+            new_metadata_all.dict(by_alias=True), new_version
         )
         self.metadata_all_latest = MetadataAll(
             **local_storage.get_metadata_all(new_version)
