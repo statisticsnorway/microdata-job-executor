@@ -79,7 +79,7 @@ def _represented_variables_from_code_list(description: str,
     ]
     valid_until_dates = [
         _days_since_epoch(item['validUntil']) + ONE_DAY
-        for item in code_items if 'validUntil' in item
+        for item in code_items if item.get('validUntil', None) is not None
     ]
     has_ongoing_time_period = any(
         ['validUntil' not in item for item in code_items]
@@ -104,7 +104,8 @@ def _represented_variables_from_code_list(description: str,
             code_valid_from = _days_since_epoch(code_item['validFrom'])
             code_valid_until = (
                 _days_since_epoch(code_item['validUntil'])
-                if 'validUntil' in code_item else None
+                if code_item.get('validUntil', None) is not None
+                else None
             )
             valid_period_is_ongoing: bool = "stop" not in valid_period
             code_period_is_ongoing: bool = code_valid_until is None
