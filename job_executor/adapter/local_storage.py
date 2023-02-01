@@ -217,6 +217,7 @@ def write_metadata(metadata: dict, dataset_name: str, version: str):
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
+    os.makedirs(f'{DATASTORE_DIR}/metadata/{dataset_name}', exist_ok=True)
     _write_json(
         metadata,
         f'{DATASTORE_DIR}/metadata/{dataset_name}/'
