@@ -219,7 +219,11 @@ class Variable(CamelModel):
         ):
             raise PatchingError(
                 'Illegal change to one of these variable fields: '
-                '[name, dataType, format, variableRole]]'
+                '[name, dataType, format, variableRole]]\n'
+                f'name=<{self.name},{other.name}>,'
+                f'dataType=<{self.data_type},{other.data_type}>,'
+                f'format=<{self.format},{other.format}>,'
+                f'variable_role=<{self.variable_role},{other.variable_role}>'
             )
         if self.key_type is None and other.key_type is not None:
             raise PatchingError('Can not change keyType')
@@ -307,13 +311,16 @@ class Metadata(CamelModel):
         if self.sensitivity_level != other.sensitivity_level:
             raise PatchingError('Can not change sensitivity level')
 
-        patched_attribute_variables = []
-        for idx, _ in enumerate(self.attribute_variables):
-            patched_attribute_variables.append(
-                self.attribute_variables[idx].patch(
-                    other.attribute_variables[idx]
-                ).dict()
-            )
+        sorted_self_attributes = sorted(
+            self.attribute_variables, key=lambda k: k.name
+        )
+        sorted_other_attributes = sorted(
+            other.attribute_variables, key=lambda k: k.name
+        )
+        patched_attribute_variables = [
+            sorted_self_attributes[0].patch(sorted_other_attributes[0]).dict(),
+            sorted_self_attributes[1].patch(sorted_other_attributes[1]).dict()
+        ]
         metadata_dict = {
             "name": self.name,
             "temporality": self.temporality,
