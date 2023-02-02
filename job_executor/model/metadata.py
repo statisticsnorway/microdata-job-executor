@@ -220,10 +220,10 @@ class Variable(CamelModel):
             raise PatchingError(
                 'Illegal change to one of these variable fields: '
                 '[name, dataType, format, variableRole]]\n'
-                f'name=<{self.name},{other.name}>,'
-                f'dataType=<{self.data_type},{other.data_type}>,'
-                f'format=<{self.format},{other.format}>,'
-                f'variable_role=<{self.variable_role},{other.variable_role}>'
+                f'name: {self.name} to {other.name},'
+                f'dataType: {self.data_type} to {other.data_type},'
+                f'format: {self.format} to {other.format},'
+                f'variable_role: {self.variable_role} to {other.variable_role}'
             )
         if self.key_type is None and other.key_type is not None:
             raise PatchingError('Can not change keyType')
