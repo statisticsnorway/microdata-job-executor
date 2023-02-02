@@ -10,7 +10,7 @@ from job_executor.model.datastore_versions import DatastoreVersions
 from job_executor.model.datastore_version import DatastoreVersion, DraftVersion
 from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.exception import (
-    NoSuchDraftException, UnnecessaryUpdateException, VersioningException
+    NoSuchDraftException, UnnecessaryUpdateException, VersioningException, PatchingError
 )
 
 
@@ -97,6 +97,13 @@ class Datastore():
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
+        except PatchingError as e:
+            self._log(job_id, 'Patching error occured', 'ERROR')
+            self._log(job_id, str(e), 'ERROR')
+            rollback_manager_phase_import_job(
+                job_id, 'PATCH_METADATA', dataset_name
+            )
+            job_service.update_job_status(job_id, 'failed', str(e))
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'ERROR')
