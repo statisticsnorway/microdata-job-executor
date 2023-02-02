@@ -42,16 +42,18 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         local_storage.delete_working_dir_file(str(metadata_file_path))
         job_service.update_job_status(job_id, 'built')
     except BuilderStepError as e:
-        logger.error(str(e))
+        error_message = 'Failed during building metdata'
+        logger.exception(error_message, exc_info=e)
         job_service.update_job_status(job_id, 'failed', log=str(e))
     except HttpResponseError as e:
-        logger.error(str(e))
+        logger.exception(e)
         job_service.update_job_status(
             job_id, 'failed',
             log='Failed due to communication errors in platform'
         )
     except Exception as e:
-        logger.error(str(e))
+        error_message = 'Unknown error when building metadata'
+        logger.exception(error_message, exc_info=e)
         job_service.update_job_status(
             job_id, 'failed', log='Unexpected exception when building dataset'
         )
