@@ -10,15 +10,15 @@
       {
         "variableRole": "Identifier",
         "name": "PERSON",
-        "label": "new value",
+        "label": "Personidentifikator",
         "notPseudonym": false,
         "dataType": "String",
         "representedVariables": [
           {
-            "description": "new value",
+            "description": "Identifikator for person i Microdata",
             "validPeriod": { "start": -25567, "stop": 18628 },
             "valueDomain": {
-              "description": "new value",
+              "description": "Pseudonymisert personnummer",
               "unitOfMeasure": "N/A"
             }
           }
@@ -26,8 +26,8 @@
         "format": "RandomUInt48",
         "keyType": {
           "name": "PERSON",
-          "label": "new value",
-          "description": "new value"
+          "label": "Person",
+          "description": "Statistisk enhet er person (individ, enkeltmenenske)"
         }
       }
     ],

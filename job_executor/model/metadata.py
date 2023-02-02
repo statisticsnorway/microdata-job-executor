@@ -152,7 +152,7 @@ class RepresentedVariable(CamelModel):
     valid_period: TimePeriod
     value_domain: ValueDomain
 
-    def patch(self, other: 'RepresentedVariable'):
+    def patch(self, other: 'RepresentedVariable', only_patch_description: bool):
         if other is None:
             raise PatchingError(
                 'Can not delete RepresentedVariable'
@@ -160,9 +160,12 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(**{
             "description": other.description,
             "validPeriod": self.valid_period.dict(by_alias=True),
-            "valueDomain": self.value_domain.patch(
-                other.value_domain
-            ).dict(by_alias=True)
+            "valueDomain": (
+                self.value_domain.dict(by_alias=True) if only_patch_description
+                else self.value_domain.patch(
+                    other.value_domain
+                ).dict(by_alias=True)
+            )
         })
 
 
@@ -205,13 +208,41 @@ class Variable(CamelModel):
             dict_representation["keyType"] = self.key_type.dict(by_alias=True)
         return dict_representation
 
-    def patch(self, other: 'Variable'):
+    def patch(self, other: 'Variable') -> 'Variable':
         patched = {}
+        only_patch_description = False
+
         if other is None:
             raise PatchingError(
                 'Can not delete Variable'
             )
-        if (
+
+        if self.variable_role == "Identifier":
+            # Centralized variable definition was used,
+            # don't patch the one that is in the datastore.
+            # The definition might have changed and we don't want to update it
+            # - one needs to use CHANGE operation for that.
+            return self
+        if self.variable_role == "Measure" and self.key_type is not None:
+            # Centralized variable definition was used,
+            # it is safe to only patch name and description fields.
+            # patch name + description
+            new_name = other.name
+            only_patch_description = True
+            if (
+                self.data_type != other.data_type or
+                self.format != other.format or
+                self.variable_role != other.variable_role
+            ):
+                raise PatchingError(
+                    'Illegal change to one of these variable fields: '
+                    '[dataType, format, variableRole]]\n'
+                    f'dataType: {self.data_type} to {other.data_type},'
+                    f'format: {self.format} to {other.format},'
+                    f'variable_role: {self.variable_role} to '
+                    f'{other.variable_role}'
+                )
+        elif (
             self.name != other.name or
             self.data_type != other.data_type or
             self.format != other.format or
@@ -225,6 +256,9 @@ class Variable(CamelModel):
                 f'format: {self.format} to {other.format},'
                 f'variable_role: {self.variable_role} to {other.variable_role}'
             )
+        else:
+            new_name = self.name
+
         if self.key_type is None and other.key_type is not None:
             raise PatchingError('Can not change keyType')
         if len(self.represented_variables) != len(other.represented_variables):
@@ -236,15 +270,21 @@ class Variable(CamelModel):
                 'Can not change keyType pseudonym status from '
                 f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
             )
+        if only_patch_description and self.label != other.label:
+            raise PatchingError(
+                'Can not change label from '
+                f'"{self.label}" to "{other.label}"'
+            )
         patched_represented_variables = []
         for idx, _ in enumerate(self.represented_variables):
             patched_represented_variables.append(
                 self.represented_variables[idx].patch(
-                    other.represented_variables[idx]
+                    other.represented_variables[idx],
+                    only_patch_description
                 ).dict()
             )
         patched.update({
-            "name": self.name,
+            "name": new_name,
             "label": other.label,
             "notPseudonym": self.not_pseudonym,
             "dataType": self.data_type,
@@ -255,7 +295,8 @@ class Variable(CamelModel):
             patched.update({"format": self.format})
         if self.key_type is not None:
             patched.update({
-                'keyType': self.key_type.patch(other.key_type).dict()
+                'keyType': self.key_type.dict() if only_patch_description else
+                self.key_type.patch(other.key_type).dict()
             })
         return Variable(**patched)
 
