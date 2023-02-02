@@ -226,7 +226,6 @@ class Variable(CamelModel):
         if self.variable_role == "Measure" and self.key_type is not None:
             # Centralized variable definition was used,
             # it is safe to only patch name and description fields.
-            # patch name + description
             new_name = other.name
             only_patch_description = True
             if (
