@@ -15,7 +15,7 @@ METADATA_ALL_PATH = f'{TEST_DIR}/metadata_all.json'
 ENUMERATED_METADATA = load_json(f'{TEST_DIR}/enumerated_metadata.json')
 DESCRIBED_METADATA = load_json(f'{TEST_DIR}/described_metadata.json')
 
-METADATA = load_json(f'{TEST_DIR}/metadata.json')
+METADATA_IN_DATASTORE = load_json(f'{TEST_DIR}/metadata.json')
 UPDATED_METADATA = load_json(f'{TEST_DIR}/updated_metadata.json')
 PATCHED_METADATA = load_json(f'{TEST_DIR}/patched_metadata.json')
 
@@ -53,7 +53,7 @@ def test_metadata():
 
 
 def test_patch():
-    metadata = Metadata(**METADATA)
+    metadata_in_datastore = Metadata(**METADATA_IN_DATASTORE)
     updated_metadata = Metadata(**UPDATED_METADATA)
-    patched_metadata = metadata.patch(updated_metadata)
+    patched_metadata = metadata_in_datastore.patch(updated_metadata)
     assert patched_metadata.dict(by_alias=True) == PATCHED_METADATA
