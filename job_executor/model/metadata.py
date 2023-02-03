@@ -225,17 +225,13 @@ class Variable(CamelModel):
             return self
         if self.variable_role == "Measure" and self.key_type is not None:
             # Centralized variable definition was used,
-            # it is safe to only patch name and description fields.
-            new_name = other.name
+            # it is safe to only patch label and description fields.
             only_patch_description = True
             self.validate_patching_fields(other, with_key_type=True)
         else:
             self.validate_patching_fields(other, with_name=True)
-            new_name = self.name
 
-        self.validate_patching_for_all_variable_roles(
-            only_patch_description, other
-        )
+        self.validate_patching_for_all_variable_roles(other)
 
         patched_represented_variables = []
         for idx, _ in enumerate(self.represented_variables):
@@ -246,7 +242,7 @@ class Variable(CamelModel):
                 ).dict()
             )
         patched.update({
-            "name": new_name,
+            "name": self.name,
             "label": other.label,
             "notPseudonym": self.not_pseudonym,
             "dataType": self.data_type,
@@ -292,9 +288,7 @@ class Variable(CamelModel):
         if message:
             raise PatchingError(caption + message)
 
-    def validate_patching_for_all_variable_roles(
-        self, only_patch_description: bool, other: 'Variable'
-    ):
+    def validate_patching_for_all_variable_roles(self, other: 'Variable'):
         if self.key_type is None and other.key_type is not None:
             raise PatchingError('Can not change keyType')
         if len(self.represented_variables) != len(other.represented_variables):
@@ -305,11 +299,6 @@ class Variable(CamelModel):
             raise PatchingError(
                 'Can not change keyType pseudonym status from '
                 f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
-            )
-        if only_patch_description and self.label != other.label:
-            raise PatchingError(
-                'Can not change label from '
-                f'"{self.label}" to "{other.label}"'
             )
 
 

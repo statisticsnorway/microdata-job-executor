@@ -35,8 +35,8 @@
     }
   ],
   "measureVariable": {
-    "name": "BEFOLKNING_MOR_FNR_new_name",
-    "label": "Fødselsnummer mor",
+    "name": "BEFOLKNING_MOR_FNR",
+    "label": "Fødselsnummer mor new label",
     "representedVariables": [
       {
         "description": "new description",
