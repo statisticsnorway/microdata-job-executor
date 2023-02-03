@@ -228,57 +228,15 @@ class Variable(CamelModel):
             # it is safe to only patch name and description fields.
             new_name = other.name
             only_patch_description = True
-            if self.key_type != other.key_type:
-                raise PatchingError(
-                    'Can not change keyType from '
-                    f'"{self.key_type}" to "{other.key_type}"'
-                )
-            if (
-                self.data_type != other.data_type or
-                self.format != other.format or
-                self.variable_role != other.variable_role
-            ):
-                raise PatchingError(
-                    'Illegal change to one of these variable fields: '
-                    '[dataType, format, variableRole]]\n'
-                    f'dataType: {self.data_type} to {other.data_type},'
-                    f'format: {self.format} to {other.format},'
-                    f'variable_role: {self.variable_role} to '
-                    f'{other.variable_role}'
-                )
-        elif (
-            self.name != other.name or
-            self.data_type != other.data_type or
-            self.format != other.format or
-            self.variable_role != other.variable_role
-        ):
-            raise PatchingError(
-                'Illegal change to one of these variable fields: '
-                '[name, dataType, format, variableRole]]\n'
-                f'name: {self.name} to {other.name},'
-                f'dataType: {self.data_type} to {other.data_type},'
-                f'format: {self.format} to {other.format},'
-                f'variable_role: {self.variable_role} to {other.variable_role}'
-            )
+            self.validate_patching_fields(other, with_key_type=True)
         else:
+            self.validate_patching_fields(other, with_name=True)
             new_name = self.name
 
-        if self.key_type is None and other.key_type is not None:
-            raise PatchingError('Can not change keyType')
-        if len(self.represented_variables) != len(other.represented_variables):
-            raise PatchingError(
-                'Can not add or delete represented variables.'
-            )
-        if self.not_pseudonym != other.not_pseudonym:
-            raise PatchingError(
-                'Can not change keyType pseudonym status from '
-                f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
-            )
-        if only_patch_description and self.label != other.label:
-            raise PatchingError(
-                'Can not change label from '
-                f'"{self.label}" to "{other.label}"'
-            )
+        self.validate_patching_for_all_variable_roles(
+            only_patch_description, other
+        )
+
         patched_represented_variables = []
         for idx, _ in enumerate(self.represented_variables):
             patched_represented_variables.append(
@@ -303,6 +261,56 @@ class Variable(CamelModel):
                 self.key_type.patch(other.key_type).dict()
             })
         return Variable(**patched)
+
+    def validate_patching_fields(
+        self, other, with_name: bool = False, with_key_type: bool = False
+    ):
+        caption = 'Illegal change to one of these variable fields: \n'
+        message = ''
+        if (
+            self.data_type != other.data_type or
+            self.format != other.format or
+            self.variable_role != other.variable_role
+        ):
+            message = (
+                f'dataType: {self.data_type} to {other.data_type},'
+                f'format: {self.format} to {other.format},'
+                f'variable_role: {self.variable_role} to '
+                f'{other.variable_role}'
+            )
+        if (
+            with_name and
+            self.name != other.name
+        ):
+            message += f'name: {self.name} to {other.name},'
+        if (
+            with_key_type and
+            self.key_type != other.key_type
+        ):
+            message += f'name: {self.key_type} to {other.key_type},'
+
+        if message:
+            raise PatchingError(caption + message)
+
+    def validate_patching_for_all_variable_roles(
+        self, only_patch_description: bool, other: 'Variable'
+    ):
+        if self.key_type is None and other.key_type is not None:
+            raise PatchingError('Can not change keyType')
+        if len(self.represented_variables) != len(other.represented_variables):
+            raise PatchingError(
+                'Can not add or delete represented variables.'
+            )
+        if self.not_pseudonym != other.not_pseudonym:
+            raise PatchingError(
+                'Can not change keyType pseudonym status from '
+                f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
+            )
+        if only_patch_description and self.label != other.label:
+            raise PatchingError(
+                'Can not change label from '
+                f'"{self.label}" to "{other.label}"'
+            )
 
 
 class IdentifierVariable(Variable):
