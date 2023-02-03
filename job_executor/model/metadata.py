@@ -228,6 +228,11 @@ class Variable(CamelModel):
             # it is safe to only patch name and description fields.
             new_name = other.name
             only_patch_description = True
+            if self.key_type != other.key_type:
+                raise PatchingError(
+                    'Can not change keyType from '
+                    f'"{self.key_type}" to "{other.key_type}"'
+                )
             if (
                 self.data_type != other.data_type or
                 self.format != other.format or
