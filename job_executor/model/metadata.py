@@ -283,7 +283,7 @@ class Variable(CamelModel):
             with_key_type and
             self.key_type != other.key_type
         ):
-            message += f'name: {self.key_type} to {other.key_type},'
+            message += f'key_type: {self.key_type} to {other.key_type},'
 
         if message:
             raise PatchingError(caption + message)
