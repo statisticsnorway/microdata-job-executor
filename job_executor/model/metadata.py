@@ -28,11 +28,11 @@ class KeyType(CamelModel):
     def patch(self, other: 'KeyType'):
         if other is None:
             raise PatchingError(
-                'Can not delete KeyType'
+                'Can not delete UnitType'
             )
         if self.name != other.name:
             raise PatchingError(
-                'Can not change keyType name from '
+                'Can not change UnitType.shortName from '
                 f'"{self.name}" to "{other.name}"'
             )
         return KeyType(**{
@@ -118,16 +118,16 @@ class ValueDomain(CamelModel):
         elif self._is_enumerated_value_domain():
             if other.code_list is None:
                 raise PatchingError(
-                    'Can not delete code list'
+                    'Can not delete ValueDomain.codeList'
                 )
             if self.missing_values != other.missing_values:
                 raise PatchingError(
-                    'Can not change ValueDomain missingValues from '
+                    'Can not change ValueDomain.sentinelAndMissingValues from '
                     f'"{self.missing_values}" to "{other.missing_values}"'
                 )
             if len(self.code_list) != len(other.code_list):
                 raise PatchingError(
-                    'Can not add or remove codes from ValueDomain codeList'
+                    'Can not add or remove codes from ValueDomain.codeList'
                 )
             patched = {
                 'codeList': []
@@ -155,7 +155,8 @@ class RepresentedVariable(CamelModel):
     def patch(self, other: 'RepresentedVariable', only_patch_description: bool):
         if other is None:
             raise PatchingError(
-                'Can not delete RepresentedVariable'
+                'Can not delete RepresentedVariable. '
+                'Please check valueDomain.codeList field.'
             )
         return RepresentedVariable(**{
             "description": other.description,
@@ -278,27 +279,35 @@ class Variable(CamelModel):
             with_name and
             self.name != other.name
         ):
-            message += f'name: {self.name} to {other.name},'
+            message += f'shortName: {self.name} to {other.name},'
         if (
             with_key_type and
             self.key_type != other.key_type
         ):
-            message += f'key_type: {self.key_type} to {other.key_type},'
+            message += f'unitType: ' \
+                       f'<shortName={self.key_type.name},' \
+                       f'name={self.key_type.label},' \
+                       f'description={self.key_type.description}> ' \
+                       f'to unitType: <shortName={other.key_type.name},' \
+                       f'name={other.key_type.label},' \
+                       f'description={other.key_type.description}> ' \
 
         if message:
             raise PatchingError(caption + message)
 
     def validate_patching_for_all_variable_roles(self, other: 'Variable'):
         if self.key_type is None and other.key_type is not None:
-            raise PatchingError('Can not change keyType')
+            raise PatchingError('Can not change unitType')
         if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
-                'Can not add or delete represented variables.'
+                'Can not add or delete represented variables. '
+                'Please check valueDomain.codeList field.'
             )
         if self.not_pseudonym != other.not_pseudonym:
             raise PatchingError(
-                'Can not change keyType pseudonym status from '
+                'Can not change unitType''s pseudonym status from '
                 f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
+                'Please check unitType.requiresPseudonymization field. '
             )
 
 
@@ -345,13 +354,13 @@ class Metadata(CamelModel):
         ):
             raise PatchingError(
                 'Can not change these metadata fields '
-                '[name, temporality, languageCode]'
+                '[shortName, temporalityType, languageCode]'
             )
         if len(self.attribute_variables) != len(other.attribute_variables):
             raise PatchingError('Can not delete or add attributeVariables')
 
         if self.sensitivity_level != other.sensitivity_level:
-            raise PatchingError('Can not change sensitivity level')
+            raise PatchingError('Can not change sensitivityLevel')
 
         sorted_self_attributes = sorted(
             self.attribute_variables, key=lambda k: k.name
