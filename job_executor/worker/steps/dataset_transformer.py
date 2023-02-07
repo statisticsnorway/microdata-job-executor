@@ -82,7 +82,7 @@ def _represented_variables_from_code_list(description: str,
         for item in code_items if item.get('validUntil', None) is not None
     ]
     has_ongoing_time_period = any(
-        ['validUntil' not in item for item in code_items]
+        [item.get('validUntil', None) is None for item in code_items]
     )
     unique_dates = list(set(valid_from_dates + valid_until_dates))
     unique_dates.sort()
