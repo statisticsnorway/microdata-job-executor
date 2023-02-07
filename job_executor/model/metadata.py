@@ -295,7 +295,8 @@ class Variable(CamelModel):
             raise PatchingError('Can not change unitType')
         if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
-                'Can not add or delete represented variables. '
+                'Can not change the number of represented variables '
+                f'from {len(self.represented_variables)} to {len(other.represented_variables)} '
                 'Please check valueDomain.codeList field.'
             )
         if self.not_pseudonym != other.not_pseudonym:
