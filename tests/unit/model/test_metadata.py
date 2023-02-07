@@ -67,4 +67,5 @@ def test_patch_change_name_desc_when_measure_has_a_unit_type():
     metadata_in_datastore = Metadata(**PATCH_UNIT_TYPE_METADATA_IN_DATASTORE)
     updated_metadata = Metadata(**PATCH_UNIT_TYPE_UPDATED_METADATA)
     patched_metadata = metadata_in_datastore.patch(updated_metadata)
-    assert patched_metadata.dict(by_alias=True) == PATCH_UNIT_TYPE_PATCHED_METADATA
+    assert patched_metadata.dict(by_alias=True) == \
+           PATCH_UNIT_TYPE_PATCHED_METADATA

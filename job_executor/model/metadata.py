@@ -209,46 +209,30 @@ class Variable(CamelModel):
             dict_representation["keyType"] = self.key_type.dict(by_alias=True)
         return dict_representation
 
-    def patch(self, other: 'Variable') -> 'Variable':
+    def _patch_downstream(
+        self, other: 'Variable',
+        only_patch_description: bool = False,
+        skip_patching_represented_variables: bool = False
+    ) -> 'Variable':
         patched = {}
-        only_patch_description = False
-
-        if other is None:
-            raise PatchingError(
-                'Can not delete Variable'
-            )
-
-        if self.variable_role == "Identifier":
-            # Centralized variable definition was used,
-            # don't patch the one that is in the datastore.
-            # The definition might have changed and we don't want to update it
-            # - one needs to use CHANGE operation for that.
-            return self
-        if self.variable_role == "Measure" and self.key_type is not None:
-            # Centralized variable definition was used,
-            # it is safe to only patch label and description fields.
-            only_patch_description = True
-            self.validate_patching_fields(other, with_key_type=True)
-        else:
-            self.validate_patching_fields(other, with_name=True)
-
-        self.validate_patching_for_all_variable_roles(other)
-
         patched_represented_variables = []
-        for idx, _ in enumerate(self.represented_variables):
-            patched_represented_variables.append(
-                self.represented_variables[idx].patch(
-                    other.represented_variables[idx],
-                    only_patch_description
-                ).dict()
-            )
+        if not skip_patching_represented_variables:
+            for idx, _ in enumerate(self.represented_variables):
+                patched_represented_variables.append(
+                    self.represented_variables[idx].patch(
+                        other.represented_variables[idx],
+                        only_patch_description
+                    ).dict()
+                )
         patched.update({
             "name": self.name,
             "label": other.label,
             "notPseudonym": self.not_pseudonym,
             "dataType": self.data_type,
             "variableRole": self.variable_role,
-            "representedVariables": patched_represented_variables
+            "representedVariables": self.represented_variables
+            if skip_patching_represented_variables
+            else patched_represented_variables
         })
         if self.format is not None:
             patched.update({"format": self.format})
@@ -290,15 +274,42 @@ class Variable(CamelModel):
         if message:
             raise PatchingError(caption + message)
 
-    def validate_patching_for_all_variable_roles(self, other: 'Variable'):
-        if self.key_type is None and other.key_type is not None:
-            raise PatchingError('Can not change unitType')
+    def validate_represented_variables(self, other: 'Variable'):
         if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
                 'Can not change the number of represented variables '
                 f'from {len(self.represented_variables)} to {len(other.represented_variables)} '
                 'Please check valueDomain.codeList field.'
             )
+
+
+class IdentifierVariable(Variable):
+    def patch(self, other: 'Variable') -> 'Variable':
+        if other is None:
+            raise PatchingError('Can not delete Variable')
+        # Centralized variable definition was used,
+        # don't patch the one that is in the datastore.
+        # The definition might have changed and we don't want to update it
+        # - one needs to use CHANGE operation for that.
+        return self
+
+
+class MeasureVariable(Variable):
+    def patch(self, other: 'Variable') -> 'Variable':
+        skip_patching_represented_variables = False
+        if other is None:
+            raise PatchingError('Can not delete Variable')
+        if self.key_type is not None:
+            # Centralized variable definition was used,
+            # it is safe to only patch label and description fields.
+            self.validate_patching_fields(other, with_key_type=True)
+            skip_patching_represented_variables = True
+        else:
+            if other.key_type is not None:
+                raise PatchingError('Can not change unitType')
+            self.validate_patching_fields(other, with_name=True)
+            self.validate_represented_variables(other)
+
         if self.not_pseudonym != other.not_pseudonym:
             raise PatchingError(
                 'Can not change unitType''s pseudonym status from '
@@ -306,17 +317,21 @@ class Variable(CamelModel):
                 'Please check unitType.requiresPseudonymization field. '
             )
 
-
-class IdentifierVariable(Variable):
-    ...
-
-
-class MeasureVariable(Variable):
-    ...
+        return super()._patch_downstream(
+            other,
+            True,
+            skip_patching_represented_variables
+        )
 
 
 class AttributeVariable(Variable):
-    ...
+    def patch(self, other: 'Variable') -> 'Variable':
+        if other is None:
+            raise PatchingError('Can not delete Variable')
+
+        self.validate_patching_fields(other, with_name=True)
+        self.validate_represented_variables(other)
+        return super()._patch_downstream(other)
 
 
 class Metadata(CamelModel):

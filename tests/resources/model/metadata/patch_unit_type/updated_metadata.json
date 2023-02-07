@@ -39,7 +39,7 @@
     "label": "Fødselsnummer mor new label",
     "representedVariables": [
       {
-        "description": "new description",
+        "description": "Variabelen er konstruert fra mors fødselsnummer. Ment for bruk som koblingsnøkkel.",
         "validPeriod": {
           "start": -25567,
           "stop": 18993
