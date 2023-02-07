@@ -273,24 +273,19 @@ class Variable(CamelModel):
                 f'dataType: {self.data_type} to {other.data_type},'
                 f'format: {self.format} to {other.format},'
                 f'variable_role: {self.variable_role} to '
-                f'{other.variable_role}'
+                f'{other.variable_role}\n'
             )
         if (
             with_name and
             self.name != other.name
         ):
-            message += f'shortName: {self.name} to {other.name},'
+            message += f'shortName: {self.name} to {other.name}\n'
         if (
             with_key_type and
-            self.key_type != other.key_type
+            self.key_type.name != other.key_type.name
         ):
-            message += f'unitType: ' \
-                       f'<shortName={self.key_type.name},' \
-                       f'name={self.key_type.label},' \
-                       f'description={self.key_type.description}> ' \
-                       f'to unitType: <shortName={other.key_type.name},' \
-                       f'name={other.key_type.label},' \
-                       f'description={other.key_type.description}> ' \
+            message += f'unitType.name: {self.key_type.name} ' \
+                       f'to {other.key_type.name}'
 
         if message:
             raise PatchingError(caption + message)
