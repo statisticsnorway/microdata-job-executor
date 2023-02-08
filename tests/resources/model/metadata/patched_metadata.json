@@ -55,15 +55,15 @@
       {
         "variableRole": "Start",
         "name": "START",
-        "label": "new value",
+        "label": "Startdato",
         "notPseudonym": true,
         "dataType": "Instant",
         "representedVariables": [
           {
-            "description": "new value",
+            "description": "Startdato/m\u00e5letidspunktet for hendelsen",
             "validPeriod": { "start": -25567, "stop": 18628 },
             "valueDomain": {
-              "description": "new value",
+              "description": "Dato oppgitt i dager siden 1970-01-01",
               "unitOfMeasure": "N/A"
             }
           }
@@ -77,10 +77,10 @@
         "dataType": "Instant",
         "representedVariables": [
           {
-            "description": "new value",
+            "description": "Stoppdato/sluttdato for hendelsen",
             "validPeriod": { "start": -25567, "stop": 18628 },
             "valueDomain": {
-              "description": "new value",
+              "description": "Dato oppgitt i dager siden 1970-01-01",
               "unitOfMeasure": "N/A"
             }
           }

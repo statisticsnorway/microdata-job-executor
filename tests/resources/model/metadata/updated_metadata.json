@@ -40,7 +40,7 @@
       "representedVariables": [
         {
           "description": "new value",
-          "validPeriod": { "start": null },
+          "validPeriod": { "start": -25567 },
           "valueDomain": {
             "codeList": [
               { "category": "Mann", "code": "1" },

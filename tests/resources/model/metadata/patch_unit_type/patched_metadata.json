@@ -66,26 +66,6 @@
   "languageCode": "no",
   "attributeVariables": [
     {
-      "name": "START",
-      "label": "Startdato",
-      "representedVariables": [
-        {
-          "description": "Startdato/måletidspunktet for hendelsen",
-          "validPeriod": {
-            "start": -25567,
-            "stop": 18993
-          },
-          "valueDomain": {
-            "description": "N/A",
-            "unitOfMeasure": "N/A"
-          }
-        }
-      ],
-      "dataType": "Instant",
-      "variableRole": "Start",
-      "notPseudonym": true
-    },
-    {
       "name": "STOP",
       "label": "Stoppdato",
       "representedVariables": [
@@ -103,6 +83,26 @@
       ],
       "dataType": "Instant",
       "variableRole": "Stop",
+      "notPseudonym": true
+    },
+    {
+      "name": "START",
+      "label": "Startdato",
+      "representedVariables": [
+        {
+          "description": "Startdato/måletidspunktet for hendelsen",
+          "validPeriod": {
+            "start": -25567,
+            "stop": 18993
+          },
+          "valueDomain": {
+            "description": "N/A",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ],
+      "dataType": "Instant",
+      "variableRole": "Start",
       "notPseudonym": true
     }
   ],
