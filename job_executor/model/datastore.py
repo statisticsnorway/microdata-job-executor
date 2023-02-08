@@ -51,12 +51,14 @@ class Datastore():
             )
         )
 
-    def _log(self, job_id, log_message, level='INFO'):
+    def _log(self, job_id, log_message, level='INFO', exc: Exception = None):
         log_str = f'{job_id}: {log_message}'
         if level == 'INFO':
             logger.info(log_str)
         elif level == 'ERROR':
             logger.error(log_str)
+        elif level == 'EXC':
+            logger.exception(log_str, exc_info=exc)
 
     def patch_metadata(self, job_id: str, dataset_name: str, description: str):
         """
@@ -99,14 +101,14 @@ class Datastore():
             local_storage.delete_working_dir_metadata(dataset_name)
         except PatchingError as e:
             self._log(job_id, 'Patching error occured', 'ERROR')
-            self._log(job_id, str(e), 'ERROR')
+            self._log(job_id, str(e), 'EXC', e)
             rollback_manager_phase_import_job(
                 job_id, 'PATCH_METADATA', dataset_name
             )
             job_service.update_job_status(job_id, 'failed', str(e))
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
-            self._log(job_id, str(e), 'ERROR')
+            self._log(job_id, str(e), 'EXC', e)
             rollback_manager_phase_import_job(
                 job_id, 'PATCH_METADATA', dataset_name
             )
@@ -153,7 +155,7 @@ class Datastore():
             local_storage.delete_working_dir_metadata(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
-            self._log(job_id, str(e), 'ERROR')
+            self._log(job_id, str(e), 'EXC', e)
             rollback_manager_phase_import_job(job_id, 'ADD', dataset_name)
             job_service.update_job_status(job_id, 'failed')
 
@@ -199,7 +201,7 @@ class Datastore():
             local_storage.delete_working_dir_metadata(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
-            self._log(job_id, str(e), 'ERROR')
+            self._log(job_id, str(e), 'EXC', e)
             rollback_manager_phase_import_job(
                 job_id, 'CHANGE', dataset_name
             )
@@ -284,7 +286,8 @@ class Datastore():
                 self.draft_version.delete_draft(dataset_name)
                 job_service.update_job_status(job_id, 'completed')
             except NoSuchDraftException as e:
-                logger.exception(f'{job_id}: failed', exc_info=e)
+                self._log(job_id, 'An unexpected error occured', 'ERROR')
+                self._log(job_id, str(e), 'EXC', e)
                 job_service.update_job_status(job_id, 'failed', str(e))
 
     def set_draft_release_status(
@@ -303,10 +306,10 @@ class Datastore():
             self._log(job_id, 'completed')
         except UnnecessaryUpdateException as e:
             job_service.update_job_status(job_id, 'completed', f'{e}')
-            self._log(job_id, f'{e}')
+            self._log(job_id, str(e), 'EXC', e)
             self._log(job_id, 'completed')
         except NoSuchDraftException as e:
-            self._log(job_id, f'{e}', level='ERROR')
+            self._log(job_id, str(e), 'EXC', e)
             job_service.update_job_status(job_id, 'failed', f'{e}')
 
     def _generate_new_metadata_all(
@@ -459,6 +462,6 @@ class Datastore():
             local_storage.delete_temporary_backup()
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
-            self._log(job_id, str(e), 'ERROR')
+            self._log(job_id, str(e), 'EXC', e)
             rollback_bump(job_id, bump_manifesto.dict(by_alias=True))
             job_service.update_job_status(job_id, 'failed')

@@ -19,6 +19,10 @@ METADATA_IN_DATASTORE = load_json(f'{TEST_DIR}/metadata.json')
 UPDATED_METADATA = load_json(f'{TEST_DIR}/updated_metadata.json')
 PATCHED_METADATA = load_json(f'{TEST_DIR}/patched_metadata.json')
 
+PATCH_UNIT_TYPE_METADATA_IN_DATASTORE = load_json(f'{TEST_DIR}/patch_unit_type/metadata.json')
+PATCH_UNIT_TYPE_UPDATED_METADATA = load_json(f'{TEST_DIR}/patch_unit_type/updated_metadata.json')
+PATCH_UNIT_TYPE_PATCHED_METADATA = load_json(f'{TEST_DIR}/patch_unit_type/patched_metadata.json')
+
 
 def setup_module():
 
@@ -57,3 +61,11 @@ def test_patch():
     updated_metadata = Metadata(**UPDATED_METADATA)
     patched_metadata = metadata_in_datastore.patch(updated_metadata)
     assert patched_metadata.dict(by_alias=True) == PATCHED_METADATA
+
+
+def test_patch_change_name_desc_when_measure_has_a_unit_type():
+    metadata_in_datastore = Metadata(**PATCH_UNIT_TYPE_METADATA_IN_DATASTORE)
+    updated_metadata = Metadata(**PATCH_UNIT_TYPE_UPDATED_METADATA)
+    patched_metadata = metadata_in_datastore.patch(updated_metadata)
+    assert patched_metadata.dict(by_alias=True) == \
+           PATCH_UNIT_TYPE_PATCHED_METADATA

@@ -19,27 +19,19 @@ class TimePeriod(CamelModel):
             else {"start": self.start}
         )
 
+    def __eq__(self, other):
+        return (
+            self.start == other.start and self.stop == other.stop
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
 
 class KeyType(CamelModel):
     name: str
     label: str
     description: str
-
-    def patch(self, other: 'KeyType'):
-        if other is None:
-            raise PatchingError(
-                'Can not delete KeyType'
-            )
-        if self.name != other.name:
-            raise PatchingError(
-                'Can not change keyType name from '
-                f'"{self.name}" to "{other.name}"'
-            )
-        return KeyType(**{
-            'name': self.name,
-            'label': other.label,
-            'description': other.description
-        })
 
 
 class CodeListItem(CamelModel):
@@ -68,7 +60,7 @@ class ValueDomain(CamelModel):
     code_list: Optional[List[CodeListItem]]
     missing_values: Optional[List[str]]
 
-    def _is_enumerated_value_domain(self):
+    def is_enumerated_value_domain(self):
         return (
             self.code_list is not None
             and self.description is None
@@ -91,7 +83,7 @@ class ValueDomain(CamelModel):
                     "unitOfMeasure": self.unit_of_measure
                 }.items() if value is not None
             }
-        elif self._is_enumerated_value_domain():
+        elif self.is_enumerated_value_domain():
             return {
                 "codeList": [
                     code_item.dict() for code_item in self.code_list
@@ -115,19 +107,19 @@ class ValueDomain(CamelModel):
             if other.unit_of_measure is not None:
                 patched.update({'unitOfMeasure': other.unit_of_measure})
             return ValueDomain(**patched)
-        elif self._is_enumerated_value_domain():
+        elif self.is_enumerated_value_domain():
             if other.code_list is None:
                 raise PatchingError(
-                    'Can not delete code list'
+                    'Can not delete ValueDomain.codeList'
                 )
             if self.missing_values != other.missing_values:
                 raise PatchingError(
-                    'Can not change ValueDomain missingValues from '
+                    'Can not change ValueDomain.sentinelAndMissingValues from '
                     f'"{self.missing_values}" to "{other.missing_values}"'
                 )
             if len(self.code_list) != len(other.code_list):
                 raise PatchingError(
-                    'Can not add or remove codes from ValueDomain codeList'
+                    'Can not add or remove codes from ValueDomain.codeList'
                 )
             patched = {
                 'codeList': []
@@ -136,10 +128,13 @@ class ValueDomain(CamelModel):
                 patched.update({
                     'missingValues': [value for value in self.missing_values]
                 })
-            for idx, _ in enumerate(self.code_list):
+            sorted_code_list = sorted(self.code_list, key=lambda key: key.code)
+            sorted_other_code_list = sorted(
+                other.code_list, key=lambda key: key.code)
+            for idx, code_item in enumerate(sorted_code_list):
                 patched['codeList'].append(
-                    self.code_list[idx].patch(
-                        other.code_list[idx]
+                    code_item.patch(
+                        sorted_other_code_list[idx]
                     ).dict(by_alias=True)
                 )
             return ValueDomain(**patched)
@@ -153,16 +148,25 @@ class RepresentedVariable(CamelModel):
     value_domain: ValueDomain
 
     def patch(self, other: 'RepresentedVariable'):
-        if other is None:
-            raise PatchingError(
-                'Can not delete RepresentedVariable'
-            )
+        is_enumerated = self.value_domain.is_enumerated_value_domain()
+        if is_enumerated:
+            if self.valid_period != other.valid_period:
+                raise PatchingError(
+                    'Can not change codeList time span'
+                )
+
         return RepresentedVariable(**{
             "description": other.description,
             "validPeriod": self.valid_period.dict(by_alias=True),
-            "valueDomain": self.value_domain.patch(
-                other.value_domain
-            ).dict(by_alias=True)
+            "valueDomain": self.value_domain.patch(other.value_domain)
+                                   .dict(by_alias=True)
+        })
+
+    def patch_description(self, description: str):
+        return RepresentedVariable(**{
+            "description": description,
+            "validPeriod": self.valid_period.dict(by_alias=True),
+            "valueDomain": self.value_domain.dict(by_alias=True)
         })
 
 
@@ -205,44 +209,98 @@ class Variable(CamelModel):
             dict_representation["keyType"] = self.key_type.dict(by_alias=True)
         return dict_representation
 
-    def patch(self, other: 'Variable'):
-        patched = {}
-        if other is None:
-            raise PatchingError(
-                'Can not delete Variable'
-            )
+    def validate_patching_fields(
+        self, other, with_name: bool = False, with_key_type: bool = False
+    ):
+        caption = 'Illegal change to one of these variable fields: \n'
+        message = ''
         if (
-            self.name != other.name or
             self.data_type != other.data_type or
             self.format != other.format or
             self.variable_role != other.variable_role
         ):
-            raise PatchingError(
-                'Illegal change to one of these variable fields: '
-                '[name, dataType, format, variableRole]]\n'
-                f'name: {self.name} to {other.name},'
+            message = (
                 f'dataType: {self.data_type} to {other.data_type},'
                 f'format: {self.format} to {other.format},'
-                f'variable_role: {self.variable_role} to {other.variable_role}'
+                f'variable_role: {self.variable_role} to '
+                f'{other.variable_role}\n'
             )
-        if self.key_type is None and other.key_type is not None:
-            raise PatchingError('Can not change keyType')
+        if (
+            with_name and
+            self.name != other.name
+        ):
+            message += f'shortName: {self.name} to {other.name}\n'
+        if (
+            with_key_type and
+            self.key_type.name != other.key_type.name
+        ):
+            message += f'unitType.name: {self.key_type.name} ' \
+                       f'to {other.key_type.name}'
+
+        if message:
+            raise PatchingError(caption + message)
+
+    def validate_represented_variables(self, other: 'Variable'):
         if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
-                'Can not add or delete represented variables.'
+                'Can not change the number of represented variables '
+                f'from {len(self.represented_variables)} to {len(other.represented_variables)} '
+                'Please check valueDomain.codeList field.'
             )
-        if self.not_pseudonym != other.not_pseudonym:
+
+
+class IdentifierVariable(Variable):
+    def patch(self, other: 'Variable') -> 'Variable':
+        if other is None:
+            raise PatchingError('Can not delete Variable')
+
+        if self.key_type.name != other.key_type.name:
             raise PatchingError(
-                'Can not change keyType pseudonym status from '
-                f'"{self.not_pseudonym}" to "{other.not_pseudonym}"'
+                'Can not change Identifier unitType from '
+                f'{self.key_type.name} to {other.key_type.name}'
             )
+
+        # Centralized variable definition was used,
+        # don't patch the one that is in the datastore.
+        # The definition might have changed and we don't want to update it
+        # - one needs to use CHANGE operation for that.
+        return self
+
+
+class MeasureVariable(Variable):
+    def patch(self, other: 'Variable') -> 'Variable':
+        centralized_variable_definition = False
+        if other is None:
+            raise PatchingError('Can not delete Variable')
+        if self.key_type is not None:
+            if other.key_type is None:
+                raise PatchingError(f'Can not remove unitType: {self.key_type}')
+            # Centralized variable definition was used,
+            # it is safe to only patch label and description fields.
+            self.validate_patching_fields(other, with_key_type=True)
+            centralized_variable_definition = True
+        else:
+            if other.key_type is not None:
+                raise PatchingError(f'Can not add unitType: {other.key_type}')
+            self.validate_patching_fields(other, with_name=True)
+            self.validate_represented_variables(other)
+
+        patched = {}
         patched_represented_variables = []
-        for idx, _ in enumerate(self.represented_variables):
-            patched_represented_variables.append(
-                self.represented_variables[idx].patch(
-                    other.represented_variables[idx]
-                ).dict()
-            )
+
+        if centralized_variable_definition:
+            description = other.represented_variables[0].description
+            patched_represented_variables = [
+                represented.patch_description(description) for represented
+                in self.represented_variables
+            ]
+        else:
+            for idx, _ in enumerate(self.represented_variables):
+                patched_represented_variables.append(
+                    self.represented_variables[idx].patch(
+                        other.represented_variables[idx]
+                    ).dict()
+                )
         patched.update({
             "name": self.name,
             "label": other.label,
@@ -253,19 +311,11 @@ class Variable(CamelModel):
         })
         if self.format is not None:
             patched.update({"format": self.format})
-        if self.key_type is not None:
+        if centralized_variable_definition:
             patched.update({
-                'keyType': self.key_type.patch(other.key_type).dict()
+                'keyType': self.key_type.dict()
             })
         return Variable(**patched)
-
-
-class IdentifierVariable(Variable):
-    ...
-
-
-class MeasureVariable(Variable):
-    ...
 
 
 class AttributeVariable(Variable):
@@ -303,24 +353,14 @@ class Metadata(CamelModel):
         ):
             raise PatchingError(
                 'Can not change these metadata fields '
-                '[name, temporality, languageCode]'
+                '[shortName, temporalityType, languageCode]'
             )
         if len(self.attribute_variables) != len(other.attribute_variables):
             raise PatchingError('Can not delete or add attributeVariables')
 
         if self.sensitivity_level != other.sensitivity_level:
-            raise PatchingError('Can not change sensitivity level')
+            raise PatchingError('Can not change sensitivityLevel')
 
-        sorted_self_attributes = sorted(
-            self.attribute_variables, key=lambda k: k.name
-        )
-        sorted_other_attributes = sorted(
-            other.attribute_variables, key=lambda k: k.name
-        )
-        patched_attribute_variables = [
-            sorted_self_attributes[0].patch(sorted_other_attributes[0]).dict(),
-            sorted_self_attributes[1].patch(sorted_other_attributes[1]).dict()
-        ]
         metadata_dict = {
             "name": self.name,
             "temporality": self.temporality,
@@ -337,7 +377,7 @@ class Metadata(CamelModel):
                     other.identifier_variables[0]
                 ).dict()
             ],
-            "attributeVariables": patched_attribute_variables,
+            "attributeVariables": self.attribute_variables,
             "temporalStatusDates": self.temporal_status_dates
         }
         if self.temporal_status_dates is None:

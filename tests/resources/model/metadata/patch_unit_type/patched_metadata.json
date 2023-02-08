@@ -1,0 +1,110 @@
+{
+  "name": "BEFOLKNING_MOR_FNR",
+  "populationDescription": "Bosatte i Norge",
+  "temporality": "FIXED",
+  "temporalCoverage": {
+    "start": -25567,
+    "stop": 18993
+  },
+  "identifierVariables": [
+    {
+      "name": "PERSONID_1",
+      "label": "Personidentifikator",
+      "representedVariables": [
+        {
+          "description": "Identifikator for person i RAIRD",
+          "validPeriod": {
+            "start": -25567,
+            "stop": 18993
+          },
+          "valueDomain": {
+            "description": "N/A",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ],
+      "dataType": "Long",
+      "variableRole": "Identifier",
+      "keyType": {
+        "name": "PERSON",
+        "label": "Person",
+        "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+      },
+      "format": "RandomUInt48",
+      "notPseudonym": false
+    }
+  ],
+  "measureVariable": {
+    "name": "BEFOLKNING_MOR_FNR",
+    "label": "Fødselsnummer mor new label",
+    "representedVariables": [
+      {
+        "description": "Variabelen er konstruert fra mors fødselsnummer. Ment for bruk som koblingsnøkkel.",
+        "validPeriod": {
+          "start": -25567,
+          "stop": 18993
+        },
+        "valueDomain": {
+          "description": "N/A",
+          "unitOfMeasure": "N/A"
+        }
+      }
+    ],
+    "dataType": "Long",
+    "variableRole": "Measure",
+    "keyType": {
+      "name": "PERSON",
+      "label": "Person",
+      "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+    },
+    "format": "RandomUInt48",
+    "notPseudonym": false
+  },
+  "subjectFields": [
+    "Befolkning"
+  ],
+  "languageCode": "no",
+  "attributeVariables": [
+    {
+      "name": "STOP",
+      "label": "Stoppdato",
+      "representedVariables": [
+        {
+          "description": "Stoppdato/sluttdato for hendelsen",
+          "validPeriod": {
+            "start": -25567,
+            "stop": 18993
+          },
+          "valueDomain": {
+            "description": "N/A",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ],
+      "dataType": "Instant",
+      "variableRole": "Stop",
+      "notPseudonym": true
+    },
+    {
+      "name": "START",
+      "label": "Startdato",
+      "representedVariables": [
+        {
+          "description": "Startdato/måletidspunktet for hendelsen",
+          "validPeriod": {
+            "start": -25567,
+            "stop": 18993
+          },
+          "valueDomain": {
+            "description": "N/A",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ],
+      "dataType": "Instant",
+      "variableRole": "Start",
+      "notPseudonym": true
+    }
+  ],
+  "sensitivityLevel": "PERSON_GENERAL"
+}

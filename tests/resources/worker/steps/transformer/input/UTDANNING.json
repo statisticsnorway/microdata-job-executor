@@ -141,7 +141,8 @@
                 "value": "Grunnskole"
               }
             ],
-            "validFrom": "1926-01-01"
+            "validFrom": "1926-01-01",
+            "validUntil": null
           },
           {
             "code": "2",
@@ -151,7 +152,8 @@
                 "value": "Videregående skole"
               }
             ],
-            "validFrom": "1926-01-01"
+            "validFrom": "1926-01-01",
+            "validUntil": null
           },
           {
             "code": "3",
@@ -161,7 +163,8 @@
                 "value": "Bachelorgrad"
               }
             ],
-            "validFrom": "1926-01-01"
+            "validFrom": "1926-01-01",
+            "validUntil": null
           },
           {
             "code": "4",
@@ -171,7 +174,8 @@
                 "value": "Mastergrad"
               }
             ],
-            "validFrom": "1926-01-01"
+            "validFrom": "1926-01-01",
+            "validUntil": null
           },
           {
             "code": "5",
@@ -181,7 +185,8 @@
                 "value": "Doktorgrad"
               }
             ],
-            "validFrom": "1926-01-01"
+            "validFrom": "1926-01-01",
+            "validUntil": null
           }
         ]
       },
