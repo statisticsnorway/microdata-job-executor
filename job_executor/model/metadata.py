@@ -317,7 +317,7 @@ class MeasureVariable(Variable):
                 'Please check unitType.requiresPseudonymization field. '
             )
 
-        return super()._patch_downstream(
+        return self._patch_downstream(
             other,
             True,
             skip_patching_represented_variables
@@ -331,7 +331,7 @@ class AttributeVariable(Variable):
 
         self.validate_patching_fields(other, with_name=True)
         self.validate_represented_variables(other)
-        return super()._patch_downstream(other)
+        return self._patch_downstream(other)
 
 
 class Metadata(CamelModel):
