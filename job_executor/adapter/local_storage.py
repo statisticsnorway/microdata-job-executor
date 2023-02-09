@@ -74,12 +74,12 @@ def get_data_versions(version: Union[str, None]) -> dict:
     Returns an empty dictionary if given version is None.
 
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
     """
     if version is None:
         return {}
+    file_version = '_'.join(version.split('_')[:-1])
     return _read_json(
-        f'{DATASTORE_DIR}/datastore/data_versions__{version[:3]}.json'
+        f'{DATASTORE_DIR}/datastore/data_versions__{file_version}.json'
     )
 
 
@@ -90,11 +90,11 @@ def write_data_versions(data_versions: dict, version: str):
 
     * data_versions: dict - data versions dict
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
     """
+    file_version = '_'.join(version.split('_')[:-1])
     _write_json(
         data_versions,
-        f'{DATASTORE_DIR}/datastore/data_versions__{version[:3]}.json'
+        f'{DATASTORE_DIR}/datastore/data_versions__{file_version}.json'
     )
 
 
@@ -266,11 +266,11 @@ def rename_parquet_draft_to_release(dataset_name: str, version: str) -> str:
 
     * dataset_name: str - name of dataset
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
     """
     draft_path = _get_datastore_draft_parquet_path(dataset_name)
+    file_version = '_'.join(version.split('_')[:-1])
     release_path = draft_path.replace(
-        'DRAFT', version[:3]
+        'DRAFT', file_version
     )
     shutil.move(draft_path, release_path)
     return release_path.split('/')[-1]
