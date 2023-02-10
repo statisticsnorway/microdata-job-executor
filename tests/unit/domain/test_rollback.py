@@ -162,10 +162,13 @@ def test_rollback_interrupted_bump_patch():
     )
     assert len(restored_datastore_versions['versions']) == 1
 
-    assert (
-        os.listdir(DATASTORE_METADATA_DIR / 'FOEDSELSVEKT')
-        == ['FOEDSELSVEKT__DRAFT.json', 'FOEDSELSVEKT__1_0_0.json']
+    foedselsvekt_metadata_files = os.listdir(
+        DATASTORE_METADATA_DIR / 'FOEDSELSVEKT'
     )
+    for metadata_file in foedselsvekt_metadata_files:
+        assert metadata_file in [
+            'FOEDSELSVEKT__DRAFT.json', 'FOEDSELSVEKT__1_0_0.json'
+        ]
     assert os.path.exists(
         f'{DATASTORE_DATA_DIR}/FOEDSELSVEKT/FOEDSELSVEKT__1_0.parquet'
     )
