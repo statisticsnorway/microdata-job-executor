@@ -74,12 +74,14 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
             logger.info(f'{job_id}: Deleting {metadata_all_path}')
             os.remove(metadata_all_path)
 
-        logger.info(f'{job_id}: Reverting name change of DRAFT files')
+        logger.info(
+            f'{job_id}: Reverting back to DRAFT for dataset files'
+        )
         for dataset in manifesto_datasets:
             if update_type in ['MAJOR', 'MINOR']:
                 logger.info(
                     f'{job_id}: Update type is {update_type}. '
-                    f'Reverting {dataset} files to DRAFT'
+                    f'Reverting {dataset} data file to DRAFT'
                 )
                 dataset_data_dir = datastore_dir / 'data' / dataset
                 partitioned_data_path = (
