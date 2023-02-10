@@ -10,7 +10,10 @@ from job_executor.model.datastore_versions import DatastoreVersions
 from job_executor.model.datastore_version import DatastoreVersion, DraftVersion
 from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.exception import (
-    NoSuchDraftException, UnnecessaryUpdateException, VersioningException, PatchingError
+    NoSuchDraftException,
+    UnnecessaryUpdateException,
+    VersioningException,
+    PatchingError
 )
 
 

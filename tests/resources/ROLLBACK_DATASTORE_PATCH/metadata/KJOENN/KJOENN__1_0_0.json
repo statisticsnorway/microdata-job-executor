@@ -1,0 +1,90 @@
+{
+  "name": "KJOENN",
+  "populationDescription": "Kj\u00f8nn for en populasjon",
+  "languageCode": "no",
+  "temporality": "FIXED",
+  "sensitivityLevel": "PERSON_GENERAL",
+  "subjectFields": ["Helse", "Helsetjenester"],
+  "temporalCoverage": { "start": -25567, "stop": 18628 },
+  "identifierVariables": [
+    {
+      "variableRole": "Identifier",
+      "name": "PERSON",
+      "label": "Personidentifikator",
+      "notPseudonym": false,
+      "dataType": "String",
+      "representedVariables": [
+        {
+          "description": "Identifikator for person i Microdata",
+          "validPeriod": { "start": -25567, "stop": 18628 },
+          "valueDomain": {
+            "description": "Pseudonymisert personnummer",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ],
+      "format": "RandomUInt48",
+      "keyType": {
+        "name": "PERSON",
+        "label": "Person",
+        "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+      }
+    }
+  ],
+  "measureVariable": {
+    "variableRole": "Measure",
+    "name": "KJOENN",
+    "label": "Kj\u00f8nn",
+    "notPseudonym": true,
+    "dataType": "String",
+    "representedVariables": [
+      {
+        "description": "Rapportert kj\u00f8nn for person",
+        "validPeriod": { "start": -25567 },
+        "valueDomain": {
+          "codeList": [
+            { "category": "Mann", "code": "1" },
+            { "category": "Kvinne", "code": "2" }
+          ],
+          "missingValues": []
+        }
+      }
+    ]
+  },
+  "attributeVariables": [
+    {
+      "variableRole": "Start",
+      "name": "START",
+      "label": "Startdato",
+      "notPseudonym": true,
+      "dataType": "Instant",
+      "representedVariables": [
+        {
+          "description": "Startdato/m\u00e5letidspunktet for hendelsen",
+          "validPeriod": { "start": -25567, "stop": 18628 },
+          "valueDomain": {
+            "description": "Dato oppgitt i dager siden 1970-01-01",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ]
+    },
+    {
+      "variableRole": "Stop",
+      "name": "STOP",
+      "label": "Stoppdato",
+      "notPseudonym": true,
+      "dataType": "Instant",
+      "representedVariables": [
+        {
+          "description": "Stoppdato/sluttdato for hendelsen",
+          "validPeriod": { "start": -25567, "stop": 18628 },
+          "valueDomain": {
+            "description": "Dato oppgitt i dager siden 1970-01-01",
+            "unitOfMeasure": "N/A"
+          }
+        }
+      ]
+    }
+  ]
+}

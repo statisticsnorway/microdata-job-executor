@@ -1,0 +1,12 @@
+{
+  "dataStore": {
+    "name": "no.jobmanager.test",
+    "label": "Test datastore",
+    "description": "Syntetiske data for unit testing av job-manager",
+    "languageCode": "no"
+  },
+  "languages": [
+    {"code": "no", "label": "Norsk"}
+  ],
+  "dataStructures": []
+}

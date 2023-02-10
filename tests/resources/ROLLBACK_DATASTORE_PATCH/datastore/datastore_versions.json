@@ -4,6 +4,21 @@
   "description": "Syntetiske data for unit testing av job-manager",
   "versions": [
     {
+      "version": "1.0.1.0",
+      "description": "Draft",
+      "releaseTime": 1635299399,
+      "languageCode": "no",
+      "dataStructureUpdates": [
+        {
+          "name": "FOEDSELSVEKT",
+          "description": "Første publisering",
+          "operation": "PATCH_METADATA",
+          "releaseStatus": "RELEASED"
+        }
+      ],
+      "updateType": "PATCH"
+    },
+    {
       "version": "1.0.0.0",
       "description": "Draft",
       "releaseTime": 1635299291,

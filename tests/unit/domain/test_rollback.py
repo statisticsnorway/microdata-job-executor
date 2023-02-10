@@ -36,6 +36,22 @@ BUMP_MANIFESTO = {
     'updateType': 'MINOR'
 }
 
+BUMP_MANIFESTO_PATCH = {
+    'version': '0.0.0.1635299291',
+    'description': 'Draft',
+    'releaseTime': 1635299291,
+    'languageCode': 'no',
+    'dataStructureUpdates': [
+      {
+        'name': 'FOEDSELSVEKT',
+        'description': 'Første publisering',
+        'operation': 'PATCH_METADATA',
+        'releaseStatus': 'PENDING_RELEASE'
+      }
+    ],
+    'updateType': 'PATCH'
+}
+
 
 def _read_json(file_path: str) -> dict:
     with open(file_path, encoding='utf-8') as f:
@@ -122,6 +138,45 @@ def test_rollback_interrupted_bump():
     assert (
         os.listdir(DATASTORE_METADATA_DIR / 'BRUTTO_INNTEKT')
         == ['BRUTTO_INNTEKT__DRAFT.json']
+    )
+
+
+def test_rollback_interrupted_bump_patch():
+    shutil.rmtree('tests/resources/TEST_DATASTORE')
+    shutil.move(
+        'tests/resources/ROLLBACK_DATASTORE_PATCH',
+        'tests/resources/TEST_DATASTORE'
+    )
+    draft_version_backup = _read_json(
+        DATASTORE_TEMP_DIR / 'draft_version.json'
+    )
+    rollback.rollback_bump(JOB_ID, BUMP_MANIFESTO_PATCH)
+
+    restored_draft_version = _read_json(
+        DATASTORE_INFO_DIR / 'draft_version.json'
+    )
+    assert restored_draft_version == draft_version_backup
+
+    restored_datastore_versions = _read_json(
+        DATASTORE_INFO_DIR / 'datastore_versions.json'
+    )
+    assert len(restored_datastore_versions['versions']) == 1
+
+    foedselsvekt_metadata_files = os.listdir(
+        DATASTORE_METADATA_DIR / 'FOEDSELSVEKT'
+    )
+    for metadata_file in foedselsvekt_metadata_files:
+        assert metadata_file in [
+            'FOEDSELSVEKT__DRAFT.json', 'FOEDSELSVEKT__1_0_0.json'
+        ]
+    assert os.path.exists(
+        f'{DATASTORE_DATA_DIR}/FOEDSELSVEKT/FOEDSELSVEKT__1_0.parquet'
+    )
+    assert not os.path.exists(
+        f'{DATASTORE_DATA_DIR}/FOEDSELSVEKT/FOEDSELSVEKT__DRAFT.parquet'
+    )
+    assert os.path.exists(
+        f'{DATASTORE_INFO_DIR}/data_versions__1_0.json'
     )
 
 
