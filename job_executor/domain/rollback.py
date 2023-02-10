@@ -41,6 +41,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
         manifesto_datasets = [
             dataset['name']
             for dataset in bump_manifesto['dataStructureUpdates']
+            if dataset['releaseStatus'] != 'DRAFT'
         ]
         logger.info(
             f'{job_id}: Found {len(manifesto_datasets)} '
@@ -50,13 +51,21 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
         logger.info(f'{job_id}: Removing generated datastore files')
         datastore_dir = Path(local_storage.DATASTORE_DIR)
         datastore_info_dir = datastore_dir / 'datastore'
-        data_versions_path = (
-            datastore_info_dir /
-            f'data_versions__{bumped_version_data}.json'
-        )
-        if data_versions_path.exists():
-            logger.info(f'{job_id}: Deleting {data_versions_path}')
-            os.remove(data_versions_path)
+
+        # No new data version has been built if update type was PATCH
+        if update_type in ['MAJOR', 'MINOR']:
+            logger.info(
+                f'{job_id}: Update type was {update_type}: '
+                f'Deleting data_versions__{bumped_version_data}'
+            )
+            data_versions_path = (
+                datastore_info_dir /
+                f'data_versions__{bumped_version_data}.json'
+            )
+            if data_versions_path.exists():
+                logger.info(f'{job_id}: Deleting {data_versions_path}')
+                os.remove(data_versions_path)
+
         metadata_all_path = (
             datastore_info_dir /
             f'metadata_all__{bumped_version_metadata}.json'
@@ -67,36 +76,43 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
 
         logger.info(f'{job_id}: Reverting name change of DRAFT files')
         for dataset in manifesto_datasets:
-            logger.info(f'{job_id}: Reverting files to draft for {dataset}')
-            dataset_data_dir = datastore_dir / 'data' / dataset
-            dataset_metadata_dir = datastore_dir / 'metadata' / dataset
-            partitioned_data_path = (
-                dataset_data_dir / f'{dataset}__{bumped_version_data}'
-            )
-            if partitioned_data_path.exists():
+            if update_type in ['MAJOR', 'MINOR']:
                 logger.info(
-                    f'{job_id}: Renaming {partitioned_data_path} '
-                    'back to draft'
+                    f'{job_id}: Update type is {update_type}. '
+                    f'Reverting {dataset} files to DRAFT'
                 )
-                shutil.move(
-                    partitioned_data_path,
-                    dataset_data_dir / f'{dataset}__DRAFT'
+                dataset_data_dir = datastore_dir / 'data' / dataset
+                partitioned_data_path = (
+                    dataset_data_dir / f'{dataset}__{bumped_version_data}'
                 )
+                if partitioned_data_path.exists():
+                    logger.info(
+                        f'{job_id}: Renaming {partitioned_data_path} '
+                        'back to draft'
+                    )
+                    shutil.move(
+                        partitioned_data_path,
+                        dataset_data_dir / f'{dataset}__DRAFT'
+                    )
+                else:
+                    data_path = (
+                        dataset_data_dir /
+                        f'{dataset}__{bumped_version_data}.parquet'
+                    )
+                    if data_path.exists():
+                        logger.info(
+                            f'{job_id}: Renaming {data_path} back to draft'
+                        )
+                        shutil.move(
+                            data_path,
+                            dataset_data_dir / f'{dataset}__DRAFT.parquet'
+                        )
 
-            data_path = (
-                dataset_data_dir / f'{dataset}__{bumped_version_data}.parquet'
-            )
-            if data_path.exists():
-                logger.info(f'{job_id}: Renaming {data_path} back to draft')
-                shutil.move(
-                    data_path,
-                    dataset_data_dir / f'{dataset}__DRAFT.parquet'
-                )
+            dataset_metadata_dir = datastore_dir / 'metadata' / dataset
             metadata_path = (
                 dataset_metadata_dir /
                 f'{dataset}__{bumped_version_metadata}.json'
             )
-            logger.info(metadata_path)
             if metadata_path.exists():
                 logger.info(
                     f'{job_id}: Renaming {metadata_path} back to draft'
