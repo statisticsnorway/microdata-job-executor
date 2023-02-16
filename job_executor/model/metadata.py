@@ -15,6 +15,9 @@ DATA_TYPES_MAPPING = {
     'DATE': 'Instant'
 }
 
+DATA_TYPES_SIKT_TO_SSB = {
+    v: k for k, v in DATA_TYPES_MAPPING.items()
+}
 
 class TimePeriod(CamelModel):
     start: Union[int, None]
@@ -196,11 +199,6 @@ class Variable(CamelModel):
             if value is not None
         }
 
-    @staticmethod
-    def data_type_to_ssb_model(data_type: str):
-        data_types_sikt_to_ssb = {v: k for k, v in DATA_TYPES_MAPPING.items()}
-        return data_types_sikt_to_ssb.get(data_type)
-
     def get_key_type_name(self):
         return None if self.key_type is None else self.key_type.name
 
@@ -230,8 +228,8 @@ class Variable(CamelModel):
 
         if self.data_type != other.data_type:
             message += (
-                f'dataType: {self.data_type_to_ssb_model(self.data_type)}'
-                f' to {self.data_type_to_ssb_model(other.data_type)},'
+                f'dataType: {DATA_TYPES_SIKT_TO_SSB.get(self.data_type)}'
+                f' to {DATA_TYPES_SIKT_TO_SSB.get(other.data_type)},'
             )
         if self.format != other.format:
             message += f'format: {self.format} to {other.format},'
