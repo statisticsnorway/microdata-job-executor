@@ -8,6 +8,17 @@ from job_executor.exception import (
 )
 
 
+DATA_TYPES_MAPPING = {
+    'STRING': 'String',
+    'LONG': 'Long',
+    'DOUBLE': 'Double',
+    'DATE': 'Instant'
+}
+
+DATA_TYPES_SIKT_TO_SSB = {
+    v: k for k, v in DATA_TYPES_MAPPING.items()
+}
+
 class TimePeriod(CamelModel):
     start: Union[int, None]
     stop: Optional[Union[int, None]]
@@ -214,14 +225,16 @@ class Variable(CamelModel):
     ):
         caption = 'Illegal change to one of these variable fields: \n'
         message = ''
-        if (
-            self.data_type != other.data_type or
-            self.format != other.format or
-            self.variable_role != other.variable_role
-        ):
-            message = (
-                f'dataType: {self.data_type} to {other.data_type},'
-                f'format: {self.format} to {other.format},'
+
+        if self.data_type != other.data_type:
+            message += (
+                f'dataType: {DATA_TYPES_SIKT_TO_SSB.get(self.data_type)}'
+                f' to {DATA_TYPES_SIKT_TO_SSB.get(other.data_type)},'
+            )
+        if self.format != other.format:
+            message += f'format: {self.format} to {other.format},'
+        if self.variable_role != other.variable_role:
+            message += (
                 f'variable_role: {self.variable_role} to '
                 f'{other.variable_role}\n'
             )
@@ -243,9 +256,9 @@ class Variable(CamelModel):
     def validate_represented_variables(self, other: 'Variable'):
         if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
-                'Can not change the number of represented variables '
-                f'from {len(self.represented_variables)} to {len(other.represented_variables)} '
-                'Please check valueDomain.codeList field.'
+                'Can not change the number of code list time periods '
+                f'from {len(self.represented_variables)} '
+                f'to {len(other.represented_variables)}'
             )
 
 

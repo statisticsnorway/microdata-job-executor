@@ -6,7 +6,7 @@ from typing import Union
 
 from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
-
+from job_executor.model.metadata import DATA_TYPES_MAPPING
 
 logger = logging.getLogger()
 
@@ -252,13 +252,7 @@ def _get_variable_role(attribute_type: str) -> str:
 
 
 def _transform_data_type(data_type: str) -> str:
-    data_types_mapping = {
-        'STRING': 'String',
-        'LONG': 'Long',
-        'DOUBLE': 'Double',
-        'DATE': 'Instant'
-    }
-    return data_types_mapping.get(data_type, data_type)
+    return DATA_TYPES_MAPPING.get(data_type, data_type)
 
 
 def _get_temporal_coverage(start, stop) -> dict:
