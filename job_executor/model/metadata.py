@@ -19,6 +19,7 @@ DATA_TYPES_SIKT_TO_SSB = {
     v: k for k, v in DATA_TYPES_MAPPING.items()
 }
 
+
 class TimePeriod(CamelModel):
     start: Union[int, None]
     stop: Optional[Union[int, None]]
@@ -169,8 +170,9 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(**{
             "description": other.description,
             "validPeriod": self.valid_period.dict(by_alias=True),
-            "valueDomain": self.value_domain.patch(other.value_domain)
-                                   .dict(by_alias=True)
+            "valueDomain": self.value_domain.patch(
+                other.value_domain
+            ).dict(by_alias=True)
         })
 
     def patch_description(self, description: str):
@@ -287,7 +289,9 @@ class MeasureVariable(Variable):
             raise PatchingError('Can not delete Variable')
         if self.key_type is not None:
             if other.key_type is None:
-                raise PatchingError(f'Can not remove unitType: {self.key_type}')
+                raise PatchingError(
+                    f'Can not remove unitType: {self.key_type}'
+                )
             # Centralized variable definition was used,
             # it is safe to only patch label and description fields.
             self.validate_patching_fields(other, with_key_type=True)
