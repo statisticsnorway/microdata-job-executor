@@ -28,13 +28,9 @@ ENRICHED_CSV_FILES = [
 
 
 def test_generate_epoch_day():
-    date_since_epoch = dataset_enricher._generate_epoch_day(
-        "1970-01-10", ['', r'\N', None]
-    )
+    date_since_epoch = dataset_enricher._generate_epoch_day('1970-01-10')
     assert date_since_epoch == '9'
-    date_since_epoch = dataset_enricher._generate_epoch_day(
-        "19700110", ['', r'\N', None]
-    )
+    date_since_epoch = dataset_enricher._generate_epoch_day('19700110')
     assert date_since_epoch == '9'
 
 
