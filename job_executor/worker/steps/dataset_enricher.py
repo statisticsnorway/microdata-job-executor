@@ -59,10 +59,10 @@ def _enrich_csv(input_csv_path: str, temporal_coverage: dict,
                 start_year = (
                     '' if start_date in empty_values else start_date[:4]
                 )
-                start_date, start_date_epoch_days = _convert_date(
+                _, start_date_epoch_days = _convert_date(
                     start_date, empty_values, days_since_epoch_for
                 )
-                stop_date, stop_date_epoch_days = _convert_date(
+                _, stop_date_epoch_days = _convert_date(
                     stop_date, empty_values, days_since_epoch_for
                 )
 
@@ -71,8 +71,11 @@ def _enrich_csv(input_csv_path: str, temporal_coverage: dict,
 
                 target_file.write(
                     ';'.join([
-                        unit_id, value, start_date, stop_date, start_year,
-                        start_date_epoch_days, stop_date_epoch_days
+                        unit_id,
+                        value,
+                        start_year,
+                        start_date_epoch_days,
+                        stop_date_epoch_days
                     ]) + '\n'
                 )
     except KeyError as e:
