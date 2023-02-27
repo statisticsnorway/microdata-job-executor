@@ -14,16 +14,16 @@ CSV_WITH_ENDING_DELIMITER_FILE = (
 )
 CSV_WITH_INSTANT_VALUE = f'{WORKING_DIR}/data_3_rows_instant_value.csv'
 
-ENHANCED_CSV_WITH_ENDING_DELIMITER_FILE = (
-    f'{WORKING_DIR}/data_3_rows_with_ending_delimiter_enhanced.csv'
+ENRICHED_CSV_WITH_ENDING_DELIMITER_FILE = (
+    f'{WORKING_DIR}/data_3_rows_with_ending_delimiter_enriched.csv'
 )
 VALID_TEMPORAL_COVERAGE = {"start": 0, "stop": 30000}
 INVALID_TEMPORAL_COVERAGE = {"start": 0, "stop": 2}
-ENHANCED_CSV_FILES = [
-    f'{WORKING_DIR}/data_3_rows_enhanced.csv',
-    f'{WORKING_DIR}/data_4_rows_no_start_date_enhanced.csv',
-    f'{WORKING_DIR}/data_4_rows_no_stop_date_enhanced.csv',
-    f'{WORKING_DIR}/data_3_rows_instant_value_enhanced.csv'
+ENRICHED_CSV_FILES = [
+    f'{WORKING_DIR}/data_3_rows_enriched.csv',
+    f'{WORKING_DIR}/data_4_rows_no_start_date_enriched.csv',
+    f'{WORKING_DIR}/data_4_rows_no_stop_date_enriched.csv',
+    f'{WORKING_DIR}/data_3_rows_instant_value_enriched.csv'
 ]
 
 
@@ -45,13 +45,13 @@ def test_convert_from_csv_to_enhanced_csv():
     file = open(enhanced_csv_file_path, 'r', encoding='utf8')
     lines = file.readlines()
     assert lines[0] == (
-        "11111111501853;22048613;19720101;19721231;1972;730;1095\n"
+        "11111111501853;22048613;1972;730;1095\n"
     )
     assert lines[1] == (
-        "11111111983265;1306729;19720101;19721231;1972;730;1095\n"
+        "11111111983265;1306729;1972;730;1095\n"
     )
     assert lines[2] == (
-        "11111111864482;21529182;20170101;20171231;2017;17167;17531\n"
+        "11111111864482;21529182;2017;17167;17531\n"
     )
 
 
@@ -62,16 +62,16 @@ def test_convert_from_csv_no_start_date_to_enhanced_csv():
     file = open(enhanced_csv_file_path, 'r', encoding='utf8')
     lines = file.readlines()
     assert lines[0] == (
-        "11111111501853;22048613;19720101;19721231;1972;730;1095\n"
+        "11111111501853;22048613;1972;730;1095\n"
     )
     assert lines[1] == (
-        "11111111983265;1306729;;19721231;;;1095\n"
+        "11111111983265;1306729;;;1095\n"
     )
     assert lines[2] == (
-        "11111111864482;21529182;20170101;20171231;2017;17167;17531\n"
+        "11111111864482;21529182;2017;17167;17531\n"
     )
     assert lines[3] == (
-        "11111111719226;21529182;;19721231;;;1095\n"
+        "11111111719226;21529182;;;1095\n"
     )
 
 
@@ -82,16 +82,16 @@ def test_convert_from_csv_no_stop_date_to_enhanced_csv():
     file = open(enhanced_csv_file_path, 'r', encoding='utf-8')
     lines = file.readlines()
     assert lines[0] == (
-        "11111111501853;22048613;19720101;19721231;1972;730;1095\n"
+        "11111111501853;22048613;1972;730;1095\n"
     )
     assert lines[1] == (
-        "11111111983265;1306729;19720101;;1972;730;\n"
+        "11111111983265;1306729;1972;730;\n"
     )
     assert lines[2] == (
-        "11111111864482;21529182;20170101;20171231;2017;17167;17531\n"
+        "11111111864482;21529182;2017;17167;17531\n"
     )
     assert lines[3] == (
-        "11111111719226;21529182;20170101;;2017;17167;\n"
+        "11111111719226;21529182;2017;17167;\n"
     )
 
 
@@ -102,13 +102,13 @@ def test_convert_from_csv_with_instant_to_enhanced_csv():
     file = open(enhanced_csv_file_path, 'r', encoding='utf-8')
     lines = file.readlines()
     assert lines[0] == (
-        "11111111501853;9;19720101;19721231;1972;730;1095\n"
+        "11111111501853;9;1972;730;1095\n"
     )
     assert lines[1] == (
-        "11111111983265;10;19720101;19721231;1972;730;1095\n"
+        "11111111983265;10;1972;730;1095\n"
     )
     assert lines[2] == (
-        "11111111864482;;20170101;20171231;2017;17167;17531\n"
+        "11111111864482;;2017;17167;17531\n"
     )
 
 
@@ -130,23 +130,23 @@ def test_convert_from_csv_with_ending_delimiter_to_enhanced_csv():
     file = open(enhanced_csv_file, 'r', encoding='utf-8')
     lines = file.readlines()
     assert lines[0] == (
-        "11111111501853;22048613;19720101;19721231;1972;730;1095\n"
+        "11111111501853;22048613;1972;730;1095\n"
     )
     assert lines[1] == (
-        "11111111983265;1306729;19720101;19721231;1972;730;1095\n"
+        "11111111983265;1306729;1972;730;1095\n"
     )
     assert lines[2] == (
-        "11111111864482;21529182;20170101;20171231;2017;17167;17531\n"
+        "11111111864482;21529182;2017;17167;17531\n"
     )
 
 
 def teardown_function():
-    for enhanced_csv_file in ENHANCED_CSV_FILES:
+    for enhanced_csv_file in ENRICHED_CSV_FILES:
         try:
             os.remove(enhanced_csv_file)
         except OSError:
             pass
     try:
-        os.remove(ENHANCED_CSV_WITH_ENDING_DELIMITER_FILE)
+        os.remove(ENRICHED_CSV_WITH_ENDING_DELIMITER_FILE)
     except OSError:
         pass
