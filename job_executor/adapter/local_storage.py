@@ -11,31 +11,31 @@ from job_executor.config import environment
 from job_executor.exception import LocalStorageError
 
 
-WORKING_DIR = environment.get('WORKING_DIR')
-DATASTORE_DIR = environment.get('DATASTORE_DIR')
-INPUT_DIR = environment.get('INPUT_DIR')
+WORKING_DIR = Path(environment.get('WORKING_DIR'))
+DATASTORE_DIR = Path(environment.get('DATASTORE_DIR'))
+INPUT_DIR = Path(environment.get('INPUT_DIR'))
 
-DATASTORE_VERSIONS_PATH = f'{DATASTORE_DIR}/datastore/datastore_versions.json'
-DRAFT_METADATA_ALL_PATH = f'{DATASTORE_DIR}/datastore/metadata_all__DRAFT.json'
-DRAFT_VERSION_PATH = f'{DATASTORE_DIR}/datastore/draft_version.json'
+DATASTORE_VERSIONS_PATH = DATASTORE_DIR / 'datastore/datastore_versions.json'
+DRAFT_METADATA_ALL_PATH = DATASTORE_DIR / 'datastore/metadata_all__DRAFT.json'
+DRAFT_VERSION_PATH = DATASTORE_DIR / 'datastore/draft_version.json'
 
 
-def _read_json(file_path: str) -> dict:
-    with open(file_path, encoding='utf-8') as f:
+def _read_json(file_path: Path) -> dict:
+    with open(file_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
-def _write_json(content: dict, file_path: str) -> None:
+def _write_json(content: dict, file_path: Path) -> None:
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(content, f)
 
 
-def _get_parquet_path(directory: str, dataset_name: str) -> str:
-    parquet_file_path = f'{directory}/{dataset_name}__DRAFT.parquet'
-    partitioned_parquet_path = f'{directory}/{dataset_name}__DRAFT'
-    if os.path.isdir(partitioned_parquet_path):
+def _get_parquet_path(directory: Path, dataset_name: str) -> str:
+    parquet_file_path = directory / f'{dataset_name}__DRAFT.parquet'
+    partitioned_parquet_path = directory / f'{dataset_name}__DRAFT'
+    if partitioned_parquet_path.is_dir():
         return partitioned_parquet_path
-    elif os.path.isfile(parquet_file_path):
+    elif parquet_file_path.is_file():
         return parquet_file_path
     else:
         raise FileExistsError(
@@ -43,18 +43,14 @@ def _get_parquet_path(directory: str, dataset_name: str) -> str:
         )
 
 
-def _get_datastore_draft_parquet_path(dataset_name: str):
+def _get_datastore_draft_parquet_path(dataset_name: str) -> Path:
     return _get_parquet_path(
-        f'{DATASTORE_DIR}/data/{dataset_name}',
-        dataset_name
+        DATASTORE_DIR / f'data/{dataset_name}', dataset_name
     )
 
 
 def _get_working_dir_draft_parquet_path(dataset_name: str):
-    return _get_parquet_path(
-        f'{WORKING_DIR}',
-        dataset_name
-    )
+    return _get_parquet_path(WORKING_DIR, dataset_name)
 
 
 def make_dataset_dir(dataset_name: str) -> None:
@@ -64,8 +60,8 @@ def make_dataset_dir(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    os.makedirs(f'{DATASTORE_DIR}/metadata/{dataset_name}', exist_ok=True)
-    os.makedirs(f'{DATASTORE_DIR}/data/{dataset_name}', exist_ok=True)
+    os.makedirs(DATASTORE_DIR / f'metadata/{dataset_name}', exist_ok=True)
+    os.makedirs(DATASTORE_DIR / f'data/{dataset_name}', exist_ok=True)
 
 
 def get_data_versions(version: Union[str, None]) -> dict:
@@ -79,7 +75,7 @@ def get_data_versions(version: Union[str, None]) -> dict:
         return {}
     file_version = '_'.join(version.split('_')[:-1])
     return _read_json(
-        f'{DATASTORE_DIR}/datastore/data_versions__{file_version}.json'
+        DATASTORE_DIR / f'datastore/data_versions__{file_version}.json'
     )
 
 
@@ -94,7 +90,7 @@ def write_data_versions(data_versions: dict, version: str):
     file_version = '_'.join(version.split('_')[:-1])
     _write_json(
         data_versions,
-        f'{DATASTORE_DIR}/datastore/data_versions__{file_version}.json'
+        DATASTORE_DIR / f'datastore/data_versions__{file_version}.json'
     )
 
 
@@ -102,7 +98,7 @@ def get_draft_version() -> dict:
     """
     Returns the contents of the draft version json file as dict.
     """
-    return _read_json(f'{DATASTORE_DIR}/datastore/draft_version.json')
+    return _read_json(DATASTORE_DIR / 'datastore/draft_version.json')
 
 
 def write_draft_version(draft_version: dict) -> None:
@@ -113,7 +109,7 @@ def write_draft_version(draft_version: dict) -> None:
     """
     _write_json(
         draft_version,
-        f'{DATASTORE_DIR}/datastore/draft_version.json'
+        DATASTORE_DIR / 'datastore/draft_version.json'
     )
 
 
@@ -121,9 +117,7 @@ def get_datastore_versions() -> dict:
     """
     Returns the contents of the datastore versions json file as dict.
     """
-    return _read_json(
-        f'{DATASTORE_DIR}/datastore/datastore_versions.json'
-    )
+    return _read_json(DATASTORE_DIR / 'datastore/datastore_versions.json')
 
 
 def write_datastore_versions(datastore_versions: dict) -> None:
@@ -134,7 +128,7 @@ def write_datastore_versions(datastore_versions: dict) -> None:
     """
     _write_json(
         datastore_versions,
-        f'{DATASTORE_DIR}/datastore/datastore_versions.json'
+        DATASTORE_DIR / 'datastore/datastore_versions.json'
     )
 
 
@@ -146,7 +140,7 @@ def get_metadata_all(version: str) -> dict:
                      or 'DRAFT'
     """
     return _read_json(
-        f'{DATASTORE_DIR}/datastore/metadata_all__{version}.json'
+        DATASTORE_DIR / f'datastore/metadata_all__{version}.json'
     )
 
 
@@ -161,7 +155,7 @@ def write_metadata_all(metadata_all: dict, version: str):
     """
     _write_json(
         metadata_all,
-        f'{DATASTORE_DIR}/datastore/metadata_all__{version}.json'
+        DATASTORE_DIR / f'datastore/metadata_all__{version}.json'
     )
 
 
@@ -171,7 +165,7 @@ def get_working_dir_metadata(dataset_name: str) -> dict:
 
     * dataset_name: str - name of dataset
     """
-    return _read_json(f'{WORKING_DIR}/{dataset_name}__DRAFT.json')
+    return _read_json(WORKING_DIR / f'{dataset_name}__DRAFT.json')
 
 
 def delete_working_dir_metadata(dataset_name: str) -> None:
@@ -180,7 +174,7 @@ def delete_working_dir_metadata(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    metadata_path = f'{WORKING_DIR}/{dataset_name}__DRAFT.json'
+    metadata_path = WORKING_DIR / f'{dataset_name}__DRAFT.json'
     if os.path.isfile(metadata_path):
         os.remove(metadata_path)
 
@@ -191,7 +185,7 @@ def get_working_dir_input_metadata(dataset_name: str) -> dict:
 
     * dataset_name: str - name of dataset
     """
-    return _read_json(f'{WORKING_DIR}/{dataset_name}.json')
+    return _read_json(WORKING_DIR / f'{dataset_name}.json')
 
 
 def get_metadata(dataset_name: str, version: str) -> dict:
@@ -203,8 +197,9 @@ def get_metadata(dataset_name: str, version: str) -> dict:
                      or 'DRAFT'
     """
     return _read_json(
-        f'{DATASTORE_DIR}/metadata/{dataset_name}/'
-        f'{dataset_name}__{version}.json'
+        DATASTORE_DIR / (
+            f'metadata/{dataset_name}/{dataset_name}__{version}.json'
+        )
     )
 
 
@@ -217,11 +212,13 @@ def write_metadata(metadata: dict, dataset_name: str, version: str):
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
-    os.makedirs(f'{DATASTORE_DIR}/metadata/{dataset_name}', exist_ok=True)
+    os.makedirs(DATASTORE_DIR / f'metadata/{dataset_name}', exist_ok=True)
     _write_json(
         metadata,
-        f'{DATASTORE_DIR}/metadata/{dataset_name}/'
-        f'{dataset_name}__{version}.json'
+        (
+            DATASTORE_DIR /
+            f'metadata/{dataset_name}/{dataset_name}__{version}.json'
+        )
     )
 
 
@@ -269,14 +266,14 @@ def rename_parquet_draft_to_release(dataset_name: str, version: str) -> str:
     """
     draft_path = _get_datastore_draft_parquet_path(dataset_name)
     file_version = '_'.join(version.split('_')[:-1])
-    release_path = draft_path.replace(
+    release_path = str(draft_path).replace(
         'DRAFT', file_version
     )
     shutil.move(draft_path, release_path)
     return release_path.split('/')[-1]
 
 
-def move_working_dir_parquet_to_datastore(dataset_name) -> None:
+def move_working_dir_parquet_to_datastore(dataset_name: str) -> None:
     """
     Moves the given parquet DRAFT file from the working directory to
     the appropriate datastore sub directory.
@@ -289,8 +286,9 @@ def move_working_dir_parquet_to_datastore(dataset_name) -> None:
     shutil.move(
         working_dir_parquet_path,
         (
-            f'{DATASTORE_DIR}/data/{dataset_name}/'
-            f'{working_dir_parquet_path.split("/")[-1]}'
+            DATASTORE_DIR /
+            f'data/{dataset_name}/'
+            f'{working_dir_parquet_path.parts[-1]}'
         )
     )
 
@@ -301,28 +299,28 @@ def delete_parquet_draft(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    parquet_path = (
-        f'{DATASTORE_DIR}/data/{dataset_name}/{dataset_name}__DRAFT'
-    )
-    if os.path.isdir(parquet_path):
-        shutil.rmtree(parquet_path)
-    elif os.path.isfile(f'{parquet_path}.parquet'):
-        os.remove(f'{parquet_path}.parquet')
+    data_dir = DATASTORE_DIR / f'data/{dataset_name}'
+    partitioned_parquet_path = data_dir / f'{dataset_name}__DRAFT'
+    parquet_file_path = data_dir / f'{dataset_name}__DRAFT.parquet'
+    if partitioned_parquet_path.is_dir():
+        shutil.rmtree(partitioned_parquet_path)
+    elif parquet_file_path.is_file():
+        os.remove(parquet_file_path)
 
 
-def delete_working_dir_file(file_name: str) -> None:
+def delete_working_dir_file(file_path: Path) -> None:
     """
     Deletes a file from the working directory.
     Intended to clean up left-over files.
     Raises a LocalStorageError if filepath is not in
     the working directory.
-    
+
     * file_name: str - name of temporary file
     """
-    if not file_name.startswith(WORKING_DIR):
+    if not str(file_path).startswith(str(WORKING_DIR)):
         raise LocalStorageError(f'Filepath is not in {WORKING_DIR}')
-    if os.path.isfile(file_name):
-        os.remove(file_name)
+    if file_path.is_file():
+        os.remove(file_path)
 
 
 def save_temporary_backup() -> None:
