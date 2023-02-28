@@ -34,11 +34,11 @@ def test_generate_epoch_day():
     assert date_since_epoch == '9'
 
 
-def test_convert_from_csv_to_enhanced_csv():
-    enhanced_csv_file_path = dataset_enricher.run(
+def test_convert_from_csv_to_enriched_csv():
+    enriched_csv_file_path = dataset_enricher.run(
         CSV_FILE, VALID_TEMPORAL_COVERAGE, "STRING"
     )
-    file = open(enhanced_csv_file_path, 'r', encoding='utf8')
+    file = open(enriched_csv_file_path, 'r', encoding='utf8')
     lines = file.readlines()
     assert lines[0] == (
         "11111111501853;22048613;1972;730;1095\n"
@@ -51,11 +51,11 @@ def test_convert_from_csv_to_enhanced_csv():
     )
 
 
-def test_convert_from_csv_no_start_date_to_enhanced_csv():
-    enhanced_csv_file_path = dataset_enricher.run(
+def test_convert_from_csv_no_start_date_to_enriched_csv():
+    enriched_csv_file_path = dataset_enricher.run(
         CSV_FILE_NO_START_DATE, VALID_TEMPORAL_COVERAGE, "STRING"
     )
-    file = open(enhanced_csv_file_path, 'r', encoding='utf8')
+    file = open(enriched_csv_file_path, 'r', encoding='utf8')
     lines = file.readlines()
     assert lines[0] == (
         "11111111501853;22048613;1972;730;1095\n"
@@ -71,11 +71,11 @@ def test_convert_from_csv_no_start_date_to_enhanced_csv():
     )
 
 
-def test_convert_from_csv_no_stop_date_to_enhanced_csv():
-    enhanced_csv_file_path = dataset_enricher.run(
+def test_convert_from_csv_no_stop_date_to_enriched_csv():
+    enriched_csv_file_path = dataset_enricher.run(
         CSV_FILE_NO_STOP_DATE, VALID_TEMPORAL_COVERAGE, "STRING"
     )
-    file = open(enhanced_csv_file_path, 'r', encoding='utf-8')
+    file = open(enriched_csv_file_path, 'r', encoding='utf-8')
     lines = file.readlines()
     assert lines[0] == (
         "11111111501853;22048613;1972;730;1095\n"
@@ -91,11 +91,11 @@ def test_convert_from_csv_no_stop_date_to_enhanced_csv():
     )
 
 
-def test_convert_from_csv_with_instant_to_enhanced_csv():
-    enhanced_csv_file_path = dataset_enricher.run(
+def test_convert_from_csv_with_instant_to_enriched_csv():
+    enriched_csv_file_path = dataset_enricher.run(
         CSV_WITH_INSTANT_VALUE, VALID_TEMPORAL_COVERAGE, "INSTANT"
     )
-    file = open(enhanced_csv_file_path, 'r', encoding='utf-8')
+    file = open(enriched_csv_file_path, 'r', encoding='utf-8')
     lines = file.readlines()
     assert lines[0] == (
         "11111111501853;9;1972;730;1095\n"
@@ -108,7 +108,7 @@ def test_convert_from_csv_with_instant_to_enhanced_csv():
     )
 
 
-def test_convert_from_csv_to_enhanced_csv_bad_coverage():
+def test_convert_from_csv_to_enriched_csv_bad_coverage():
     with pytest.raises(dataset_enricher.TemporalCoverageException) as e:
         dataset_enricher._enrich_csv(
             CSV_FILE, INVALID_TEMPORAL_COVERAGE, "STRING"
@@ -119,11 +119,11 @@ def test_convert_from_csv_to_enhanced_csv_bad_coverage():
     )
 
 
-def test_convert_from_csv_with_ending_delimiter_to_enhanced_csv():
-    enhanced_csv_file = dataset_enricher.run(
+def test_convert_from_csv_with_ending_delimiter_to_enriched_csv():
+    enriched_csv_file = dataset_enricher.run(
         CSV_WITH_ENDING_DELIMITER_FILE, VALID_TEMPORAL_COVERAGE, "STRING"
     )
-    file = open(enhanced_csv_file, 'r', encoding='utf-8')
+    file = open(enriched_csv_file, 'r', encoding='utf-8')
     lines = file.readlines()
     assert lines[0] == (
         "11111111501853;22048613;1972;730;1095\n"
@@ -137,9 +137,9 @@ def test_convert_from_csv_with_ending_delimiter_to_enhanced_csv():
 
 
 def teardown_function():
-    for enhanced_csv_file in ENRICHED_CSV_FILES:
+    for enriched_csv_file in ENRICHED_CSV_FILES:
         try:
-            os.remove(enhanced_csv_file)
+            os.remove(enriched_csv_file)
         except OSError:
             pass
     try:
