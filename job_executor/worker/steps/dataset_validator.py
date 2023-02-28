@@ -8,11 +8,11 @@ from job_executor.config import environment
 
 
 logger = logging.getLogger()
-INPUT_DIR = environment.get('INPUT_DIR')
-WORKING_DIR = environment.get('WORKING_DIR')
+INPUT_DIR = Path(environment.get('INPUT_DIR'))
+WORKING_DIR = Path(environment.get('WORKING_DIR'))
 
 
-def run_for_dataset(dataset_name: str) -> Tuple[str, str]:
+def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
     """
     Validates the data and metadata file in the input directory
     and moves the files to the working_directory using the microdata-validator.
@@ -23,8 +23,8 @@ def run_for_dataset(dataset_name: str) -> Tuple[str, str]:
     try:
         validation_errors = validate(
             dataset_name,
-            input_directory=INPUT_DIR,
-            working_directory=WORKING_DIR,
+            input_directory=str(INPUT_DIR),
+            working_directory=str(WORKING_DIR),
             keep_temporary_files=True
         )
     except Exception as e:
@@ -40,8 +40,8 @@ def run_for_dataset(dataset_name: str) -> Tuple[str, str]:
             'Resolve errors with the microdata-validator before uploading.'
         )
     return (
-        f'{WORKING_DIR}/{dataset_name}.csv',
-        f'{WORKING_DIR}/{dataset_name}.json'
+        WORKING_DIR / f'{dataset_name}.csv',
+        WORKING_DIR / f'{dataset_name}.json'
     )
 
 
