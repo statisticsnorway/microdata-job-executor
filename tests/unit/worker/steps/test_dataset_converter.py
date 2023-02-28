@@ -73,7 +73,7 @@ def test_create_list_of_fields_for_partitioned_parquet():
 
 def test_convert_from_csv_with_string_value_to_simple_parquet():
     data_type = "String"
-    output_parquet_file = (
+    output_parquet_path = (
         dataset_converter.run(
             DATASET_NAME,
             CSV_FILE_READY_FOR_PARQUET_CONVERSION,
@@ -81,15 +81,15 @@ def test_convert_from_csv_with_string_value_to_simple_parquet():
             data_type=data_type
         )
     )
-    parquet_file = pq.read_table(output_parquet_file)
+    parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert output_parquet_file.endswith('.parquet')
+    assert str(output_parquet_path).endswith('.parquet')
     assert 3 == parquet_file.num_rows
 
 
 def test_convert_from_csv_with_long_value_to_simple_parquet():
     data_type = "Long"
-    output_parquet_file = (
+    output_parquet_path = (
         dataset_converter.run(
             DATASET_NAME,
             CSV_FILE_READY_FOR_PARQUET_CONVERSION,
@@ -97,15 +97,15 @@ def test_convert_from_csv_with_long_value_to_simple_parquet():
             data_type=data_type
         )
     )
-    parquet_file = pq.read_table(output_parquet_file)
+    parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert output_parquet_file.endswith('.parquet')
+    assert str(output_parquet_path).endswith('.parquet')
     assert 3 == parquet_file.num_rows
 
 
 def test_convert_from_csv_with_double_value_to_simple_parquet():
     data_type = "Double"
-    output_parquet_file = (
+    output_parquet_path = (
         dataset_converter.run(
             DATASET_NAME,
             CSV_FILE_READY_FOR_PARQUET_CONVERSION,
@@ -113,15 +113,15 @@ def test_convert_from_csv_with_double_value_to_simple_parquet():
             data_type=data_type
         )
     )
-    parquet_file = pq.read_table(output_parquet_file)
+    parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert output_parquet_file.endswith('.parquet')
+    assert str(output_parquet_path).endswith('.parquet')
     assert 3 == parquet_file.num_rows
 
 
 def test_convert_from_csv_with_date_value_to_simple_parquet():
     data_type = "Instant"
-    output_parquet_file = (
+    output_parquet_path = (
         dataset_converter.run(
             DATASET_NAME,
             CSV_FILE_READY_FOR_PARQUET_CONVERSION,
@@ -129,15 +129,15 @@ def test_convert_from_csv_with_date_value_to_simple_parquet():
             data_type=data_type
         )
     )
-    parquet_file = pq.read_table(output_parquet_file)
+    parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert output_parquet_file.endswith('.parquet')
+    assert str(output_parquet_path).endswith('.parquet')
     assert 3 == parquet_file.num_rows
 
 
 def test_convert_from_csv_to_partitioned_parquet():
     data_type = "String"
-    output_partitioned_parquet_dir = (
+    output_partitioned_parquet_path = (
         dataset_converter.run(
             DATASET_NAME,
             CSV_FILE_READY_FOR_PARQUET_CONVERSION,
@@ -145,16 +145,16 @@ def test_convert_from_csv_to_partitioned_parquet():
             data_type=data_type
         )
     )
-    assert not output_partitioned_parquet_dir.endswith('.parquet')
-    assert output_partitioned_parquet_dir == (
+    assert not str(output_partitioned_parquet_path).endswith('.parquet')
+    assert str(output_partitioned_parquet_path) == (
         f'{os.environ["WORKING_DIR"]}/{DATASET_NAME}__DRAFT'
     )
-    partitioned_parquet = pq.read_table(output_partitioned_parquet_dir)
+    partitioned_parquet = pq.read_table(output_partitioned_parquet_path)
     verify_partition_schema(partitioned_parquet, data_type)
     verify_partition_rows_and_columns(partitioned_parquet)
 
-    partition_dir_1972 = f'{output_partitioned_parquet_dir}/start_year=1972'
-    partition_dir_2017 = f'{output_partitioned_parquet_dir}/start_year=2017'
+    partition_dir_1972 = output_partitioned_parquet_path / 'start_year=1972'
+    partition_dir_2017 = output_partitioned_parquet_path / 'start_year=2017'
     verify_that_subdirectories_exist(
         partition_dir_1972, partition_dir_2017
     )
