@@ -6,47 +6,40 @@ from job_executor.exception import BuilderStepError
 
 
 logger = logging.getLogger()
-epoch = datetime.utcfromtimestamp(0)
+EPOCH = datetime.utcfromtimestamp(0)
+EMPTY_VALUES = ['', None]
 
 
 def _generate_epoch_dict(temporal_coverage: dict) -> dict:
     days_since_epoch_for = {}
-    start = epoch + timedelta(days=temporal_coverage["start"])
-    stop = epoch + timedelta(days=temporal_coverage["stop"])
+    start = EPOCH + timedelta(days=temporal_coverage['start'])
+    stop = EPOCH + timedelta(days=temporal_coverage['stop'])
     logger.info(f"Generating epoch dict from {start} to {stop}")
     while start <= stop:
         days_since_epoch_for[start.strftime("%Y%m%d")] = (
-            str((start - epoch).days)
+            str((start - EPOCH).days)
         )
         start += timedelta(days=1)
     return days_since_epoch_for
 
 
-def _generate_epoch_day(date: str, empty_values: list) -> str:
-    if date in empty_values:
+def _generate_epoch_day(date: str) -> str:
+    if date in EMPTY_VALUES:
         return ''
     else:
         datetime_obj = datetime.strptime(date.replace('-', ''), "%Y%m%d")
-        return str((datetime_obj - epoch).days)
+        return str((datetime_obj - EPOCH).days)
 
 
-def _convert_date(date: str, empty_values: list, days_since_epoch_for: dict):
-    if date in empty_values:
-        date_value = ''
-        date_epoch_days_value = ''
-    else:
-        date_value = date
-        date_epoch_days_value = days_since_epoch_for[date]
-    return date_value, date_epoch_days_value
-
-
-def _enrich_csv(input_csv_path: str, temporal_coverage: dict,
-                data_type: str) -> str:
+def _enrich_csv(
+    input_csv_path: str,
+    temporal_coverage: dict,
+    data_type: str
+) -> str:
     output_csv_path = input_csv_path.replace('.csv', '_enriched.csv')
     days_since_epoch_for = _generate_epoch_dict(temporal_coverage)
     try:
         target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
-        empty_values = ['', r'\N', None]
         with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
             for line in csv_file:
                 row = line.strip().split(';')
@@ -57,22 +50,26 @@ def _enrich_csv(input_csv_path: str, temporal_coverage: dict,
                 stop_date: str = row[4].replace('-', '')
 
                 start_year = (
-                    '' if start_date in empty_values else start_date[:4]
+                    '' if start_date in EMPTY_VALUES else start_date[:4]
                 )
-                start_date, start_date_epoch_days = _convert_date(
-                    start_date, empty_values, days_since_epoch_for
+                start_date_epoch_days = (
+                    '' if start_date in EMPTY_VALUES
+                    else days_since_epoch_for[start_date]
                 )
-                stop_date, stop_date_epoch_days = _convert_date(
-                    stop_date, empty_values, days_since_epoch_for
+                stop_date_epoch_days = (
+                    '' if stop_date in EMPTY_VALUES
+                    else days_since_epoch_for[stop_date]
                 )
-
                 if "INSTANT" == data_type.upper():
-                    value = _generate_epoch_day(value, empty_values)
+                    value = _generate_epoch_day(value)
 
                 target_file.write(
                     ';'.join([
-                        unit_id, value, start_date, stop_date, start_year,
-                        start_date_epoch_days, stop_date_epoch_days
+                        unit_id,
+                        value,
+                        start_year,
+                        start_date_epoch_days,
+                        stop_date_epoch_days
                     ]) + '\n'
                 )
     except KeyError as e:
