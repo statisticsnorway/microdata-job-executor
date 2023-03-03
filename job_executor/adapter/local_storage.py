@@ -25,9 +25,14 @@ def _read_json(file_path: Path) -> dict:
         return json.load(f)
 
 
-def _write_json(content: dict, file_path: Path) -> None:
+
+def _write_json(
+    content: dict,
+    file_path: Union[str, Path],
+    indent: int = None
+) -> None:
     with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(content, f)
+        json.dump(content, f, indent=indent)
 
 
 def _get_parquet_path(directory: Path, dataset_name: str) -> str:
@@ -90,7 +95,8 @@ def write_data_versions(data_versions: dict, version: str):
     file_version = '_'.join(version.split('_')[:-1])
     _write_json(
         data_versions,
-        DATASTORE_DIR / f'datastore/data_versions__{file_version}.json'
+        DATASTORE_DIR / f'datastore/data_versions__{file_version}.json',
+        indent=2
     )
 
 
@@ -109,7 +115,8 @@ def write_draft_version(draft_version: dict) -> None:
     """
     _write_json(
         draft_version,
-        DATASTORE_DIR / 'datastore/draft_version.json'
+        DATASTORE_DIR / 'datastore/draft_version.json',
+        indent=2
     )
 
 
@@ -128,7 +135,8 @@ def write_datastore_versions(datastore_versions: dict) -> None:
     """
     _write_json(
         datastore_versions,
-        DATASTORE_DIR / 'datastore/datastore_versions.json'
+        DATASTORE_DIR / 'datastore/datastore_versions.json',
+        indent=2
     )
 
 
@@ -349,14 +357,15 @@ def save_temporary_backup() -> None:
     if os.path.isdir(tmp_dir):
         raise LocalStorageError('tmp directory already exists')
     os.mkdir(tmp_dir)
-    with open(tmp_dir / 'draft_version.json', 'w', encoding='utf-8') as f:
-        json.dump(draft_version, f)
-    with open(
-        tmp_dir / 'metadata_all__DRAFT.json', 'w', encoding='utf-8'
-    ) as f:
-        json.dump(metadata_all_draft, f)
-    with open(tmp_dir / 'datastore_versions.json', 'w', encoding='utf-8') as f:
-        json.dump(datastore_versions, f)
+    _write_json(
+        draft_version, tmp_dir / 'draft_version.json', indent=2
+    )
+    _write_json(
+        metadata_all_draft, tmp_dir / 'metadata_all__DRAFT.json'
+    )
+    _write_json(
+        datastore_versions, tmp_dir / 'datastore_versions.json', indent=2
+    )
 
 
 def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
