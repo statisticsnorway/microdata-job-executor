@@ -1,5 +1,6 @@
 # pylint: disable=protected-access
 import os.path
+from pathlib import Path
 import shutil
 
 import pyarrow as pa
@@ -8,12 +9,12 @@ import pytest
 
 from job_executor.worker.steps import dataset_converter
 
-WORKING_DIR = 'tests/resources/worker/steps/converter'
+WORKING_DIR = Path('tests/resources/worker/steps/converter')
 DATASET_NAME = 'KREFTREG_DS'
-CSV_FILE_READY_FOR_PARQUET_CONVERSION = (
-    f'{WORKING_DIR}/KREFTREG_DS_enriched.csv'
-)
 OUTPUT_PARQUET_FILE = f'{os.environ["WORKING_DIR"]}/KREFTREG_DS__DRAFT.parquet'
+CSV_FILE_READY_FOR_PARQUET_CONVERSION = (
+    WORKING_DIR / 'KREFTREG_DS_enriched.csv'
+)
 OUTPUT_PARTITIONED_PARQUET_DIR = (
     f'{os.environ["WORKING_DIR"]}/KREFTREG_DS__DRAFT'
 )
@@ -83,7 +84,7 @@ def test_convert_from_csv_with_string_value_to_simple_parquet():
     )
     parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert str(output_parquet_path).endswith('.parquet')
+    assert output_parquet_path.suffix == '.parquet'
     assert 3 == parquet_file.num_rows
 
 
@@ -99,7 +100,7 @@ def test_convert_from_csv_with_long_value_to_simple_parquet():
     )
     parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert str(output_parquet_path).endswith('.parquet')
+    assert output_parquet_path.suffix == '.parquet'
     assert 3 == parquet_file.num_rows
 
 
@@ -115,7 +116,7 @@ def test_convert_from_csv_with_double_value_to_simple_parquet():
     )
     parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert str(output_parquet_path).endswith('.parquet')
+    assert output_parquet_path.suffix == '.parquet'
     assert 3 == parquet_file.num_rows
 
 
@@ -131,7 +132,7 @@ def test_convert_from_csv_with_date_value_to_simple_parquet():
     )
     parquet_file = pq.read_table(output_parquet_path)
     verify_parquet_file_schema(parquet_file, data_type)
-    assert str(output_parquet_path).endswith('.parquet')
+    assert output_parquet_path.suffix == '.parquet'
     assert 3 == parquet_file.num_rows
 
 

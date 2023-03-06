@@ -1,29 +1,29 @@
 # pylint: disable=protected-access
 import os
+from pathlib import Path
 import pytest
 
 from job_executor.worker.steps import dataset_enricher
 
-WORKING_DIR = 'tests/resources/worker/steps/enricher'
+WORKING_DIR = Path('tests/resources/worker/steps/enricher')
 
-CSV_FILE = f'{WORKING_DIR}/data_3_rows.csv'
-CSV_FILE_NO_START_DATE = f'{WORKING_DIR}/data_4_rows_no_start_date.csv'
-CSV_FILE_NO_STOP_DATE = f'{WORKING_DIR}/data_4_rows_no_stop_date.csv'
-CSV_WITH_ENDING_DELIMITER_FILE = (
-    f'{WORKING_DIR}/data_3_rows_with_ending_delimiter.csv'
-)
-CSV_WITH_INSTANT_VALUE = f'{WORKING_DIR}/data_3_rows_instant_value.csv'
-
+CSV_FILE = WORKING_DIR / 'data_3_rows.csv'
+CSV_FILE_NO_START_DATE = WORKING_DIR / 'data_4_rows_no_start_date.csv'
+CSV_FILE_NO_STOP_DATE = WORKING_DIR / 'data_4_rows_no_stop_date.csv'
+CSV_WITH_INSTANT_VALUE = WORKING_DIR / 'data_3_rows_instant_value.csv'
 ENRICHED_CSV_WITH_ENDING_DELIMITER_FILE = (
-    f'{WORKING_DIR}/data_3_rows_with_ending_delimiter_enriched.csv'
+    WORKING_DIR / 'data_3_rows_with_ending_delimiter_enriched.csv'
+)
+CSV_WITH_ENDING_DELIMITER_FILE = (
+    WORKING_DIR / 'data_3_rows_with_ending_delimiter.csv'
 )
 VALID_TEMPORAL_COVERAGE = {"start": 0, "stop": 30000}
 INVALID_TEMPORAL_COVERAGE = {"start": 0, "stop": 2}
 ENRICHED_CSV_FILES = [
-    f'{WORKING_DIR}/data_3_rows_enriched.csv',
-    f'{WORKING_DIR}/data_4_rows_no_start_date_enriched.csv',
-    f'{WORKING_DIR}/data_4_rows_no_stop_date_enriched.csv',
-    f'{WORKING_DIR}/data_3_rows_instant_value_enriched.csv'
+    WORKING_DIR / 'data_3_rows_enriched.csv',
+    WORKING_DIR / 'data_4_rows_no_start_date_enriched.csv',
+    WORKING_DIR / 'data_4_rows_no_stop_date_enriched.csv',
+    WORKING_DIR / 'data_3_rows_instant_value_enriched.csv'
 ]
 
 

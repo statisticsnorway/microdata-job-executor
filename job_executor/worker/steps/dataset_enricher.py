@@ -37,8 +37,9 @@ def _enrich_csv(
     temporal_coverage: dict,
     data_type: str
 ) -> Path:
-    output_csv_path = Path(
-        str(input_csv_path).replace('.csv', '_enriched.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_enriched.csv'
     )
     days_since_epoch_for = _generate_epoch_dict(temporal_coverage)
     try:

@@ -33,8 +33,9 @@ def _pseudonymize_identifier_only(
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
         list(unique_identifiers), unit_id_type, job_id
     )
-    output_csv_path = Path(
-        str(input_csv_path).replace('.csv', '_pseudonymized.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_pseudonymized.csv'
     )
     target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
@@ -70,8 +71,9 @@ def _pseudonymize_measure_only(
     value_to_pseudonym = pseudonym_service.pseudonymize(
         list(unique_measure_values), unit_id_type, job_id
     )
-    output_csv_path = Path(
-        str(input_csv_path).replace('.csv', '_pseudonymized.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_pseudonymized.csv'
     )
     target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
@@ -115,8 +117,9 @@ def _pseudonymize_identifier_and_measure(
     value_to_pseudonym = pseudonym_service.pseudonymize(
         list(unique_measure_values), measure_unit_id_type, job_id
     )
-    output_csv_path = Path(
-        str(input_csv_path).replace('.csv', '_pseudonymized.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_pseudonymized.csv'
     )
     target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:

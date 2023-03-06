@@ -1,22 +1,20 @@
 import json
 import os
+from pathlib import Path
 
 from job_executor.worker.steps import dataset_transformer
 
 
-WORKING_DIR = 'tests/resources/worker/steps/transformer'
-DESCRIBED_FILE_PATH = f'{WORKING_DIR}/input/KREFTREG_DS_described.json'
-ENUMERATED_FILE_PATH = f'{WORKING_DIR}/input/KREFTREG_DS_enumerated.json'
-STATUS_FILE_PATH = f'{WORKING_DIR}/input/UTDANNING.json'
-STATUS_PATCH_FILE_PATH = F'{WORKING_DIR}/input/UTDANNING_PATCH.json'
+WORKING_DIR = Path('tests/resources/worker/steps/transformer')
+DESCRIBED_FILE_PATH = WORKING_DIR / 'input/KREFTREG_DS_described.json'
+ENUMERATED_FILE_PATH = WORKING_DIR / 'input/KREFTREG_DS_enumerated.json'
+STATUS_FILE_PATH = WORKING_DIR / 'input/UTDANNING.json'
+STATUS_PATCH_FILE_PATH = WORKING_DIR / 'input/UTDANNING_PATCH.json'
 
-
-DESCRIBED_EXPECTED_PATH = f'{WORKING_DIR}/expected/KREFTREG_DS_described.json'
-STATUS_EXPECTED_PATH = f'{WORKING_DIR}/expected/UTDANNING.json'
-STATUS_PATCH_EXPECTED_PATH = f'{WORKING_DIR}/expected/UTDANNING_PATCH.json'
-ENUMERATED_EXPECTED_PATH = (
-    f'{WORKING_DIR}/expected/KREFTREG_DS_enumerated.json'
-)
+DESCRIBED_EXPECTED_PATH = WORKING_DIR / 'expected/KREFTREG_DS_described.json'
+STATUS_EXPECTED_PATH = WORKING_DIR / 'expected/UTDANNING.json'
+STATUS_PATCH_EXPECTED_PATH = WORKING_DIR / 'expected/UTDANNING_PATCH.json'
+ENUMERATED_EXPECTED_PATH = WORKING_DIR / 'expected/KREFTREG_DS_enumerated.json'
 
 
 def test_dataset_with_enumerated_valuedomain():
