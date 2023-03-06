@@ -72,4 +72,4 @@ def run_for_metadata(dataset_name: str) -> Path:
             'Failed to validate metadata. '
             'Resolve errors with the microdata-validator before uploading.'
         )
-    return Path(WORKING_DIR) / f'{dataset_name}.json'
+    return WORKING_DIR / f'{dataset_name}.json'

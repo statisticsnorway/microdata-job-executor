@@ -147,7 +147,7 @@ def _pseudonymize_csv(
     identifier_unit_id_type: Union[str, None],
     measure_unit_id_type: Union[str, None],
     job_id: str
-) -> str:
+) -> Path:
     if identifier_unit_id_type and not measure_unit_id_type:
         logger.info('Pseudonymizing identifier')
         return _pseudonymize_identifier_only(
