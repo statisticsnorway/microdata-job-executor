@@ -273,11 +273,12 @@ def rename_parquet_draft_to_release(dataset_name: str, version: str) -> str:
     """
     draft_path = _get_datastore_draft_parquet_path(dataset_name)
     file_version = '_'.join(version.split('_')[:-1])
-    release_path = str(draft_path).replace(
-        'DRAFT', file_version
+    file_name = (
+        draft_path.stem.replace('DRAFT', file_version) + draft_path.suffix
     )
+    release_path = draft_path.parent / file_name
     shutil.move(draft_path, release_path)
-    return release_path.split('/')[-1]
+    return release_path.name
 
 
 def move_working_dir_parquet_to_datastore(dataset_name: str) -> None:
