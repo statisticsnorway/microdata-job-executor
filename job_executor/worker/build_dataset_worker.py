@@ -1,5 +1,6 @@
 import logging
 from multiprocessing import Queue
+from pathlib import Path
 from time import perf_counter
 
 from job_executor.adapter import job_service, local_storage
@@ -17,7 +18,7 @@ from job_executor.worker.steps import (
     dataset_pseudonymizer
 )
 
-WORKING_DIR = environment.get('WORKING_DIR')
+WORKING_DIR = Path(environment.get('WORKING_DIR'))
 
 
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
@@ -40,7 +41,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         )
         local_storage.archive_input_files(dataset_name)
         local_storage.delete_working_dir_file(
-            f'{WORKING_DIR}/{dataset_name}.db'
+            WORKING_DIR / f'{dataset_name}.db'
         )
         description = input_metadata['dataRevision']['description'][0]['value']
         job_service.update_description(job_id, description)

@@ -1,7 +1,6 @@
-# test good case
-# test bad case
 import json
 import os
+from pathlib import Path
 import shutil
 import pytest
 
@@ -11,10 +10,10 @@ from job_executor.worker.steps import dataset_pseudonymizer
 from job_executor.adapter import pseudonym_service
 
 
-WORKING_DIR = 'tests/resources/worker/steps/pseudonymizer'
-INPUT_CSV_PATH = f'{WORKING_DIR}/input.csv'
-EXPECTED_OUTPUT_CSV_PATH = f'{WORKING_DIR}/expected_output.csv'
-OUTPUT_CSV_PATH = f'{WORKING_DIR}/input_pseudonymized.csv'
+WORKING_DIR = Path('tests/resources/worker/steps/pseudonymizer')
+INPUT_CSV_PATH = WORKING_DIR / 'input.csv'
+EXPECTED_OUTPUT_CSV_PATH = WORKING_DIR / 'expected_output.csv'
+OUTPUT_CSV_PATH = WORKING_DIR / 'input_pseudonymized.csv'
 JOB_ID = '123-123-123-123'
 PSEUDONYM_DICT = {
     'i1': '1',
@@ -32,7 +31,7 @@ with open(
 
 @pytest.fixture(autouse=True)
 def set_working_dir(monkeypatch):
-    monkeypatch.setenv('WORKING_DIR', WORKING_DIR)
+    monkeypatch.setenv('WORKING_DIR', str(WORKING_DIR))
 
 
 def setup_function():
@@ -54,8 +53,8 @@ def test_pseudonymizer(mocker):
         return_value=PSEUDONYM_DICT
     )
     assert (
-        dataset_pseudonymizer.run(INPUT_CSV_PATH, METADATA, JOB_ID)
-        == OUTPUT_CSV_PATH
+        str(dataset_pseudonymizer.run(INPUT_CSV_PATH, METADATA, JOB_ID))
+        == str(OUTPUT_CSV_PATH)
     )
     with open(OUTPUT_CSV_PATH, encoding='utf-8') as f:
         output_file = f.readlines()

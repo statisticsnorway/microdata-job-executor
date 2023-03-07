@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Tuple, Union
 
 import microdata_validator
@@ -20,10 +21,10 @@ def _get_unit_types(
 
 
 def _pseudonymize_identifier_only(
-    input_csv_path: str,
+    input_csv_path: Path,
     unit_id_type: str,
     job_id: str
-) -> str:
+) -> Path:
     unique_identifiers = set()
     with open(input_csv_path, newline='', encoding='utf8') as csv_file:
         for line in csv_file:
@@ -32,7 +33,10 @@ def _pseudonymize_identifier_only(
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
         list(unique_identifiers), unit_id_type, job_id
     )
-    output_csv_path = input_csv_path.replace('.csv', '_pseudonymized.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_pseudonymized.csv'
+    )
     target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
         for line in csv_file:
@@ -55,10 +59,10 @@ def _pseudonymize_identifier_only(
 
 
 def _pseudonymize_measure_only(
-    input_csv_path: str,
+    input_csv_path: Path,
     unit_id_type: str,
     job_id: str
-) -> str:
+) -> Path:
     unique_measure_values = set()
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
         for line in csv_file:
@@ -67,7 +71,10 @@ def _pseudonymize_measure_only(
     value_to_pseudonym = pseudonym_service.pseudonymize(
         list(unique_measure_values), unit_id_type, job_id
     )
-    output_csv_path = input_csv_path.replace('.csv', '_pseudonymized.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_pseudonymized.csv'
+    )
     target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
         for line in csv_file:
@@ -90,11 +97,11 @@ def _pseudonymize_measure_only(
 
 
 def _pseudonymize_identifier_and_measure(
-    input_csv_path: str,
+    input_csv_path: Path,
     identifier_unit_id_type: str,
     measure_unit_id_type: str,
     job_id: str
-) -> str:
+) -> Path:
     unique_idents = set()
     unique_measure_values = set()
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
@@ -110,7 +117,10 @@ def _pseudonymize_identifier_and_measure(
     value_to_pseudonym = pseudonym_service.pseudonymize(
         list(unique_measure_values), measure_unit_id_type, job_id
     )
-    output_csv_path = input_csv_path.replace('.csv', '_pseudonymized.csv')
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_pseudonymized.csv'
+    )
     target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
     with open(input_csv_path, newline='', encoding='utf-8') as csv_file:
         for line in csv_file:
@@ -133,11 +143,11 @@ def _pseudonymize_identifier_and_measure(
 
 
 def _pseudonymize_csv(
-    input_csv_path: str,
+    input_csv_path: Path,
     identifier_unit_id_type: Union[str, None],
     measure_unit_id_type: Union[str, None],
     job_id: str
-) -> str:
+) -> Path:
     if identifier_unit_id_type and not measure_unit_id_type:
         logger.info('Pseudonymizing identifier')
         return _pseudonymize_identifier_only(
@@ -161,7 +171,7 @@ def _pseudonymize_csv(
         return input_csv_path
 
 
-def run(input_csv_path: str, metadata: Metadata, job_id: str) -> str:
+def run(input_csv_path: Path, metadata: Metadata, job_id: str) -> Path:
     """
     Pseudonymizes the identifier column of the dataset. Requests pseudonyms
     from an external service and replaces all values in the identifier column.

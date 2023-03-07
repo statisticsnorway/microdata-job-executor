@@ -1,6 +1,7 @@
 from datetime import timedelta
 from datetime import datetime
 import logging
+from pathlib import Path
 
 from job_executor.exception import BuilderStepError
 
@@ -32,11 +33,14 @@ def _generate_epoch_day(date: str) -> str:
 
 
 def _enrich_csv(
-    input_csv_path: str,
+    input_csv_path: Path,
     temporal_coverage: dict,
     data_type: str
-) -> str:
-    output_csv_path = input_csv_path.replace('.csv', '_enriched.csv')
+) -> Path:
+    output_csv_path = (
+        input_csv_path.parent /
+        f'{input_csv_path.stem}_enriched.csv'
+    )
     days_since_epoch_for = _generate_epoch_dict(temporal_coverage)
     try:
         target_file = open(output_csv_path, 'w', newline='', encoding='utf-8')
@@ -80,7 +84,7 @@ def _enrich_csv(
     return output_csv_path
 
 
-def run(input_csv_path: str, temporal_coverage: dict, data_type: str) -> str:
+def run(input_csv_path: Path, temporal_coverage: dict, data_type: str) -> Path:
     """
     Enriches a csv file for a dataset with extra columns of date information.
     Returns file path for enriched file.

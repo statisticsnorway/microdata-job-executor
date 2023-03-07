@@ -305,8 +305,9 @@ def _transform_metadata(metadata_file_path: Path) -> str:
                 metadata['dataRevision'].get('temporalStatusDates', None)
             )
         )
-    transformed_metadata_file_path = str(metadata_file_path).replace(
-        '.json', '__DRAFT.json'
+    transformed_metadata_file_path = (
+        metadata_file_path.parent /
+        f'{metadata_file_path.stem}__DRAFT.json'
     )
     with open(transformed_metadata_file_path, 'w', encoding='utf-8') as f:
         json.dump(transformed, f)
@@ -315,7 +316,7 @@ def _transform_metadata(metadata_file_path: Path) -> str:
     return Metadata(**transformed)
 
 
-def run(metadata_file_path: str) -> Metadata:
+def run(metadata_file_path: Path) -> Metadata:
     """
     Transforms a metadatafile from the input model to the SIKT
     metadata model that is stored in the datastore.

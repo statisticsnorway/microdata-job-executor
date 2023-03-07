@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import pyarrow as pa
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
@@ -8,7 +9,7 @@ from job_executor.config import environment
 
 
 logger = logging.getLogger()
-WORKING_DIR = environment.get('WORKING_DIR')
+WORKING_DIR = Path(environment.get('WORKING_DIR'))
 
 
 def _get_read_options():
@@ -25,8 +26,9 @@ def _get_read_options():
     )
 
 
-def _create_table(csv_convert_options: str, csv_parse_options: str,
-                  data_path: str) -> pa.Table:
+def _create_table(
+    csv_convert_options: str, csv_parse_options: str, data_path: Path
+) -> pa.Table:
     table = pv.read_csv(
         input_file=data_path,
         read_options=_get_read_options(),
@@ -60,8 +62,9 @@ def _create_list_of_fields(data_type: str, partitioned: bool = False) -> list:
     return fields
 
 
-def _create_table_for_simple_parquet(data_path: str,
-                                     data_type: str) -> pa.Table:
+def _create_table_for_simple_parquet(
+    data_path: Path, data_type: str
+) -> pa.Table:
     data_schema = pa.schema(_create_list_of_fields(data_type))
     csv_convert_options = pv.ConvertOptions(
         column_types=data_schema,
@@ -74,8 +77,9 @@ def _create_table_for_simple_parquet(data_path: str,
     )
 
 
-def _create_table_for_partitioned_parquet(data_path: str,
-                                          data_type: str) -> pa.Table:
+def _create_table_for_partitioned_parquet(
+    data_path: Path, data_type: str
+) -> pa.Table:
     data_schema = pa.schema(_create_list_of_fields(data_type, True))
     csv_convert_options = pv.ConvertOptions(
         column_types=data_schema,
@@ -90,9 +94,9 @@ def _create_table_for_partitioned_parquet(data_path: str,
 
 
 def _convert_csv_to_simple_parquet(
-    dataset_name: str, csv_data_path: str, data_type: str
+    dataset_name: str, csv_data_path: Path, data_type: str
 ) -> str:
-    parquet_file_path = f'{WORKING_DIR}/{dataset_name}__DRAFT.parquet'
+    parquet_file_path = WORKING_DIR / f'{dataset_name}__DRAFT.parquet'
     logger.info(
         f"Converts csv {csv_data_path} "
         f"to simple parquet {parquet_file_path}"
@@ -106,9 +110,9 @@ def _convert_csv_to_simple_parquet(
 
 
 def _convert_csv_to_partitioned_parquet(
-    dataset_name: str, csv_data_path: str, data_type: str
+    dataset_name: str, csv_data_path: Path, data_type: str
 ) -> str:
-    parquet_partition_path = f'{WORKING_DIR}/{dataset_name}__DRAFT'
+    parquet_partition_path = WORKING_DIR / f'{dataset_name}__DRAFT'
     logger.info(
         f"Converts csv {csv_data_path} "
         f"to partitioned parquet {parquet_partition_path}"
@@ -130,7 +134,7 @@ def _convert_csv_to_partitioned_parquet(
 
 def run(
     dataset_name: str,
-    csv_data_path: str,
+    csv_data_path: Path,
     temporality_type: str,
     data_type: str
 ) -> str:
