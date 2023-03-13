@@ -102,6 +102,7 @@ class Datastore:
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
+            local_storage.delete_archived_input(dataset_name)
         except PatchingError as e:
             self._log(job_id, 'Patching error occured', 'ERROR')
             self._log(job_id, str(e), 'EXC', e)
@@ -156,6 +157,7 @@ class Datastore:
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
+            local_storage.delete_archived_input(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'EXC', e)
@@ -202,6 +204,7 @@ class Datastore:
             self._log(job_id, 'Deleting temporary backup')
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
+            local_storage.delete_archived_input(dataset_name)
         except Exception as e:
             self._log(job_id, 'An unexpected error occured', 'ERROR')
             self._log(job_id, str(e), 'EXC', e)
