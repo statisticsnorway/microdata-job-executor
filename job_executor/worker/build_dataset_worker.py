@@ -69,6 +69,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             dataset_name, enriched_data_path, temporality_type, data_type
         )
         local_storage.delete_working_dir_file(enriched_data_path)
+        local_storage.delete_archived(dataset_name)
         job_service.update_job_status(job_id, 'built')
         logger.info('Dataset built successfully')
     except BuilderStepError as e:

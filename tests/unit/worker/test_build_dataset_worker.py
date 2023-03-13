@@ -261,9 +261,7 @@ def test_import(requests_mock: RequestsMocker):
         assert request_matches(
             requests_made[index], EXPECTED_REQUESTS_IMPORT[index]
         )
-    assert len(
-        get_file_list_from_dir(Path(INPUT_DIR_ARCHIVE) / f'{DATASET_NAME}')
-    ) == 2
+    assert not (Path(INPUT_DIR_ARCHIVE) / f'{DATASET_NAME}').exists()
 
 
 def request_matches(request: dict, other: dict):
