@@ -452,3 +452,26 @@ def archive_input_files(dataset_name: str):
     )
     if os.path.isdir(move_dir):
         shutil.rmtree(move_dir)
+
+
+def move_archived_to_input(dataset_name: str):
+    """
+    Move the archived dataset to input directory.
+    Throws FileExistsError if the dataset exists in input directory.
+    """
+    archive_dir: Path = INPUT_DIR / f'archive/{dataset_name}'
+    input_dir = INPUT_DIR / f'{dataset_name}'
+    shutil.copytree(
+        archive_dir, input_dir, dirs_exist_ok=False
+    )
+    if archive_dir.is_dir():
+        shutil.rmtree(archive_dir)
+
+
+def delete_archived(dataset_name: str):
+    """
+    Delete the archived dataset from archive directory.
+    """
+    archive_dir: Path = INPUT_DIR / f'archive/{dataset_name}'
+    if archive_dir.is_dir():
+        shutil.rmtree(archive_dir)

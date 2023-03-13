@@ -20,7 +20,7 @@ from job_executor.exception import (
 logger = logging.getLogger()
 
 
-class Datastore():
+class Datastore:
     metadata_all_latest: MetadataAll
     metadata_all_draft: MetadataAllDraft
     datastore_versions: DatastoreVersions
@@ -468,3 +468,21 @@ class Datastore():
             self._log(job_id, str(e), 'EXC', e)
             rollback_bump(job_id, bump_manifesto.dict(by_alias=True))
             job_service.update_job_status(job_id, 'failed')
+
+    def move_archived_to_input(self, job_id: str, dataset_name: str):
+        """
+        Move the archived dataset to input directory.
+        """
+        self._log(job_id, 'initiated')
+        job_service.update_job_status(job_id, 'initiated')
+        local_storage.move_archived_to_input(dataset_name)
+        job_service.update_job_status(job_id, 'completed')
+
+    def delete_archived(self, job_id: str, dataset_name: str):
+        """
+        Delete the archived dataset from archive directory.
+        """
+        self._log(job_id, 'initiated')
+        job_service.update_job_status(job_id, 'initiated')
+        local_storage.delete_archived(dataset_name)
+        job_service.update_job_status(job_id, 'completed')

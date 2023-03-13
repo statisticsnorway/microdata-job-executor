@@ -148,7 +148,14 @@ def main():
             built_jobs = job_service.get_jobs(job_status='built')
             queued_manager_jobs = job_service.get_jobs(
                 job_status='queued',
-                operations=['SET_STATUS', 'BUMP', 'DELETE_DRAFT', 'REMOVE']
+                operations=[
+                    'SET_STATUS',
+                    'BUMP',
+                    'DELETE_DRAFT',
+                    'REMOVE',
+                    'MOVE_ARCHIVED_TO_INPUT',
+                    'DELETE_ARCHIVE'
+                ]
             )
             queued_worker_jobs = job_service.get_jobs(
                 job_status='queued',
@@ -256,6 +263,10 @@ def _handle_manager_job(job: Job):
         )
     elif operation == 'DELETE_DRAFT':
         datastore.delete_draft(job_id, job.parameters.target)
+    elif operation == 'MOVE_ARCHIVED_TO_INPUT':
+        datastore.move_archived_to_input(job_id, job.parameters.target)
+    elif operation == 'DELETE_ARCHIVE':
+        datastore.delete_archived(job_id, job.parameters.target)
     else:
         job_service.update_job_status(
             job.job_id, 'failed',
