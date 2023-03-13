@@ -153,7 +153,6 @@ def main():
                     'BUMP',
                     'DELETE_DRAFT',
                     'REMOVE',
-                    'MOVE_ARCHIVED_TO_INPUT',
                     'DELETE_ARCHIVE'
                 ]
             )
@@ -263,8 +262,6 @@ def _handle_manager_job(job: Job):
         )
     elif operation == 'DELETE_DRAFT':
         datastore.delete_draft(job_id, job.parameters.target)
-    elif operation == 'MOVE_ARCHIVED_TO_INPUT':
-        datastore.move_archived_to_input(job_id, job.parameters.target)
     elif operation == 'DELETE_ARCHIVE':
         datastore.delete_archived_input(job_id, job.parameters.target)
     else:
