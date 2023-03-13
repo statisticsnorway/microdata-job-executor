@@ -8,7 +8,7 @@ from job_executor.config import environment
 
 
 logger = logging.getLogger()
-INPUT_DIR = Path(environment.get('INPUT_DIR'))
+INPUT_DIR = Path(environment.get('INPUT_DIR')) / 'archive'
 WORKING_DIR = Path(environment.get('WORKING_DIR'))
 
 
