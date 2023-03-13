@@ -444,12 +444,13 @@ def archive_input_files(dataset_name: str):
     """
     Archives the input folder files
     """
-    archive_dir = Path(f'{INPUT_DIR}/archive/{dataset_name}')
-    move_dir = f'{INPUT_DIR}/{dataset_name}'
-    os.makedirs(archive_dir, exist_ok=True)
-    shutil.copytree(
-        move_dir, archive_dir, dirs_exist_ok=True
-    )
+    archive_dir = INPUT_DIR / f'archive/{dataset_name}'
+    move_dir = INPUT_DIR / f'{dataset_name}'
+    if not archive_dir.exists():
+        os.makedirs(archive_dir, exist_ok=True)
+        shutil.copytree(
+            move_dir, archive_dir, dirs_exist_ok=True
+        )
     if os.path.isdir(move_dir):
         shutil.rmtree(move_dir)
 
