@@ -478,11 +478,11 @@ class Datastore:
         local_storage.move_archived_to_input(dataset_name)
         job_service.update_job_status(job_id, 'completed')
 
-    def delete_archived(self, job_id: str, dataset_name: str):
+    def delete_archived_input(self, job_id: str, dataset_name: str):
         """
         Delete the archived dataset from archive directory.
         """
         self._log(job_id, 'initiated')
         job_service.update_job_status(job_id, 'initiated')
-        local_storage.delete_archived(dataset_name)
+        local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, 'completed')

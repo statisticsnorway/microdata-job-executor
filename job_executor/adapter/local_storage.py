@@ -468,7 +468,7 @@ def move_archived_to_input(dataset_name: str):
         shutil.rmtree(archive_dir)
 
 
-def delete_archived(dataset_name: str):
+def delete_archived_input(dataset_name: str):
     """
     Delete the archived dataset from archive directory.
     """

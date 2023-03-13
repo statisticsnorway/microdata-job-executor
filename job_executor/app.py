@@ -266,7 +266,7 @@ def _handle_manager_job(job: Job):
     elif operation == 'MOVE_ARCHIVED_TO_INPUT':
         datastore.move_archived_to_input(job_id, job.parameters.target)
     elif operation == 'DELETE_ARCHIVE':
-        datastore.delete_archived(job_id, job.parameters.target)
+        datastore.delete_archived_input(job_id, job.parameters.target)
     else:
         job_service.update_job_status(
             job.job_id, 'failed',
