@@ -177,23 +177,22 @@ def rollback_worker_phase_import_job(
 def rollback_manager_phase_import_job(
     job_id: str, operation: str, dataset_name: str
 ):
-    try:
-        logger.info(
-            f'{job_id}: Rolling back import job '
-            f'with target: "{dataset_name}" and operation "{operation}"'
-        )
-        logger.info(f'{job_id}: Restoring files from temporary backup')
-        local_storage.restore_from_temporary_backup()
+    """
+    Rolls back manager phase import job.
+    Exceptions are not handled here on purpose. It is a catastrophic thing
+    if a rollback fails.
+    """
+    logger.info(
+        f'{job_id}: Rolling back import job '
+        f'with target: "{dataset_name}" and operation "{operation}"'
+    )
+    logger.info(f'{job_id}: Restoring files from temporary backup')
+    local_storage.restore_from_temporary_backup()
 
-        logger.info(f'{job_id}: Deleting metadata draft file')
-        local_storage.delete_metadata_draft(dataset_name)
-        if operation in ['ADD', 'CHANGE']:
-            logger.info(f'{job_id}: Deleting data file/directory')
-            local_storage.delete_parquet_draft(dataset_name)
-        logger.info(f'{job_id}: Deleting temporary backup')
-        local_storage.delete_temporary_backup()
-    except Exception as e:
-        logger.error(
-            f'{job_id}: Unexpected error when rolling back manager phase job'
-        )
-        logger.exception(e)
+    logger.info(f'{job_id}: Deleting metadata draft file')
+    local_storage.delete_metadata_draft(dataset_name)
+    if operation in ['ADD', 'CHANGE']:
+        logger.info(f'{job_id}: Deleting data file/directory')
+        local_storage.delete_parquet_draft(dataset_name)
+    logger.info(f'{job_id}: Deleting temporary backup')
+    local_storage.delete_temporary_backup()
