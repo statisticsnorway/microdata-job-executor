@@ -8,7 +8,7 @@ from job_executor.config import environment
 
 
 logger = logging.getLogger()
-INPUT_DIR = Path(environment.get('INPUT_DIR')) / 'archive'
+ARCHIVE_DIR = Path(environment.get('INPUT_DIR')) / 'archive'
 WORKING_DIR = Path(environment.get('WORKING_DIR'))
 
 
@@ -23,7 +23,7 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
     try:
         validation_errors = validate(
             dataset_name,
-            input_directory=str(INPUT_DIR),
+            input_directory=str(ARCHIVE_DIR),
             working_directory=str(WORKING_DIR),
             keep_temporary_files=True
         )
@@ -56,7 +56,7 @@ def run_for_metadata(dataset_name: str) -> Path:
     try:
         validation_errors = validate_metadata(
             dataset_name,
-            input_directory=INPUT_DIR,
+            input_directory=ARCHIVE_DIR,
             working_directory=WORKING_DIR,
             keep_temporary_files=True
         )

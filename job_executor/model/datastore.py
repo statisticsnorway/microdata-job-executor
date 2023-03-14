@@ -286,9 +286,9 @@ class Datastore:
                 self.metadata_all_draft.remove(dataset_name)
             if dataset_operation in ['ADD', 'CHANGE', 'PATCH_METADATA']:
                 local_storage.delete_metadata_draft(dataset_name)
-            if dataset_operation in ['ADD', 'CHANGE']:
-                local_storage.delete_parquet_draft(dataset_name)
             try:
+                if dataset_operation in ['ADD', 'CHANGE']:
+                    local_storage.delete_parquet_draft(dataset_name)
                 self.draft_version.delete_draft(dataset_name)
                 job_service.update_job_status(job_id, 'completed')
             except NoSuchDraftException as e:
@@ -472,12 +472,16 @@ class Datastore:
             rollback_bump(job_id, bump_manifesto.dict(by_alias=True))
             job_service.update_job_status(job_id, 'failed')
 
-
     def delete_archived_input(self, job_id: str, dataset_name: str):
         """
         Delete the archived dataset from archive directory.
         """
-        self._log(job_id, 'initiated')
-        job_service.update_job_status(job_id, 'initiated')
-        local_storage.delete_archived_input(dataset_name)
-        job_service.update_job_status(job_id, 'completed')
+        try:
+            self._log(job_id, 'initiated')
+            job_service.update_job_status(job_id, 'initiated')
+            local_storage.delete_archived_input(dataset_name)
+            job_service.update_job_status(job_id, 'completed')
+        except Exception as e:
+            self._log(job_id, 'An unexpected error occured', 'ERROR')
+            self._log(job_id, str(e), 'EXC', e)
+            job_service.update_job_status(job_id, 'failed')
