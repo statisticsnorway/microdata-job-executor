@@ -25,7 +25,7 @@ class ContextFilter(logging.Filter):
     def filter(self, record):
         # prefix record.msg instead of adding a new field
         # to be compliant with Kibana
-        record.msg = self.job_id + ': ' + record.msg
+        record.msg = self.job_id + ': ' + str(record.msg)
         return True
 
 

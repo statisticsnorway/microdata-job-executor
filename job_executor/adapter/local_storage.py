@@ -326,7 +326,7 @@ def delete_working_dir_file(file_path: Path) -> None:
     * file_name: str - name of temporary file
     """
     if not str(file_path).startswith(str(WORKING_DIR)):
-        raise LocalStorageError(f'Filepath is not in {WORKING_DIR}')
+        raise LocalStorageError(f'Filepath {file_path} is not in {WORKING_DIR}')
     if file_path.is_file():
         os.remove(file_path)
 
@@ -444,11 +444,21 @@ def archive_input_files(dataset_name: str):
     """
     Archives the input folder files
     """
-    archive_dir = Path(f'{INPUT_DIR}/archive/{dataset_name}')
-    move_dir = f'{INPUT_DIR}/{dataset_name}'
-    os.makedirs(archive_dir, exist_ok=True)
-    shutil.copytree(
-        move_dir, archive_dir, dirs_exist_ok=True
-    )
+    archive_dir = INPUT_DIR / f'archive/{dataset_name}'
+    move_dir = INPUT_DIR / f'{dataset_name}'
+    if not archive_dir.exists():
+        os.makedirs(archive_dir, exist_ok=True)
+        shutil.copytree(
+            move_dir, archive_dir, dirs_exist_ok=True
+        )
     if os.path.isdir(move_dir):
         shutil.rmtree(move_dir)
+
+
+def delete_archived_input(dataset_name: str):
+    """
+    Delete the archived dataset from archive directory.
+    """
+    archive_dir: Path = INPUT_DIR / f'archive/{dataset_name}'
+    if archive_dir.is_dir():
+        shutil.rmtree(archive_dir)

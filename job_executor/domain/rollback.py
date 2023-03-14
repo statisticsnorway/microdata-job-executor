@@ -177,6 +177,11 @@ def rollback_worker_phase_import_job(
 def rollback_manager_phase_import_job(
     job_id: str, operation: str, dataset_name: str
 ):
+    """
+    Rolls back manager phase import job.
+    Exceptions are not handled here on purpose. It is a catastrophic thing
+    if a rollback fails.
+    """
     logger.info(
         f'{job_id}: Rolling back import job '
         f'with target: "{dataset_name}" and operation "{operation}"'

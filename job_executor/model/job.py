@@ -30,6 +30,7 @@ class Operation(str, Enum):
     SET_STATUS = 'SET_STATUS'
     DELETE_DRAFT = 'DELETE_DRAFT'
     REMOVE = 'REMOVE'
+    DELETE_ARCHIVE = 'DELETE_ARCHIVE'
 
 
 class ReleaseStatus(str, Enum):

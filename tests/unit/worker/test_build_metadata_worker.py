@@ -10,7 +10,6 @@ from tests.unit.test_util import get_file_list_from_dir
 from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_metadata_worker import run_worker, local_storage
 
-
 DATASET_NAME = 'KJOENN'
 JOB_ID = '1234-1234-1234-1234'
 WORKING_DIR = os.environ['WORKING_DIR']
@@ -83,6 +82,7 @@ def test_import(requests_mock: RequestsMocker):
         for req in requests_mock.request_history
     ]
     assert requests_made == EXPECTED_REQUESTS
+    assert (Path(INPUT_DIR_ARCHIVE) / f'{DATASET_NAME}').exists()
 
 
 def test_delete_working_dir_file_is_called(
@@ -96,6 +96,4 @@ def test_delete_working_dir_file_is_called(
     )
     run_worker(JOB_ID, DATASET_NAME, Queue())
     spy.assert_called()
-    assert len(
-        get_file_list_from_dir(Path(INPUT_DIR_ARCHIVE) / f'{DATASET_NAME}')
-    ) == 1
+    assert not Path(f'{WORKING_DIR}/{DATASET_NAME}').exists()
