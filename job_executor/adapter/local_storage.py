@@ -326,7 +326,9 @@ def delete_working_dir_file(file_path: Path) -> None:
     * file_name: str - name of temporary file
     """
     if not str(file_path).startswith(str(WORKING_DIR)):
-        raise LocalStorageError(f'Filepath {file_path} is not in {WORKING_DIR}')
+        raise LocalStorageError(
+            f'Filepath {file_path} is not in {WORKING_DIR}'
+        )
     if file_path.is_file():
         os.remove(file_path)
 

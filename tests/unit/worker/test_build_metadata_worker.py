@@ -4,11 +4,13 @@ import shutil
 from multiprocessing import Queue
 from pathlib import Path
 
+from pytest_mock import MockerFixture
 from requests_mock import Mocker as RequestsMocker
-from tests.unit.test_util import get_file_list_from_dir
 
+from job_executor.worker.steps import dataset_validator
 from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_metadata_worker import run_worker, local_storage
+
 
 DATASET_NAME = 'KJOENN'
 JOB_ID = '1234-1234-1234-1234'
@@ -86,7 +88,7 @@ def test_import(requests_mock: RequestsMocker):
 
 
 def test_delete_working_dir_file_is_called(
-    requests_mock: RequestsMocker, mocker
+    requests_mock: RequestsMocker, mocker: MockerFixture
 ):
     spy = mocker.patch.object(
         local_storage, 'delete_working_dir_file'
@@ -97,3 +99,26 @@ def test_delete_working_dir_file_is_called(
     run_worker(JOB_ID, DATASET_NAME, Queue())
     spy.assert_called()
     assert not Path(f'{WORKING_DIR}/{DATASET_NAME}').exists()
+
+
+def test_delete_working_dir_on_failure(
+    requests_mock: RequestsMocker, mocker: MockerFixture
+):
+    spy = mocker.patch.object(
+        local_storage, 'delete_working_dir_file'
+    )
+    requests_mock.put(
+        f'{JOB_SERVICE_URL}/jobs/{JOB_ID}', json={"message": "OK"}
+    )
+    run_worker(JOB_ID, DATASET_NAME, Queue())
+    spy.assert_called()
+    mocker.patch.object(
+        dataset_validator,
+        'run_for_dataset',
+        side_effect=Exception('mocked error')
+    )
+    run_worker(JOB_ID, DATASET_NAME, Queue())
+    spy.assert_called()
+    working_dir_content = os.listdir(local_storage.WORKING_DIR)
+    assert not Path(f'{WORKING_DIR}/{DATASET_NAME}').exists()
+    

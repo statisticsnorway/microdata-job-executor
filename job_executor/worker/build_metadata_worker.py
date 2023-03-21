@@ -13,6 +13,16 @@ from job_executor.worker.steps import (
     dataset_transformer
 )
 
+WORKING_DIR = local_storage.WORKING_DIR
+
+
+def _clean_working_dir(dataset_name: str):
+    generated_files = [
+        WORKING_DIR / f'{dataset_name}.json'
+    ]
+    for file_path in generated_files:
+        local_storage.delete_working_dir_file(file_path)
+
 
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
@@ -41,9 +51,11 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     except BuilderStepError as e:
         error_message = 'Failed during building metdata'
         logger.exception(error_message, exc_info=e)
+        _clean_working_dir(dataset_name)
         job_service.update_job_status(job_id, 'failed', log=str(e))
     except HttpResponseError as e:
         logger.exception(e)
+        _clean_working_dir(dataset_name)
         job_service.update_job_status(
             job_id, 'failed',
             log='Failed due to communication errors in platform'
@@ -51,6 +63,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     except Exception as e:
         error_message = 'Unknown error when building metadata'
         logger.exception(error_message, exc_info=e)
+        _clean_working_dir(dataset_name)
         job_service.update_job_status(
             job_id, 'failed', log='Unexpected exception when building dataset'
         )

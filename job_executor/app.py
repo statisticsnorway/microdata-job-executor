@@ -205,6 +205,7 @@ def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
             args=(job_id, dataset_name, logging_queue,)
         )
         workers.append(worker)
+        job_service.update_job_status(job_id, 'initiated')
         worker.start()
     elif operation == 'PATCH_METADATA':
         worker = Process(
@@ -212,6 +213,7 @@ def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
             args=(job_id, dataset_name, logging_queue,)
         )
         workers.append(worker)
+        job_service.update_job_status(job_id, 'initiated')
         worker.start()
     else:
         logger.error(f'Unknown operation "{operation}"')
