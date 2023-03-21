@@ -21,6 +21,18 @@ from job_executor.worker.steps import (
 WORKING_DIR = Path(environment.get('WORKING_DIR'))
 
 
+def _clean_working_dir(dataset_name: str):
+    generated_files = [
+        WORKING_DIR / f'{dataset_name}.json',
+        WORKING_DIR / f'{dataset_name}.csv',
+        WORKING_DIR / f'{dataset_name}_enriched.csv',
+        WORKING_DIR / f'{dataset_name}_pseudonymized.csv',
+        WORKING_DIR / f'{dataset_name}.db'
+    ]
+    for file_path in generated_files:
+        local_storage.delete_working_dir_file(file_path)
+
+
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     start = perf_counter()
     logger = logging.getLogger()
@@ -73,15 +85,18 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         logger.info('Dataset built successfully')
     except BuilderStepError as e:
         logger.error(str(e))
+        _clean_working_dir(dataset_name)
         job_service.update_job_status(job_id, 'failed', log=str(e))
     except HttpResponseError as e:
         logger.error(str(e))
+        _clean_working_dir(dataset_name)
         job_service.update_job_status(
             job_id, 'failed',
             log='Failed due to communication errors in platform'
         )
     except Exception as e:
         logger.exception(e)
+        _clean_working_dir(dataset_name)
         job_service.update_job_status(
             job_id, 'failed',
             log='Unexpected error when building dataset'
