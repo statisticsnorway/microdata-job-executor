@@ -444,7 +444,7 @@ def archive_draft_version(version: str):
 
 def archive_input_files(dataset_name: str):
     """
-    Archives the input folder files
+    Archives the input folder files if not already archived
     """
     archive_dir = INPUT_DIR / f'archive/{dataset_name}'
     move_dir = INPUT_DIR / f'{dataset_name}'
@@ -453,8 +453,8 @@ def archive_input_files(dataset_name: str):
         shutil.copytree(
             move_dir, archive_dir, dirs_exist_ok=True
         )
-    if os.path.isdir(move_dir):
-        shutil.rmtree(move_dir)
+        if os.path.isdir(move_dir):
+            shutil.rmtree(move_dir)
 
 
 def delete_archived_input(dataset_name: str):
