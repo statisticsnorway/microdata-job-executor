@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_VERSION=1.1.14 \
+    POETRY_VERSION=1.4.1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
@@ -19,9 +19,9 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 # Install python 3.10
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    python3-pip python3-dev \
+    python3.10 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && ln -s /usr/bin/python3 /usr/bin/python
+    && ln -s /usr/bin/python3.10 /usr/bin/python
 
 # Install tools
 RUN apt-get update \
@@ -37,7 +37,7 @@ COPY poetry.lock pyproject.toml /app/
 
 # Install poetry and export dependencies to requirements yaml
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN curl -sSL https://install.python-poetry.org | python3 - --version $POETRY_VERSION
 
 #Set application version in pyproject.toml, use zero if not set
 ARG BUILD_NUMBER=0
