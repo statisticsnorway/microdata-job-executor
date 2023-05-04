@@ -96,7 +96,7 @@
             "dataType": "Instant",
             "representedVariables": [
                 {
-                    "description": "Startdato/m\u00e5letidspunktet for hendelsen",
+                    "description": "Stoppdato/m\u00e5letidspunktet for hendelsen",
                     "validPeriod": {
                         "start": null,
                         "stop": null
