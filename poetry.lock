@@ -340,14 +340,14 @@ files = [
 
 [[package]]
 name = "microdata-validator"
-version = "7.3.0"
+version = "7.3.2"
 description = "Python package for validating datasets in the microdata platform"
 category = "main"
 optional = false
 python-versions = ">=3.7.2,<4.0"
 files = [
-    {file = "microdata-validator-7.3.0.tar.gz", hash = "sha256:e5f2e4be342b93ae1185bbc17cacb18428ea15bec9d3bceb705c0380217f77bb"},
-    {file = "microdata_validator-7.3.0-py3-none-any.whl", hash = "sha256:e08504c27750c1c487f717f2e285b19510a9d2bbd5f0de66674f02766798e7d8"},
+    {file = "microdata-validator-7.3.2.tar.gz", hash = "sha256:a1a7d8b26e3b59a9b4cb65b12a79cc6a0832b37c2e8b51d22fc56b66dc58dddd"},
+    {file = "microdata_validator-7.3.2-py3-none-any.whl", hash = "sha256:e0e617df1fcfc738d80101ea5adef908248017dbb63c3f5d830f76036d17e73b"},
 ]
 
 [package.dependencies]
@@ -947,4 +947,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8f6bfed237d277b43ca602af649b0b5c6fa1b7caa8ee58f5299fbc785cd13bd8"
+content-hash = "435af818d791eaac708f6c7e3962b19a51dbdec560b6a4cfb0efe9356f67f3fc"
