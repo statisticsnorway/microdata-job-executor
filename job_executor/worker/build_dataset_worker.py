@@ -6,28 +6,25 @@ from time import perf_counter
 from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
-from job_executor.exception import (
-    BuilderStepError,
-    HttpResponseError
-)
+from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.worker.steps import (
     dataset_validator,
     dataset_converter,
     dataset_transformer,
     dataset_enricher,
-    dataset_pseudonymizer
+    dataset_pseudonymizer,
 )
 
-WORKING_DIR = Path(environment.get('WORKING_DIR'))
+WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
 def _clean_working_dir(dataset_name: str):
     generated_files = [
-        WORKING_DIR / f'{dataset_name}.json',
-        WORKING_DIR / f'{dataset_name}.csv',
-        WORKING_DIR / f'{dataset_name}_enriched.csv',
-        WORKING_DIR / f'{dataset_name}_pseudonymized.csv',
-        WORKING_DIR / f'{dataset_name}.db'
+        WORKING_DIR / f"{dataset_name}.json",
+        WORKING_DIR / f"{dataset_name}.csv",
+        WORKING_DIR / f"{dataset_name}_enriched.csv",
+        WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
+        WORKING_DIR / f"{dataset_name}.db",
     ]
     for file_path in generated_files:
         local_storage.delete_working_dir_file(file_path)
@@ -40,12 +37,12 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
     try:
         configure_worker_logger(logging_queue, job_id)
         logger.info(
-            f'Starting dataset worker for dataset '
-            f'{dataset_name} and job {job_id}'
+            f"Starting dataset worker for dataset "
+            f"{dataset_name} and job {job_id}"
         )
 
         local_storage.archive_input_files(dataset_name)
-        job_service.update_job_status(job_id, 'validating')
+        job_service.update_job_status(job_id, "validating")
         data_file_path, metadata_file_path = dataset_validator.run_for_dataset(
             dataset_name
         )
@@ -53,12 +50,12 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             dataset_name
         )
         local_storage.delete_working_dir_file(
-            WORKING_DIR / f'{dataset_name}.db'
+            WORKING_DIR / f"{dataset_name}.db"
         )
-        description = input_metadata['dataRevision']['description'][0]['value']
+        description = input_metadata["dataRevision"]["description"][0]["value"]
         job_service.update_description(job_id, description)
 
-        job_service.update_job_status(job_id, 'transforming')
+        job_service.update_job_status(job_id, "transforming")
         transformed_metadata = dataset_transformer.run(metadata_file_path)
         local_storage.delete_working_dir_file(metadata_file_path)
 
@@ -66,45 +63,45 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         temporal_coverage = transformed_metadata.temporal_coverage.dict()
         data_type = transformed_metadata.measure_variable.data_type
 
-        job_service.update_job_status(job_id, 'pseudonymizing')
+        job_service.update_job_status(job_id, "pseudonymizing")
         pseudonymized_data_path = dataset_pseudonymizer.run(
             data_file_path, transformed_metadata, job_id
         )
         local_storage.delete_working_dir_file(data_file_path)
-        job_service.update_job_status(job_id, 'enriching')
+        job_service.update_job_status(job_id, "enriching")
         enriched_data_path = dataset_enricher.run(
             pseudonymized_data_path, temporal_coverage, data_type
         )
         local_storage.delete_working_dir_file(pseudonymized_data_path)
-        job_service.update_job_status(job_id, 'converting')
+        job_service.update_job_status(job_id, "converting")
         dataset_converter.run(
             dataset_name, enriched_data_path, temporality_type, data_type
         )
         local_storage.delete_working_dir_file(enriched_data_path)
-        job_service.update_job_status(job_id, 'built')
-        logger.info('Dataset built successfully')
+        job_service.update_job_status(job_id, "built")
+        logger.info("Dataset built successfully")
     except BuilderStepError as e:
         logger.error(str(e))
         _clean_working_dir(dataset_name)
-        job_service.update_job_status(job_id, 'failed', log=str(e))
+        job_service.update_job_status(job_id, "failed", log=str(e))
     except HttpResponseError as e:
         logger.error(str(e))
         _clean_working_dir(dataset_name)
         job_service.update_job_status(
-            job_id, 'failed',
-            log='Failed due to communication errors in platform'
+            job_id,
+            "failed",
+            log="Failed due to communication errors in platform",
         )
     except Exception as e:
         logger.exception(e)
         _clean_working_dir(dataset_name)
         job_service.update_job_status(
-            job_id, 'failed',
-            log='Unexpected error when building dataset'
+            job_id, "failed", log="Unexpected error when building dataset"
         )
     finally:
         delta = perf_counter() - start
         logger.info(
-            f'Dataset worker for dataset '
-            f'{dataset_name} and job {job_id} '
-            f'done in {delta:.2f} seconds'
+            f"Dataset worker for dataset "
+            f"{dataset_name} and job {job_id} "
+            f"done in {delta:.2f} seconds"
         )

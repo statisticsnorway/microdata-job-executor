@@ -9,18 +9,18 @@ DATA_STRUCTURE_ADD_UPDATE = {
     "name": "KJOENN",
     "description": "Første publisering",
     "operation": "ADD",
-    "releaseStatus": "DRAFT"
+    "releaseStatus": "DRAFT",
 }
 DATA_STRUCTURE_REMOVE_UPDATE = {
     "name": "KJOENN",
     "description": "Fjernet variabel",
     "operation": "REMOVE",
-    "releaseStatus": "DRAFT"
+    "releaseStatus": "DRAFT",
 }
 DATA_STRUCTURE_UPDATE_MISSING_FIELD = {
     "name": "KJOENN",
     "description": "Første publisering",
-    "operation": "ADD"
+    "operation": "ADD",
 }
 
 
@@ -38,26 +38,26 @@ def test_invalid_data_structure_update():
 
 def test_set_release_status():
     data_structure_update = DataStructureUpdate(**DATA_STRUCTURE_ADD_UPDATE)
-    data_structure_update.set_release_status('PENDING_RELEASE')
-    assert data_structure_update.release_status == 'PENDING_RELEASE'
+    data_structure_update.set_release_status("PENDING_RELEASE")
+    assert data_structure_update.release_status == "PENDING_RELEASE"
 
-    data_structure_update.set_release_status('DRAFT')
-    assert data_structure_update.release_status == 'DRAFT'
+    data_structure_update.set_release_status("DRAFT")
+    assert data_structure_update.release_status == "DRAFT"
 
     with pytest.raises(ReleaseStatusException) as e:
-        data_structure_update.set_release_status('PENDING_DELETE')
-    assert 'Can\'t set release status: PENDING_DELETE' in str(e)
+        data_structure_update.set_release_status("PENDING_DELETE")
+    assert "Can't set release status: PENDING_DELETE" in str(e)
     with pytest.raises(ReleaseStatusException) as e:
-        data_structure_update.set_release_status('NO_SUCH_RELEASE_STATUS')
-    assert 'Invalid release status: NO_SUCH_RELEASE_STATUS' in str(e)
+        data_structure_update.set_release_status("NO_SUCH_RELEASE_STATUS")
+    assert "Invalid release status: NO_SUCH_RELEASE_STATUS" in str(e)
 
     data_structure_update = DataStructureUpdate(**DATA_STRUCTURE_REMOVE_UPDATE)
-    data_structure_update.set_release_status('PENDING_DELETE')
-    assert data_structure_update.release_status == 'PENDING_DELETE'
+    data_structure_update.set_release_status("PENDING_DELETE")
+    assert data_structure_update.release_status == "PENDING_DELETE"
 
-    data_structure_update.set_release_status('DRAFT')
-    assert data_structure_update.release_status == 'DRAFT'
+    data_structure_update.set_release_status("DRAFT")
+    assert data_structure_update.release_status == "DRAFT"
 
     with pytest.raises(ReleaseStatusException) as e:
-        data_structure_update.set_release_status('PENDING_RELEASE')
-    assert 'Can\'t set release status: PENDING_RELEASE' in str(e)
+        data_structure_update.set_release_status("PENDING_RELEASE")
+    assert "Can't set release status: PENDING_RELEASE" in str(e)

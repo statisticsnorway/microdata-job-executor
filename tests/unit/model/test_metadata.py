@@ -6,41 +6,40 @@ from job_executor.model import MetadataAll, Metadata
 
 
 def load_json(file_path):
-    return json.load(open(file_path, encoding='utf'))
+    return json.load(open(file_path, encoding="utf"))
 
 
-TEST_DIR = 'tests/resources/model/metadata'
-METADATA_ALL_PATH = f'{TEST_DIR}/metadata_all.json'
+TEST_DIR = "tests/resources/model/metadata"
+METADATA_ALL_PATH = f"{TEST_DIR}/metadata_all.json"
 
-ENUMERATED_METADATA = load_json(f'{TEST_DIR}/enumerated_metadata.json')
-DESCRIBED_METADATA = load_json(f'{TEST_DIR}/described_metadata.json')
+ENUMERATED_METADATA = load_json(f"{TEST_DIR}/enumerated_metadata.json")
+DESCRIBED_METADATA = load_json(f"{TEST_DIR}/described_metadata.json")
 
-METADATA_IN_DATASTORE = load_json(f'{TEST_DIR}/metadata.json')
-UPDATED_METADATA = load_json(f'{TEST_DIR}/updated_metadata.json')
-PATCHED_METADATA = load_json(f'{TEST_DIR}/patched_metadata.json')
+METADATA_IN_DATASTORE = load_json(f"{TEST_DIR}/metadata.json")
+UPDATED_METADATA = load_json(f"{TEST_DIR}/updated_metadata.json")
+PATCHED_METADATA = load_json(f"{TEST_DIR}/patched_metadata.json")
 
-PATCH_UNIT_TYPE_METADATA_IN_DATASTORE = load_json(f'{TEST_DIR}/patch_unit_type/metadata.json')
-PATCH_UNIT_TYPE_UPDATED_METADATA = load_json(f'{TEST_DIR}/patch_unit_type/updated_metadata.json')
-PATCH_UNIT_TYPE_PATCHED_METADATA = load_json(f'{TEST_DIR}/patch_unit_type/patched_metadata.json')
+PATCH_UNIT_TYPE_METADATA_IN_DATASTORE = load_json(
+    f"{TEST_DIR}/patch_unit_type/metadata.json"
+)
+PATCH_UNIT_TYPE_UPDATED_METADATA = load_json(
+    f"{TEST_DIR}/patch_unit_type/updated_metadata.json"
+)
+PATCH_UNIT_TYPE_PATCHED_METADATA = load_json(
+    f"{TEST_DIR}/patch_unit_type/patched_metadata.json"
+)
 
 
 def setup_module():
+    if os.path.isdir("tests/resources_backup"):
+        shutil.rmtree("tests/resources_backup")
 
-    if os.path.isdir('tests/resources_backup'):
-        shutil.rmtree('tests/resources_backup')
-
-    shutil.copytree(
-        'tests/resources',
-        'tests/resources_backup'
-    )
+    shutil.copytree("tests/resources", "tests/resources_backup")
 
 
 def teardown_module():
-    shutil.rmtree('tests/resources')
-    shutil.move(
-        'tests/resources_backup',
-        'tests/resources'
-    )
+    shutil.rmtree("tests/resources")
+    shutil.move("tests/resources_backup", "tests/resources")
 
 
 def test_metadata_all():
@@ -67,5 +66,7 @@ def test_patch_change_name_desc_when_measure_has_a_unit_type():
     metadata_in_datastore = Metadata(**PATCH_UNIT_TYPE_METADATA_IN_DATASTORE)
     updated_metadata = Metadata(**PATCH_UNIT_TYPE_UPDATED_METADATA)
     patched_metadata = metadata_in_datastore.patch(updated_metadata)
-    assert patched_metadata.dict(by_alias=True) == \
-           PATCH_UNIT_TYPE_PATCHED_METADATA
+    assert (
+        patched_metadata.dict(by_alias=True)
+        == PATCH_UNIT_TYPE_PATCHED_METADATA
+    )

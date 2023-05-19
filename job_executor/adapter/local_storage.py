@@ -11,45 +11,41 @@ from job_executor.config import environment
 from job_executor.exception import LocalStorageError
 
 
-WORKING_DIR = Path(environment.get('WORKING_DIR'))
-DATASTORE_DIR = Path(environment.get('DATASTORE_DIR'))
-INPUT_DIR = Path(environment.get('INPUT_DIR'))
+WORKING_DIR = Path(environment.get("WORKING_DIR"))
+DATASTORE_DIR = Path(environment.get("DATASTORE_DIR"))
+INPUT_DIR = Path(environment.get("INPUT_DIR"))
 
-DATASTORE_VERSIONS_PATH = DATASTORE_DIR / 'datastore/datastore_versions.json'
-DRAFT_METADATA_ALL_PATH = DATASTORE_DIR / 'datastore/metadata_all__DRAFT.json'
-DRAFT_VERSION_PATH = DATASTORE_DIR / 'datastore/draft_version.json'
+DATASTORE_VERSIONS_PATH = DATASTORE_DIR / "datastore/datastore_versions.json"
+DRAFT_METADATA_ALL_PATH = DATASTORE_DIR / "datastore/metadata_all__DRAFT.json"
+DRAFT_VERSION_PATH = DATASTORE_DIR / "datastore/draft_version.json"
 
 
 def _read_json(file_path: Path) -> dict:
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def _write_json(
-    content: dict,
-    file_path: Path,
-    indent: int = None
-) -> None:
-    with open(file_path, 'w', encoding='utf-8') as f:
+def _write_json(content: dict, file_path: Path, indent: int = None) -> None:
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(content, f, indent=indent)
 
 
 def _get_parquet_path(directory: Path, dataset_name: str) -> str:
-    parquet_file_path = directory / f'{dataset_name}__DRAFT.parquet'
-    partitioned_parquet_path = directory / f'{dataset_name}__DRAFT'
+    parquet_file_path = directory / f"{dataset_name}__DRAFT.parquet"
+    partitioned_parquet_path = directory / f"{dataset_name}__DRAFT"
     if partitioned_parquet_path.is_dir():
         return partitioned_parquet_path
     elif parquet_file_path.is_file():
         return parquet_file_path
     else:
         raise FileExistsError(
-            f'Invalid parquet path in {directory} for {dataset_name}'
+            f"Invalid parquet path in {directory} for {dataset_name}"
         )
 
 
 def _get_datastore_draft_parquet_path(dataset_name: str) -> Path:
     return _get_parquet_path(
-        DATASTORE_DIR / f'data/{dataset_name}', dataset_name
+        DATASTORE_DIR / f"data/{dataset_name}", dataset_name
     )
 
 
@@ -64,8 +60,8 @@ def make_dataset_dir(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    os.makedirs(DATASTORE_DIR / f'metadata/{dataset_name}', exist_ok=True)
-    os.makedirs(DATASTORE_DIR / f'data/{dataset_name}', exist_ok=True)
+    os.makedirs(DATASTORE_DIR / f"metadata/{dataset_name}", exist_ok=True)
+    os.makedirs(DATASTORE_DIR / f"data/{dataset_name}", exist_ok=True)
 
 
 def get_data_versions(version: Union[str, None]) -> dict:
@@ -77,9 +73,9 @@ def get_data_versions(version: Union[str, None]) -> dict:
     """
     if version is None:
         return {}
-    file_version = '_'.join(version.split('_')[:-1])
+    file_version = "_".join(version.split("_")[:-1])
     return _read_json(
-        DATASTORE_DIR / f'datastore/data_versions__{file_version}.json'
+        DATASTORE_DIR / f"datastore/data_versions__{file_version}.json"
     )
 
 
@@ -91,11 +87,11 @@ def write_data_versions(data_versions: dict, version: str):
     * data_versions: dict - data versions dict
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
     """
-    file_version = '_'.join(version.split('_')[:-1])
+    file_version = "_".join(version.split("_")[:-1])
     _write_json(
         data_versions,
-        DATASTORE_DIR / f'datastore/data_versions__{file_version}.json',
-        indent=2
+        DATASTORE_DIR / f"datastore/data_versions__{file_version}.json",
+        indent=2,
     )
 
 
@@ -103,7 +99,7 @@ def get_draft_version() -> dict:
     """
     Returns the contents of the draft version json file as dict.
     """
-    return _read_json(DATASTORE_DIR / 'datastore/draft_version.json')
+    return _read_json(DATASTORE_DIR / "datastore/draft_version.json")
 
 
 def write_draft_version(draft_version: dict) -> None:
@@ -113,9 +109,7 @@ def write_draft_version(draft_version: dict) -> None:
     * draft_version: dict - draft version dict
     """
     _write_json(
-        draft_version,
-        DATASTORE_DIR / 'datastore/draft_version.json',
-        indent=2
+        draft_version, DATASTORE_DIR / "datastore/draft_version.json", indent=2
     )
 
 
@@ -123,7 +117,7 @@ def get_datastore_versions() -> dict:
     """
     Returns the contents of the datastore versions json file as dict.
     """
-    return _read_json(DATASTORE_DIR / 'datastore/datastore_versions.json')
+    return _read_json(DATASTORE_DIR / "datastore/datastore_versions.json")
 
 
 def write_datastore_versions(datastore_versions: dict) -> None:
@@ -134,8 +128,8 @@ def write_datastore_versions(datastore_versions: dict) -> None:
     """
     _write_json(
         datastore_versions,
-        DATASTORE_DIR / 'datastore/datastore_versions.json',
-        indent=2
+        DATASTORE_DIR / "datastore/datastore_versions.json",
+        indent=2,
     )
 
 
@@ -147,7 +141,7 @@ def get_metadata_all(version: str) -> dict:
                      or 'DRAFT'
     """
     return _read_json(
-        DATASTORE_DIR / f'datastore/metadata_all__{version}.json'
+        DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
     )
 
 
@@ -161,8 +155,7 @@ def write_metadata_all(metadata_all: dict, version: str):
                      or 'DRAFT'
     """
     _write_json(
-        metadata_all,
-        DATASTORE_DIR / f'datastore/metadata_all__{version}.json'
+        metadata_all, DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
     )
 
 
@@ -172,7 +165,7 @@ def get_working_dir_metadata(dataset_name: str) -> dict:
 
     * dataset_name: str - name of dataset
     """
-    return _read_json(WORKING_DIR / f'{dataset_name}__DRAFT.json')
+    return _read_json(WORKING_DIR / f"{dataset_name}__DRAFT.json")
 
 
 def delete_working_dir_metadata(dataset_name: str) -> None:
@@ -181,7 +174,7 @@ def delete_working_dir_metadata(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    metadata_path = WORKING_DIR / f'{dataset_name}__DRAFT.json'
+    metadata_path = WORKING_DIR / f"{dataset_name}__DRAFT.json"
     if os.path.isfile(metadata_path):
         os.remove(metadata_path)
 
@@ -192,7 +185,7 @@ def get_working_dir_input_metadata(dataset_name: str) -> dict:
 
     * dataset_name: str - name of dataset
     """
-    return _read_json(WORKING_DIR / f'{dataset_name}.json')
+    return _read_json(WORKING_DIR / f"{dataset_name}.json")
 
 
 def get_metadata(dataset_name: str, version: str) -> dict:
@@ -204,9 +197,8 @@ def get_metadata(dataset_name: str, version: str) -> dict:
                      or 'DRAFT'
     """
     return _read_json(
-        DATASTORE_DIR / (
-            f'metadata/{dataset_name}/{dataset_name}__{version}.json'
-        )
+        DATASTORE_DIR
+        / (f"metadata/{dataset_name}/{dataset_name}__{version}.json")
     )
 
 
@@ -219,13 +211,13 @@ def write_metadata(metadata: dict, dataset_name: str, version: str):
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
-    os.makedirs(DATASTORE_DIR / f'metadata/{dataset_name}', exist_ok=True)
+    os.makedirs(DATASTORE_DIR / f"metadata/{dataset_name}", exist_ok=True)
     _write_json(
         metadata,
         (
-            DATASTORE_DIR /
-            f'metadata/{dataset_name}/{dataset_name}__{version}.json'
-        )
+            DATASTORE_DIR
+            / f"metadata/{dataset_name}/{dataset_name}__{version}.json"
+        ),
     )
 
 
@@ -236,7 +228,7 @@ def delete_metadata_draft(dataset_name: str) -> None:
     * dataset_name: str - name of dataset
     """
     metadata_path = (
-        f'{DATASTORE_DIR}/metadata/{dataset_name}/{dataset_name}__DRAFT.json'
+        f"{DATASTORE_DIR}/metadata/{dataset_name}/{dataset_name}__DRAFT.json"
     )
     if os.path.isfile(metadata_path):
         os.remove(metadata_path)
@@ -252,14 +244,12 @@ def rename_metadata_draft_to_release(dataset_name: str, version: str) -> dict:
                      or 'DRAFT'
     """
     metadata_draft_path = (
-        f'{DATASTORE_DIR}/metadata/{dataset_name}/'
-        f'{dataset_name}__DRAFT.json'
+        f"{DATASTORE_DIR}/metadata/{dataset_name}/"
+        f"{dataset_name}__DRAFT.json"
     )
-    metadata_release_path = metadata_draft_path.replace(
-        'DRAFT', version
-    )
+    metadata_release_path = metadata_draft_path.replace("DRAFT", version)
     shutil.move(metadata_draft_path, metadata_release_path)
-    with open(metadata_release_path, encoding='utf-8') as f:
+    with open(metadata_release_path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -272,9 +262,9 @@ def rename_parquet_draft_to_release(dataset_name: str, version: str) -> str:
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
     """
     draft_path = _get_datastore_draft_parquet_path(dataset_name)
-    file_version = '_'.join(version.split('_')[:-1])
+    file_version = "_".join(version.split("_")[:-1])
     file_name = (
-        draft_path.stem.replace('DRAFT', file_version) + draft_path.suffix
+        draft_path.stem.replace("DRAFT", file_version) + draft_path.suffix
     )
     release_path = draft_path.parent / file_name
     shutil.move(draft_path, release_path)
@@ -294,10 +284,9 @@ def move_working_dir_parquet_to_datastore(dataset_name: str) -> None:
     shutil.move(
         working_dir_parquet_path,
         (
-            DATASTORE_DIR /
-            f'data/{dataset_name}/'
-            f'{working_dir_parquet_path.parts[-1]}'
-        )
+            DATASTORE_DIR / f"data/{dataset_name}/"
+            f"{working_dir_parquet_path.parts[-1]}"
+        ),
     )
 
 
@@ -307,9 +296,9 @@ def delete_parquet_draft(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    data_dir = DATASTORE_DIR / f'data/{dataset_name}'
-    partitioned_parquet_path = data_dir / f'{dataset_name}__DRAFT'
-    parquet_file_path = data_dir / f'{dataset_name}__DRAFT.parquet'
+    data_dir = DATASTORE_DIR / f"data/{dataset_name}"
+    partitioned_parquet_path = data_dir / f"{dataset_name}__DRAFT"
+    parquet_file_path = data_dir / f"{dataset_name}__DRAFT.parquet"
     if partitioned_parquet_path.is_dir():
         shutil.rmtree(partitioned_parquet_path)
     elif parquet_file_path.is_file():
@@ -327,7 +316,7 @@ def delete_working_dir_file(file_path: Path) -> None:
     """
     if not str(file_path).startswith(str(WORKING_DIR)):
         raise LocalStorageError(
-            f'Filepath {file_path} is not in {WORKING_DIR}'
+            f"Filepath {file_path} is not in {WORKING_DIR}"
         )
     if file_path.is_file():
         os.remove(file_path)
@@ -341,32 +330,25 @@ def save_temporary_backup() -> None:
     Raises `LocalStorageError` if tmp directory already exists.
     """
     with open(
-        f'{DATASTORE_DIR}/datastore/datastore_versions.json',
-        encoding='utf-8'
+        f"{DATASTORE_DIR}/datastore/datastore_versions.json", encoding="utf-8"
     ) as f:
         datastore_versions = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/draft_version.json',
-        encoding='utf-8'
+        f"{DATASTORE_DIR}/datastore/draft_version.json", encoding="utf-8"
     ) as f:
         draft_version = json.load(f)
     with open(
-        f'{DATASTORE_DIR}/datastore/metadata_all__DRAFT.json',
-        encoding='utf-8'
+        f"{DATASTORE_DIR}/datastore/metadata_all__DRAFT.json", encoding="utf-8"
     ) as f:
         metadata_all_draft = json.load(f)
-    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
+    tmp_dir = Path(DATASTORE_DIR) / "tmp"
     if os.path.isdir(tmp_dir):
-        raise LocalStorageError('tmp directory already exists')
+        raise LocalStorageError("tmp directory already exists")
     os.mkdir(tmp_dir)
+    _write_json(draft_version, tmp_dir / "draft_version.json", indent=2)
+    _write_json(metadata_all_draft, tmp_dir / "metadata_all__DRAFT.json")
     _write_json(
-        draft_version, tmp_dir / 'draft_version.json', indent=2
-    )
-    _write_json(
-        metadata_all_draft, tmp_dir / 'metadata_all__DRAFT.json'
-    )
-    _write_json(
-        datastore_versions, tmp_dir / 'datastore_versions.json', indent=2
+        datastore_versions, tmp_dir / "datastore_versions.json", indent=2
     )
 
 
@@ -378,29 +360,29 @@ def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
     Returns None if no released version in backup, else returns the
     latest release version number as dotted four part version.
     """
-    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
-    draft_version_backup = tmp_dir / 'draft_version.json'
-    metadata_all_draft_backup = tmp_dir / 'metadata_all__DRAFT.json'
-    datastore_versions_backup = tmp_dir / 'datastore_versions.json'
+    tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    draft_version_backup = tmp_dir / "draft_version.json"
+    metadata_all_draft_backup = tmp_dir / "metadata_all__DRAFT.json"
+    datastore_versions_backup = tmp_dir / "datastore_versions.json"
     backup_exists = (
-        os.path.isdir(tmp_dir) and
-        os.path.isfile(draft_version_backup) and
-        os.path.isfile(metadata_all_draft_backup) and
-        os.path.isfile(datastore_versions_backup)
+        os.path.isdir(tmp_dir)
+        and os.path.isfile(draft_version_backup)
+        and os.path.isfile(metadata_all_draft_backup)
+        and os.path.isfile(datastore_versions_backup)
     )
     if not backup_exists:
-        raise LocalStorageError('Missing tmp backup files')
+        raise LocalStorageError("Missing tmp backup files")
     try:
         datastore_versions = _read_json(datastore_versions_backup)
         shutil.move(draft_version_backup, DRAFT_VERSION_PATH)
         shutil.move(metadata_all_draft_backup, DRAFT_METADATA_ALL_PATH)
         shutil.move(datastore_versions_backup, DATASTORE_VERSIONS_PATH)
-        if datastore_versions['versions'] == []:
+        if datastore_versions["versions"] == []:
             return None
         else:
-            return datastore_versions['versions'][0]['version']
+            return datastore_versions["versions"][0]["version"]
     except ValidationError as e:
-        raise LocalStorageError('Invalid backup file') from e
+        raise LocalStorageError("Invalid backup file") from e
 
 
 def delete_temporary_backup() -> Union[None, LocalStorageError]:
@@ -409,20 +391,20 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
     exists. Raises `LocalStorageError` if there are any unrecognized files
     in the directory.
     """
-    tmp_dir = Path(DATASTORE_DIR) / 'tmp'
-    if not os.path.isdir(Path(DATASTORE_DIR) / 'tmp'):
+    tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    if not os.path.isdir(Path(DATASTORE_DIR) / "tmp"):
         return None
     for content in os.listdir(tmp_dir):
         if content not in [
-            'datastore_versions.json',
-            'metadata_all__DRAFT.json',
-            'draft_version.json'
+            "datastore_versions.json",
+            "metadata_all__DRAFT.json",
+            "draft_version.json",
         ]:
             raise LocalStorageError(
-                'Found unrecognized files and/or directories in the tmp '
-                'directory. Aborting tmp deletion.'
+                "Found unrecognized files and/or directories in the tmp "
+                "directory. Aborting tmp deletion."
             )
-    shutil.rmtree(Path(DATASTORE_DIR) / 'tmp')
+    shutil.rmtree(Path(DATASTORE_DIR) / "tmp")
 
 
 def archive_draft_version(version: str):
@@ -431,13 +413,13 @@ def archive_draft_version(version: str):
     * dataset_name: str - name of dataset draft
     * version: str - version of the archived draft
     """
-    archive_dir = Path(f'{DATASTORE_DIR}/archive')
+    archive_dir = Path(f"{DATASTORE_DIR}/archive")
     os.makedirs(archive_dir, exist_ok=True)
 
     timestamp = datetime.now()
 
     archived_draft_version_path = (
-        archive_dir / f'draft_version_{version}_{timestamp}.json'
+        archive_dir / f"draft_version_{version}_{timestamp}.json"
     )
     shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
 
@@ -446,13 +428,11 @@ def archive_input_files(dataset_name: str):
     """
     Archives the input folder files if not already archived
     """
-    archive_dir = INPUT_DIR / f'archive/{dataset_name}'
-    move_dir = INPUT_DIR / f'{dataset_name}'
+    archive_dir = INPUT_DIR / f"archive/{dataset_name}"
+    move_dir = INPUT_DIR / f"{dataset_name}"
     if not archive_dir.exists():
         os.makedirs(archive_dir, exist_ok=True)
-        shutil.copytree(
-            move_dir, archive_dir, dirs_exist_ok=True
-        )
+        shutil.copytree(move_dir, archive_dir, dirs_exist_ok=True)
         if os.path.isdir(move_dir):
             shutil.rmtree(move_dir)
 
@@ -461,6 +441,6 @@ def delete_archived_input(dataset_name: str):
     """
     Delete the archived dataset from archive directory.
     """
-    archive_dir: Path = INPUT_DIR / f'archive/{dataset_name}'
+    archive_dir: Path = INPUT_DIR / f"archive/{dataset_name}"
     if archive_dir.is_dir():
         shutil.rmtree(archive_dir)

@@ -16,5 +16,5 @@ __all__ = [
     "DataStructureUpdate",
     "MetadataAllDraft",
     "Datastore",
-    "Job"
+    "Job",
 ]

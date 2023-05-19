@@ -8,8 +8,8 @@ from job_executor.config import environment
 
 
 logger = logging.getLogger()
-ARCHIVE_DIR = Path(environment.get('INPUT_DIR')) / 'archive'
-WORKING_DIR = Path(environment.get('WORKING_DIR'))
+ARCHIVE_DIR = Path(environment.get("INPUT_DIR")) / "archive"
+WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
 def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
@@ -25,23 +25,23 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
             dataset_name,
             input_directory=str(ARCHIVE_DIR),
             working_directory=str(WORKING_DIR),
-            keep_temporary_files=True
+            keep_temporary_files=True,
         )
     except Exception as e:
-        logger.error(f'Error during validation: {str(e)}')
+        logger.error(f"Error during validation: {str(e)}")
         raise BuilderStepError(
-            'Unexpected error when validating dataset'
+            "Unexpected error when validating dataset"
         ) from e
     if validation_errors:
         for error in validation_errors:
             logger.error(error)
         raise BuilderStepError(
-            'Failed to validate dataset. '
-            'Resolve errors with the microdata-validator before uploading.'
+            "Failed to validate dataset. "
+            "Resolve errors with the microdata-validator before uploading."
         )
     return (
-        WORKING_DIR / f'{dataset_name}.csv',
-        WORKING_DIR / f'{dataset_name}.json'
+        WORKING_DIR / f"{dataset_name}.csv",
+        WORKING_DIR / f"{dataset_name}.json",
     )
 
 
@@ -58,18 +58,18 @@ def run_for_metadata(dataset_name: str) -> Path:
             dataset_name,
             input_directory=ARCHIVE_DIR,
             working_directory=WORKING_DIR,
-            keep_temporary_files=True
+            keep_temporary_files=True,
         )
     except Exception as e:
-        logger.error(f'Error during validation: {str(e)}')
+        logger.error(f"Error during validation: {str(e)}")
         raise BuilderStepError(
-            'Unexpected error when validating metadata'
+            "Unexpected error when validating metadata"
         ) from e
     if validation_errors:
         for error in validation_errors:
             logger.error(error)
         raise BuilderStepError(
-            'Failed to validate metadata. '
-            'Resolve errors with the microdata-validator before uploading.'
+            "Failed to validate metadata. "
+            "Resolve errors with the microdata-validator before uploading."
         )
-    return WORKING_DIR / f'{dataset_name}.json'
+    return WORKING_DIR / f"{dataset_name}.json"
