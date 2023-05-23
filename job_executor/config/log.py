@@ -16,6 +16,7 @@ class ContextFilter(logging.Filter):
     """
     This is a filter which injects contextual information into the log.
     """
+
     job_id = ""
 
     def __init__(self, job_id: str):
@@ -25,7 +26,7 @@ class ContextFilter(logging.Filter):
     def filter(self, record):
         # prefix record.msg instead of adding a new field
         # to be compliant with Kibana
-        record.msg = self.job_id + ': ' + str(record.msg)
+        record.msg = self.job_id + ": " + str(record.msg)
         return True
 
 
@@ -44,22 +45,22 @@ def configure_worker_logger(queue: Queue, job_id: str):
     logger.addFilter(log_filter)
 
     handlers = logger.handlers
-    logger.debug(f'Handlers: {len(handlers)}')
-    logger.debug(f'Handler 0: {handlers[0]}')
+    logger.debug(f"Handlers: {len(handlers)}")
+    logger.debug(f"Handler 0: {handlers[0]}")
     if len(handlers) == 2:
-        logger.debug(f'Handler 1: {handlers[1]}')
+        logger.debug(f"Handler 1: {handlers[1]}")
 
 
 def _get_project_meta():
-    with open('pyproject.toml', encoding='utf-8') as pyproject:
+    with open("pyproject.toml", encoding="utf-8") as pyproject:
         file_contents = pyproject.read()
 
-    return tomlkit.parse(file_contents)['tool']['poetry']
+    return tomlkit.parse(file_contents)["tool"]["poetry"]
 
 
 pkg_meta = _get_project_meta()
 service_name = "job-executor"
-host = environment.get('DOCKER_HOST_NAME')
+host = environment.get("DOCKER_HOST_NAME")
 command = json.dumps(sys.argv)
 
 
@@ -74,15 +75,15 @@ class CustomJSONLog(logging.Formatter):
         else:
             exc_info = record.exc_text
         return {
-            'exc_info': exc_info,
-            'filename': record.filename,
+            "exc_info": exc_info,
+            "filename": record.filename,
         }
 
     @classmethod
     def format_exception(cls, exc_info):
-        return ''.join(
-            traceback.format_exception(*exc_info)
-        ) if exc_info else ''
+        return (
+            "".join(traceback.format_exception(*exc_info)) if exc_info else ""
+        )
 
     def format(self, record):
         utcnow = datetime.utcnow()
@@ -93,16 +94,14 @@ class CustomJSONLog(logging.Formatter):
         if record.exc_info or record.exc_text:
             base_obj.update(self.get_exc_fields(record))
 
-        return json.dumps(
-            create_microdata_json_log(record, base_obj)
-        )
+        return json.dumps(create_microdata_json_log(record, base_obj))
 
 
 def create_microdata_json_log(record: logging.LogRecord, base_obj: dict):
     return {
-        "@timestamp": base_obj['written_at'],
+        "@timestamp": base_obj["written_at"],
         "command": command,
-        "error.stack": base_obj.get('exc_info'),
+        "error.stack": base_obj.get("exc_info"),
         "host": host,
         "message": record.getMessage(),
         "level": record.levelno,
@@ -110,6 +109,6 @@ def create_microdata_json_log(record: logging.LogRecord, base_obj: dict):
         "loggerName": record.name,
         "schemaVersion": "v3",
         "serviceName": service_name,
-        "serviceVersion": str(pkg_meta['version']),
-        "thread": record.threadName
+        "serviceVersion": str(pkg_meta["version"]),
+        "thread": record.threadName,
     }

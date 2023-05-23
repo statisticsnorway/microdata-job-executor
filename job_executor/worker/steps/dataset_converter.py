@@ -9,7 +9,7 @@ from job_executor.config import environment
 
 
 logger = logging.getLogger()
-WORKING_DIR = Path(environment.get('WORKING_DIR'))
+WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
 def _get_read_options():
@@ -17,12 +17,12 @@ def _get_read_options():
         skip_rows=0,
         encoding="utf8",
         column_names=[
-            'unit_id',
-            'value',
-            'start_year',
-            'start_epoch_days',
-            'stop_epoch_days'
-        ]
+            "unit_id",
+            "value",
+            "start_year",
+            "start_epoch_days",
+            "stop_epoch_days",
+        ],
     )
 
 
@@ -33,7 +33,7 @@ def _create_table(
         input_file=data_path,
         read_options=_get_read_options(),
         parse_options=csv_parse_options,
-        convert_options=csv_convert_options
+        convert_options=csv_convert_options,
     )
     return table
 
@@ -44,19 +44,19 @@ def _create_list_of_fields(data_type: str, partitioned: bool = False) -> list:
         LONG=pa.int64(),
         DOUBLE=pa.float64(),
         INSTANT=pa.int64(),
-        DATE=pa.int64()
+        DATE=pa.int64(),
     )
     if data_type.upper() not in types:
-        raise ValueError(f'Unknown datatype {data_type}')
+        raise ValueError(f"Unknown datatype {data_type}")
     fields = [
-        pa.field(name='unit_id', type=pa.uint64(), nullable=False),
-        pa.field(name='value', type=types[data_type.upper()], nullable=False),
-        pa.field(name='start_epoch_days', type=pa.int16(), nullable=False),
-        pa.field(name='stop_epoch_days', type=pa.int16(), nullable=False)
+        pa.field(name="unit_id", type=pa.uint64(), nullable=False),
+        pa.field(name="value", type=types[data_type.upper()], nullable=False),
+        pa.field(name="start_epoch_days", type=pa.int16(), nullable=False),
+        pa.field(name="stop_epoch_days", type=pa.int16(), nullable=False),
     ]
     if partitioned:
         start_year_field = [
-            pa.field(name='start_year', type=pa.string(), nullable=True)
+            pa.field(name="start_year", type=pa.string(), nullable=True)
         ]
         fields = start_year_field + fields
     return fields
@@ -69,11 +69,14 @@ def _create_table_for_simple_parquet(
     csv_convert_options = pv.ConvertOptions(
         column_types=data_schema,
         include_columns=[
-            "unit_id", "value", "start_epoch_days", "stop_epoch_days"
-        ]
+            "unit_id",
+            "value",
+            "start_epoch_days",
+            "stop_epoch_days",
+        ],
     )
     return _create_table(
-        csv_convert_options, pv.ParseOptions(delimiter=';'), data_path
+        csv_convert_options, pv.ParseOptions(delimiter=";"), data_path
     )
 
 
@@ -84,19 +87,22 @@ def _create_table_for_partitioned_parquet(
     csv_convert_options = pv.ConvertOptions(
         column_types=data_schema,
         include_columns=[
-            "unit_id", "value", "start_year",
-            "start_epoch_days", "stop_epoch_days"
-        ]
+            "unit_id",
+            "value",
+            "start_year",
+            "start_epoch_days",
+            "stop_epoch_days",
+        ],
     )
     return _create_table(
-        csv_convert_options, pv.ParseOptions(delimiter=';'), data_path
+        csv_convert_options, pv.ParseOptions(delimiter=";"), data_path
     )
 
 
 def _convert_csv_to_simple_parquet(
     dataset_name: str, csv_data_path: Path, data_type: str
 ) -> str:
-    parquet_file_path = WORKING_DIR / f'{dataset_name}__DRAFT.parquet'
+    parquet_file_path = WORKING_DIR / f"{dataset_name}__DRAFT.parquet"
     logger.info(
         f"Converts csv {csv_data_path} "
         f"to simple parquet {parquet_file_path}"
@@ -112,7 +118,7 @@ def _convert_csv_to_simple_parquet(
 def _convert_csv_to_partitioned_parquet(
     dataset_name: str, csv_data_path: Path, data_type: str
 ) -> str:
-    parquet_partition_path = WORKING_DIR / f'{dataset_name}__DRAFT'
+    parquet_partition_path = WORKING_DIR / f"{dataset_name}__DRAFT"
     logger.info(
         f"Converts csv {csv_data_path} "
         f"to partitioned parquet {parquet_partition_path}"
@@ -125,8 +131,8 @@ def _convert_csv_to_partitioned_parquet(
     pq.write_to_dataset(
         table,
         root_path=parquet_partition_path,
-        partition_cols=['start_year'],
-        metadata_collector=metadata_collector
+        partition_cols=["start_year"],
+        metadata_collector=metadata_collector,
     )
     logger.info("Converted csv to partitioned parquet successfully")
     return parquet_partition_path
@@ -136,7 +142,7 @@ def run(
     dataset_name: str,
     csv_data_path: Path,
     temporality_type: str,
-    data_type: str
+    data_type: str,
 ) -> str:
     """
     Converts a csv file to parquet format. Will partition the parquet
@@ -144,27 +150,26 @@ def run(
     """
     try:
         logger.info(
-            f'Converting {csv_data_path} to parquet, '
-            f'data_type: {data_type}, '
-            f'temporality_type: {temporality_type}'
+            f"Converting {csv_data_path} to parquet, "
+            f"data_type: {data_type}, "
+            f"temporality_type: {temporality_type}"
         )
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             parquet_path = _convert_csv_to_partitioned_parquet(
                 dataset_name, csv_data_path, data_type
             )
             logger.info(
-                'Converted csv to partitioned parquet and wrote to '
-                f'{parquet_path}'
+                "Converted csv to partitioned parquet and wrote to "
+                f"{parquet_path}"
             )
         else:
             parquet_path = _convert_csv_to_simple_parquet(
                 dataset_name, csv_data_path, data_type
             )
             logger.info(
-                'Converted csv to parquet and wrote to '
-                f'{parquet_path}'
+                "Converted csv to parquet and wrote to " f"{parquet_path}"
             )
         return parquet_path
     except Exception as e:
-        logger.error(f'Error during conversion: {str(e)}')
-        raise BuilderStepError('Failed to convert dataset') from e
+        logger.error(f"Error during conversion: {str(e)}")
+        raise BuilderStepError("Failed to convert dataset") from e
