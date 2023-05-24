@@ -28,10 +28,6 @@ def working_dir_metadata_draft_path(name: str):
     return f"{WORKING_DIR}/{name}__DRAFT.json"
 
 
-def draft_metadata_path(name: str):
-    return f"{DATASTORE_METADATA_DIR}/{name}/{name}__DRAFT.json"
-
-
 def draft_data_path(name: str):
     return f"{DATASTORE_DATA_DIR}/{name}/{name}__DRAFT.parquet"
 
@@ -58,8 +54,6 @@ def test_patch_metadata(requests_mock: RequestsMocker):
     datastore.patch_metadata(JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
-    with open(draft_metadata_path(DATASET_NAME), encoding="utf-8") as f:
-        sivstand_metadata = json.load(f)
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
         metadata_all_draft = json.load(f)
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -71,7 +65,21 @@ def test_patch_metadata(requests_mock: RequestsMocker):
         "releaseStatus": "DRAFT",
     } in draft_version["dataStructureUpdates"]
     assert draft_version["releaseTime"] > 1_000_000
-    assert sivstand_metadata in metadata_all_draft["dataStructures"]
+    assert any(
+        draft["name"] == DATASET_NAME
+        for draft in metadata_all_draft["dataStructures"]
+    )
+    released_metadata = next(
+        metadata.dict()
+        for metadata in datastore.metadata_all_latest
+        if metadata.name == DATASET_NAME
+    )
+    draft_metadata = next(
+        metadata.dict()
+        for metadata in datastore.metadata_all_draft
+        if metadata.name == DATASET_NAME
+    )
+    assert released_metadata != draft_metadata
 
 
 def test_add(requests_mock: RequestsMocker):
@@ -80,12 +88,14 @@ def test_add(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "FOEDESTED"
     DESCRIPTION = "første publisering"
+    with open(
+        working_dir_metadata_draft_path(DATASET_NAME), encoding="utf-8"
+    ) as f:
+        foedested_metadata = json.load(f)
     datastore.add(JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
-    with open(draft_metadata_path(DATASET_NAME), encoding="utf-8") as f:
-        foedested_metadata = json.load(f)
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
         metadata_all_draft = json.load(f)
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -111,10 +121,8 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(partitioned_draft_data_path(DATASET_NAME))
-    with open(draft_metadata_path(DATASET_NAME), encoding="utf-8") as f:
-        inntekt_metadata = json.load(f)
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
-        metadata_all_draft = json.load(f)
+        json.load(f)
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         draft_version = json.load(f)
 
@@ -125,7 +133,9 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
         "releaseStatus": "DRAFT",
     } in draft_version["dataStructureUpdates"]
     assert draft_version["releaseTime"] > 1_000_000
-    assert inntekt_metadata in metadata_all_draft["dataStructures"]
+    assert any(
+        [draft.name == DATASET_NAME for draft in datastore.metadata_all_draft]
+    )
 
 
 def test_change(requests_mock: RequestsMocker):
@@ -134,12 +144,14 @@ def test_change(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "oppdaterte data"
+    with open(
+        working_dir_metadata_draft_path(DATASET_NAME), encoding="utf-8"
+    ) as f:
+        foedested_metadata = json.load(f)
     datastore.change(JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
-    with open(draft_metadata_path(DATASET_NAME), encoding="utf-8") as f:
-        foedested_metadata = json.load(f)
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
         metadata_all_draft = json.load(f)
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -189,7 +201,6 @@ def test_delete_draft(requests_mock: RequestsMocker):
 
     assert not os.path.exists(draft_data_path(DATASET_NAME))
     assert not os.path.exists(partitioned_draft_data_path(DATASET_NAME))
-    assert not os.path.exists(draft_metadata_path(DATASET_NAME))
     assert not [
         update
         for update in draft_version["dataStructureUpdates"]
@@ -377,14 +388,18 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "SIVSTAND"
     # Previous interrupted run deleted metadata
-    os.remove(draft_metadata_path(DATASET_NAME))
+    datastore.metadata_all_draft.data_structures = [
+        draft
+        for draft in datastore.metadata_all_draft.data_structures
+        if draft.name != DATASET_NAME
+    ]
     datastore.delete_draft(JOB_ID, DATASET_NAME)
     assert len(requests_mock.request_history) == 2
     assert requests_mock.request_history[1].json() == {"status": "completed"}
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         draft_version = json.load(f)
 
-    assert not os.path.exists(draft_metadata_path(DATASET_NAME))
+    assert not os.path.exists(draft_data_path(DATASET_NAME))
     assert not [
         update
         for update in draft_version["dataStructureUpdates"]
