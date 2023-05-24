@@ -11,7 +11,6 @@ from job_executor.exception import LocalStorageError
 WORKING_DIR = os.environ["WORKING_DIR"]
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
-DATASTORE_METADATA_DIR = f"{DATASTORE_DIR}/metadata"
 
 DATASTORE_VERSIONS_PATH = f"{DATASTORE_DIR}/datastore/datastore_versions.json"
 DRAFT_METADATA_ALL_PATH = f"{DATASTORE_DIR}/datastore/metadata_all__draft.json"
@@ -119,8 +118,8 @@ def test_make_temp_directory():
     datastore_content = os.listdir(DATASTORE_DIR)
     local_storage.save_temporary_backup()
     datastore_content_backup = os.listdir(DATASTORE_DIR)
-    assert len(datastore_content) == 3
-    assert len(datastore_content_backup) == 4
+    assert len(datastore_content) == 2
+    assert len(datastore_content_backup) == 3
     tmp_dir = Path(DATASTORE_DIR) / "tmp"
     assert os.path.isdir(tmp_dir)
     tmp_actual_content = os.listdir(tmp_dir)
@@ -148,8 +147,8 @@ def test_delete_temp_directory():
     datastore_content = os.listdir(DATASTORE_DIR)
     local_storage.delete_temporary_backup()
     datastore_content_delete = os.listdir(DATASTORE_DIR)
-    assert len(datastore_content) == 4
-    assert len(datastore_content_delete) == 3
+    assert len(datastore_content) == 3
+    assert len(datastore_content_delete) == 2
     assert not os.path.isdir(Path(DATASTORE_DIR) / "tmp")
 
 
