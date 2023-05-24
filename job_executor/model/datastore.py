@@ -94,9 +94,6 @@ class Datastore:
                     releaseStatus="DRAFT",
                 )
             )
-            local_storage.write_metadata(
-                patched_metadata.dict(by_alias=True), dataset_name, "DRAFT"
-            )
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
             self._log(job_id, "Deleting temporary backup")
@@ -145,9 +142,6 @@ class Datastore:
                 **local_storage.get_working_dir_metadata(dataset_name)
             )
             local_storage.make_dataset_dir(dataset_name)
-            local_storage.write_metadata(
-                draft_metadata.dict(by_alias=True), dataset_name, "DRAFT"
-            )
             self.metadata_all_draft.add(draft_metadata)
             local_storage.move_working_dir_parquet_to_datastore(dataset_name)
             self._log(job_id, "completed")
@@ -192,9 +186,6 @@ class Datastore:
                     description=description,
                     releaseStatus="DRAFT",
                 )
-            )
-            local_storage.write_metadata(
-                draft_metadata.dict(by_alias=True), dataset_name, "DRAFT"
             )
             local_storage.move_working_dir_parquet_to_datastore(dataset_name)
             self._log(job_id, "completed")
@@ -278,8 +269,6 @@ class Datastore:
                 self.metadata_all_draft.add(released_metadata)
             if dataset_operation == "ADD":
                 self.metadata_all_draft.remove(dataset_name)
-            if dataset_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
-                local_storage.delete_metadata_draft(dataset_name)
             try:
                 if dataset_operation in ["ADD", "CHANGE"]:
                     local_storage.delete_parquet_draft(dataset_name)
@@ -369,18 +358,15 @@ class Datastore:
 
             if operation in ["PATCH_METADATA", "CHANGE", "ADD"]:
                 self._log(job_id, "Renaming metadata file")
-                released_metadata = (
-                    local_storage.rename_metadata_draft_to_release(
-                        dataset_name, new_version
-                    )
-                )
                 self._log(job_id, "Updating metadata into metadata_all")
                 new_metadata_datasets = [
                     dataset
                     for dataset in new_metadata_datasets
                     if dataset.name != dataset_name
                 ]
-                new_metadata_datasets.append(Metadata(**released_metadata))
+                new_metadata_datasets.append(
+                    self.metadata_all_draft.get(dataset_name)
+                )
             if operation in ["ADD", "CHANGE"]:
                 self._log(
                     job_id, "Renaming data file and updating data_versions"
