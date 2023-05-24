@@ -55,12 +55,10 @@ def _get_working_dir_draft_parquet_path(dataset_name: str):
 
 def make_dataset_dir(dataset_name: str) -> None:
     """
-    Creates sub-directories for dataset_name in the datastore /data and
-    /metadata directories.
+    Creates sub-directories for dataset_name in the datastore /data directory.
 
     * dataset_name: str - name of dataset
     """
-    os.makedirs(DATASTORE_DIR / f"metadata/{dataset_name}", exist_ok=True)
     os.makedirs(DATASTORE_DIR / f"data/{dataset_name}", exist_ok=True)
 
 
@@ -186,71 +184,6 @@ def get_working_dir_input_metadata(dataset_name: str) -> dict:
     * dataset_name: str - name of dataset
     """
     return _read_json(WORKING_DIR / f"{dataset_name}.json")
-
-
-def get_metadata(dataset_name: str, version: str) -> dict:
-    """
-    Returns the datastore metadata json file for the given version as a dict.
-
-    * dataset_name: str - name of dataset
-    * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
-    """
-    return _read_json(
-        DATASTORE_DIR
-        / (f"metadata/{dataset_name}/{dataset_name}__{version}.json")
-    )
-
-
-def write_metadata(metadata: dict, dataset_name: str, version: str):
-    """
-    Writes given dict to a metadata json file to the appropriate
-    datastore directory named with the given version.
-
-    * metadata: dict - metadata dict
-    * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
-    """
-    os.makedirs(DATASTORE_DIR / f"metadata/{dataset_name}", exist_ok=True)
-    _write_json(
-        metadata,
-        (
-            DATASTORE_DIR
-            / f"metadata/{dataset_name}/{dataset_name}__{version}.json"
-        ),
-    )
-
-
-def delete_metadata_draft(dataset_name: str) -> None:
-    """
-    Deletes the metadata draft file for the given dataset_name.
-
-    * dataset_name: str - name of dataset
-    """
-    metadata_path = (
-        f"{DATASTORE_DIR}/metadata/{dataset_name}/{dataset_name}__DRAFT.json"
-    )
-    if os.path.isfile(metadata_path):
-        os.remove(metadata_path)
-
-
-def rename_metadata_draft_to_release(dataset_name: str, version: str) -> dict:
-    """
-    Renames the metadata DRAFT file for the given dataset_name, with the
-    given version.
-
-    * dataset_name: str - name of dataset
-    * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
-    """
-    metadata_draft_path = (
-        f"{DATASTORE_DIR}/metadata/{dataset_name}/"
-        f"{dataset_name}__DRAFT.json"
-    )
-    metadata_release_path = metadata_draft_path.replace("DRAFT", version)
-    shutil.move(metadata_draft_path, metadata_release_path)
-    with open(metadata_release_path, encoding="utf-8") as f:
-        return json.load(f)
 
 
 def rename_parquet_draft_to_release(dataset_name: str, version: str) -> str:

@@ -80,8 +80,8 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                     f"{job_id}: Update type is {update_type}. "
                     f"Reverting {dataset} data file to DRAFT"
                 )
-                dataset_data_dir = datastore_dir / "data" / dataset
-                partitioned_data_path = (
+                dataset_data_dir: Path = datastore_dir / "data" / dataset
+                partitioned_data_path: Path = (
                     dataset_data_dir / f"{dataset}__{bumped_version_data}"
                 )
                 if partitioned_data_path.exists():
@@ -106,20 +106,6 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                             data_path,
                             dataset_data_dir / f"{dataset}__DRAFT.parquet",
                         )
-
-            dataset_metadata_dir = datastore_dir / "metadata" / dataset
-            metadata_path = (
-                dataset_metadata_dir
-                / f"{dataset}__{bumped_version_metadata}.json"
-            )
-            if metadata_path.exists():
-                logger.info(
-                    f"{job_id}: Renaming {metadata_path} back to draft"
-                )
-                shutil.move(
-                    metadata_path,
-                    dataset_metadata_dir / f"{dataset}__DRAFT.json",
-                )
         logger.info(f"{job_id}: Deleting temporary backup")
         local_storage.delete_temporary_backup()
     except LocalStorageError as e:
@@ -186,8 +172,6 @@ def rollback_manager_phase_import_job(
     logger.info(f"{job_id}: Restoring files from temporary backup")
     local_storage.restore_from_temporary_backup()
 
-    logger.info(f"{job_id}: Deleting metadata draft file")
-    local_storage.delete_metadata_draft(dataset_name)
     if operation in ["ADD", "CHANGE"]:
         logger.info(f"{job_id}: Deleting data file/directory")
         local_storage.delete_parquet_draft(dataset_name)

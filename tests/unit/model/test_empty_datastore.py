@@ -11,7 +11,6 @@ JOB_SERVICE_URL = os.getenv("JOB_SERVICE_URL")
 JOB_ID = "123-123-123-123"
 DATASTORE_DIR = Path(os.getenv("DATASTORE_DIR"))
 UTDANNING_DATA_DIR = DATASTORE_DIR / "data" / "UTDANNING"
-UTDANNING_METADATA_DIR = DATASTORE_DIR / "metadata" / "UTDANNING"
 DATASTORE_INFO_DIR = DATASTORE_DIR / "datastore"
 DATASTORE_VERSIONS = DATASTORE_INFO_DIR / "datastore_versions.json"
 DRAFT_VERSION = DATASTORE_INFO_DIR / "draft_version.json"
@@ -69,4 +68,3 @@ def test_bump_empty_datastore(requests_mock: RequestsMocker):
 
     # check renamed files
     assert os.listdir(UTDANNING_DATA_DIR) == ["UTDANNING__1_0.parquet"]
-    assert os.listdir(UTDANNING_METADATA_DIR) == ["UTDANNING__1_0_0.json"]

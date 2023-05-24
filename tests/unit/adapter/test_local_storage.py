@@ -11,7 +11,6 @@ from job_executor.exception import LocalStorageError
 WORKING_DIR = os.environ["WORKING_DIR"]
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
-DATASTORE_METADATA_DIR = f"{DATASTORE_DIR}/metadata"
 
 DATASTORE_VERSIONS_PATH = f"{DATASTORE_DIR}/datastore/datastore_versions.json"
 DRAFT_METADATA_ALL_PATH = f"{DATASTORE_DIR}/datastore/metadata_all__draft.json"
@@ -21,16 +20,10 @@ METADATA_ALL_PATH = f"{DATASTORE_DIR}/datastore/metadata_all__1_0_0.json"
 
 DRAFT_DATASET_NAME = "UTDANNING"
 DRAFT_DATA_PATH = f"{DATASTORE_DATA_DIR}/UTDANNING/UTDANNING__DRAFT.parquet"
-DRAFT_METADATA_PATH = (
-    f"{DATASTORE_METADATA_DIR}/UTDANNING/UTDANNING__DRAFT.json"
-)
 
 DRAFT2_DATASET_NAME = "BRUTTO_INNTEKT"
 RELEASED_DRAFT2_DATA_PATH = (
     f"{DATASTORE_DATA_DIR}/BRUTTO_INNTEKT/BRUTTO_INNTEKT__1_1"
-)
-RELEASED_DRAFT2_METADATA_PATH = (
-    f"{DATASTORE_METADATA_DIR}/BRUTTO_INNTEKT/BRUTTO_INNTEKT__1_1_0.json"
 )
 
 WORKING_DIR_DATASET = "FOEDESTED"
@@ -58,7 +51,6 @@ def read_json(file_path: str) -> dict:
 def test_make_dataset_dir():
     local_storage.make_dataset_dir(WORKING_DIR_DATASET)
     assert os.path.isdir(f"{DATASTORE_DATA_DIR}/{WORKING_DIR_DATASET}")
-    assert os.path.isdir(f"{DATASTORE_METADATA_DIR}/{WORKING_DIR_DATASET}")
 
 
 def test_get_data_versions():
@@ -103,32 +95,9 @@ def test_write_metadata_all():
     assert read_json(METADATA_ALL_PATH) == {}
 
 
-def test_get_metadata():
-    assert local_storage.get_metadata(
-        DRAFT_DATASET_NAME, "DRAFT"
-    ) == read_json(DRAFT_METADATA_PATH)
-
-
-def test_write_metadata():
-    local_storage.write_metadata({}, DRAFT_DATASET_NAME, "DRAFT")
-    assert read_json(DRAFT_METADATA_PATH) == {}
-
-
-def test_delete_metadata_draft():
-    local_storage.delete_metadata_draft(DRAFT_DATASET_NAME)
-    assert not os.path.isfile(DRAFT_METADATA_PATH)
-
-
 def delete_parquet_draft():
     local_storage.delete_parquet_draft(DRAFT_DATASET_NAME)
     assert not os.path.isfile(DRAFT_DATA_PATH)
-
-
-def test_rename_metadata_draft_to_release():
-    local_storage.rename_metadata_draft_to_release(
-        DRAFT2_DATASET_NAME, "1_1_0"
-    )
-    assert os.path.isfile(RELEASED_DRAFT2_METADATA_PATH)
 
 
 def test_rename_parquet_draft_to_release():
@@ -149,8 +118,8 @@ def test_make_temp_directory():
     datastore_content = os.listdir(DATASTORE_DIR)
     local_storage.save_temporary_backup()
     datastore_content_backup = os.listdir(DATASTORE_DIR)
-    assert len(datastore_content) == 3
-    assert len(datastore_content_backup) == 4
+    assert len(datastore_content) == 2
+    assert len(datastore_content_backup) == 3
     tmp_dir = Path(DATASTORE_DIR) / "tmp"
     assert os.path.isdir(tmp_dir)
     tmp_actual_content = os.listdir(tmp_dir)
@@ -178,8 +147,8 @@ def test_delete_temp_directory():
     datastore_content = os.listdir(DATASTORE_DIR)
     local_storage.delete_temporary_backup()
     datastore_content_delete = os.listdir(DATASTORE_DIR)
-    assert len(datastore_content) == 4
-    assert len(datastore_content_delete) == 3
+    assert len(datastore_content) == 3
+    assert len(datastore_content_delete) == 2
     assert not os.path.isdir(Path(DATASTORE_DIR) / "tmp")
 
 
