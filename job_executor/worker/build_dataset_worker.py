@@ -8,12 +8,12 @@ from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.worker.steps import (
+    dataset_decryptor,
     dataset_validator,
     dataset_converter,
     dataset_transformer,
     dataset_enricher,
     dataset_pseudonymizer,
-    dataset_decrypt,
 )
 
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
@@ -43,7 +43,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             f"{dataset_name} and job {job_id}"
         )
 
-        dataset_decrypt.decrypt_and_extract_files(dataset_name)
+        dataset_decryptor.unpackage(dataset_name)
 
         local_storage.archive_input_files(dataset_name)
         job_service.update_job_status(job_id, "validating")

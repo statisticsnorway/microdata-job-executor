@@ -40,7 +40,10 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
             "Failed to validate dataset. "
             "Resolve errors with the microdata-validator before uploading."
         )
-    validated_path = save_validated_file(dataset_name)
+
+    validated_path = Path(WORKING_DIR / f"{dataset_name}.csv").rename(
+        Path(WORKING_DIR / f"{dataset_name}_validated.csv")
+    )
     return (
         validated_path,
         WORKING_DIR / f"{dataset_name}.json",
@@ -76,20 +79,3 @@ def run_for_metadata(dataset_name: str) -> Path:
             "Resolve errors with the microdata-validator before uploading."
         )
     return WORKING_DIR / f"{dataset_name}.json"
-
-
-def save_validated_file(dataset_name: str) -> Path:
-    """
-    Moves the validated file from the input directory to the working directory.
-    """
-    try:
-        logger.info(f"Moving validated file for dataset {dataset_name}")
-        file_path = WORKING_DIR / f"{dataset_name}.csv"
-        output_file_path = WORKING_DIR / f"{dataset_name}_validated.csv"
-        file_path.rename(output_file_path)
-        return output_file_path
-    except Exception as e:
-        logger.error(f"Error during moving validated file: {str(e)}")
-        raise BuilderStepError(
-            "Unexpected error when moving validated file"
-        ) from e
