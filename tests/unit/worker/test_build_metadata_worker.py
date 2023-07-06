@@ -3,6 +3,7 @@ import os
 import shutil
 from multiprocessing import Queue
 from pathlib import Path
+from microdata_tools import package_dataset
 
 from pytest_mock import MockerFixture
 from requests_mock import Mocker as RequestsMocker
@@ -10,6 +11,10 @@ from requests_mock import Mocker as RequestsMocker
 from job_executor.worker.steps import dataset_validator
 from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_metadata_worker import run_worker, local_storage
+from tests.unit.worker.test_build_dataset_worker import _create_rsa_public_key
+
+RSA_KEYS_DIRECTORY = Path("tests/resources/rsa_keys")
+# RSA_KEYS_DIRECTORY = Path(environment.get("RSA_DIR")) # TODO: Use this instead of the line above
 
 
 DATASET_NAME = "KJOENN"
@@ -46,6 +51,15 @@ def setup_function():
     if os.path.isdir("tests/resources_backup"):
         shutil.rmtree("tests/resources_backup")
     shutil.copytree("tests/resources", "tests/resources_backup")
+
+    _create_rsa_public_key(RSA_KEYS_DIRECTORY)
+    for dataset in os.listdir(INPUT_DIR):
+        shutil.move(f"{INPUT_DIR}/{dataset}", f"{INPUT_DIR}/raw/{dataset}")
+        package_dataset(
+            rsa_keys_dir=RSA_KEYS_DIRECTORY,
+            dataset_dir=Path(f"{INPUT_DIR}/raw/{dataset}"),
+            output_dir=Path(f"{INPUT_DIR}"),
+        )
 
 
 def teardown_function():

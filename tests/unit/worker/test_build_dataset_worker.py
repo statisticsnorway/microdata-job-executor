@@ -10,6 +10,15 @@ from job_executor.worker.steps import dataset_validator
 from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_dataset_worker import run_worker, local_storage
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
+
+from microdata_tools import package_dataset
+
+RSA_KEYS_DIRECTORY = Path("tests/resources/rsa_keys")
+# RSA_KEYS_DIRECTORY = Path(environment.get("RSA_DIR")) # TODO: Use this instead of the line above
+
 
 PARTITIONED_DATASET_NAME = "INNTEKT"
 DATASET_NAME = "BOSTED"
@@ -236,6 +245,15 @@ def setup_function():
         shutil.rmtree("tests/resources_backup")
     shutil.copytree("tests/resources", "tests/resources_backup")
 
+    _create_rsa_public_key(RSA_KEYS_DIRECTORY)
+    for dataset in os.listdir(INPUT_DIR):
+        shutil.move(f"{INPUT_DIR}/{dataset}", f"{INPUT_DIR}/raw/{dataset}")
+        package_dataset(
+            rsa_keys_dir=RSA_KEYS_DIRECTORY,
+            dataset_dir=Path(f"{INPUT_DIR}/raw/{dataset}"),
+            output_dir=Path(f"{INPUT_DIR}"),
+        )
+
 
 def teardown_function():
     shutil.rmtree("tests/resources")
@@ -275,8 +293,9 @@ def test_import(requests_mock: RequestsMocker):
         f"{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}",
         json=PSEUDONYM_DICT,
     )
+
     run_worker(JOB_ID, DATASET_NAME, Queue())
-    assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}")
+    assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}.tar")
     assert os.path.isfile(f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.parquet")
     assert os.path.isfile(f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.json")
     requests_made = [
@@ -341,3 +360,32 @@ def test_delete_working_dir_on_failure(
     spy.assert_called()
     working_dir_content = os.listdir(local_storage.WORKING_DIR)
     assert DATASET_NAME not in ",".join(working_dir_content)
+
+
+def _create_rsa_public_key(target_dir: Path):
+    if not target_dir.exists():
+        os.makedirs(target_dir)
+
+    private_key = rsa.generate_private_key(
+        public_exponent=65537, key_size=2048, backend=default_backend()
+    )
+
+    public_key = private_key.public_key()
+
+    microdata_public_key_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+
+    public_key_location = target_dir / "microdata_public_key.pem"
+    with open(public_key_location, "wb") as file:
+        file.write(microdata_public_key_pem)
+
+    with open(target_dir / "microdata_private_key.pem", "wb") as file:
+        file.write(
+            private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+        )
