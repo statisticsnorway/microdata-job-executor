@@ -1,11 +1,11 @@
 from pathlib import Path
+from job_executor.config import environment
 from job_executor.adapter.local_storage import INPUT_DIR
 
 from microdata_tools import unpackage_dataset
 
 
-RSA_KEYS_DIRECTORY = Path("tests/resources/rsa_keys")
-# RSA_KEYS_DIRECTORY = Path(environment.get("RSA_DIR")) # TODO: Use this instead of the line above
+RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
 
 def decrypt_and_extract_files(dataset_name: str):

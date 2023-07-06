@@ -6,6 +6,7 @@ from multiprocessing import Queue
 from pytest_mock import MockerFixture
 from requests_mock import Mocker as RequestsMocker
 
+from job_executor.config import environment
 from job_executor.worker.steps import dataset_validator
 from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_dataset_worker import run_worker, local_storage
@@ -16,8 +17,7 @@ from cryptography.hazmat.backends import default_backend
 
 from microdata_tools import package_dataset
 
-RSA_KEYS_DIRECTORY = Path("tests/resources/rsa_keys")
-# RSA_KEYS_DIRECTORY = Path(environment.get("RSA_DIR")) # TODO: Use this instead of the line above
+RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
 
 PARTITIONED_DATASET_NAME = "INNTEKT"
