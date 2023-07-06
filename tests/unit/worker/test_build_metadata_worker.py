@@ -86,9 +86,9 @@ def test_import(requests_mock: RequestsMocker):
         for req in requests_mock.request_history
     ]
     assert requests_made == EXPECTED_REQUESTS
-    assert (
-        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
-    ).exists()
 
     assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}")
     assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}.json")
+    assert not (
+        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
+    ).exists()
