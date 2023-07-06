@@ -255,6 +255,21 @@ def delete_working_dir_file(file_path: Path) -> None:
         os.remove(file_path)
 
 
+def delete_working_dir_dir(dir_path: Path) -> None:
+    """
+    Deletes a directory from the working directory.
+    Intended to clean up left-over directories.
+    Raises a LocalStorageError if dirpath is not in
+    the working directory.
+
+    * dir_path: str - name of temporary directory
+    """
+    if not str(dir_path).startswith(str(WORKING_DIR)):
+        raise LocalStorageError(f"Dirpath {dir_path} is not in {WORKING_DIR}")
+    if dir_path.is_dir():
+        shutil.rmtree(dir_path)
+
+
 def save_temporary_backup() -> None:
     """
     Backs up metadata_all__DRAFT.json, datastore_versions.json and
