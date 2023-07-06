@@ -5,7 +5,11 @@ from time import perf_counter
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.adapter import job_service, local_storage
-from job_executor.worker.steps import dataset_validator, dataset_transformer
+from job_executor.worker.steps import (
+    dataset_validator,
+    dataset_transformer,
+    dataset_decrypt,
+)
 
 WORKING_DIR = local_storage.WORKING_DIR
 
@@ -26,6 +30,8 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             f"Starting metadata worker for dataset "
             f"{dataset_name} and job {job_id}"
         )
+
+        dataset_decrypt.decrypt_and_extract_files(dataset_name)
 
         local_storage.archive_input_files(dataset_name)
         job_service.update_job_status(job_id, "validating")

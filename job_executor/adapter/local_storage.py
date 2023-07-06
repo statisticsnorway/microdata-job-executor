@@ -362,7 +362,7 @@ def archive_input_files(dataset_name: str):
     Archives the input folder files if not already archived
     """
     archive_dir = INPUT_DIR / f"archive/{dataset_name}"
-    move_dir = INPUT_DIR / f"{dataset_name}"
+    move_dir = INPUT_DIR / f"decrypted/{dataset_name}"
     if not archive_dir.exists():
         os.makedirs(archive_dir, exist_ok=True)
         shutil.copytree(move_dir, archive_dir, dirs_exist_ok=True)

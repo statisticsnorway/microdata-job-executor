@@ -13,6 +13,7 @@ from job_executor.worker.steps import (
     dataset_transformer,
     dataset_enricher,
     dataset_pseudonymizer,
+    dataset_decrypt,
 )
 
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
@@ -22,6 +23,7 @@ def _clean_working_dir(dataset_name: str):
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
         WORKING_DIR / f"{dataset_name}.csv",
+        WORKING_DIR / f"{dataset_name}_validated.csv",
         WORKING_DIR / f"{dataset_name}_enriched.csv",
         WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
         WORKING_DIR / f"{dataset_name}.db",
@@ -41,11 +43,15 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             f"{dataset_name} and job {job_id}"
         )
 
+        dataset_decrypt.decrypt_and_extract_files(dataset_name)
+
         local_storage.archive_input_files(dataset_name)
         job_service.update_job_status(job_id, "validating")
-        data_file_path, metadata_file_path = dataset_validator.run_for_dataset(
-            dataset_name
-        )
+
+        (
+            validated_data_file_path,
+            metadata_file_path,
+        ) = dataset_validator.run_for_dataset(dataset_name)
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
         )
@@ -65,9 +71,9 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         job_service.update_job_status(job_id, "pseudonymizing")
         pseudonymized_data_path = dataset_pseudonymizer.run(
-            data_file_path, transformed_metadata, job_id
+            validated_data_file_path, transformed_metadata, job_id
         )
-        local_storage.delete_working_dir_file(data_file_path)
+        local_storage.delete_working_dir_file(validated_data_file_path)
         job_service.update_job_status(job_id, "enriching")
         enriched_data_path = dataset_enricher.run(
             pseudonymized_data_path, temporal_coverage, data_type
