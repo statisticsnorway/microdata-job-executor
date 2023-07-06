@@ -14,5 +14,4 @@ def unpackage(dataset_name: str):
         packaged_file_path=file_path,
         rsa_keys_dir=RSA_KEYS_DIRECTORY,
         output_dir=WORKING_DIR,
-        archive_dir=Path(f"{INPUT_DIR}/archive"),
     )
