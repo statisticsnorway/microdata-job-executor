@@ -307,7 +307,9 @@ def test_import(requests_mock: RequestsMocker):
         assert request_matches(
             requests_made[index], EXPECTED_REQUESTS_IMPORT[index]
         )
-    assert (Path(INPUT_DIR_ARCHIVE) / f"{DATASET_NAME}").exists()
+    assert (
+        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
+    ).exists()
 
 
 def request_matches(request: dict, other: dict):

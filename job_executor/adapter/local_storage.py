@@ -359,21 +359,20 @@ def archive_draft_version(version: str):
 
 def archive_input_files(dataset_name: str):
     """
-    Archives the input folder files if not already archived
+    Archives the input .tar files if not already archived
     """
-    archive_dir = INPUT_DIR / f"archive/{dataset_name}"
-    move_dir = INPUT_DIR / f"decrypted/{dataset_name}"
+    archive_dir = INPUT_DIR / "archive"
+    tar_file = INPUT_DIR / f"{dataset_name}.tar"
     if not archive_dir.exists():
         os.makedirs(archive_dir, exist_ok=True)
-        shutil.copytree(move_dir, archive_dir, dirs_exist_ok=True)
-        if os.path.isdir(move_dir):
-            shutil.rmtree(move_dir)
+    if tar_file.exists():
+        shutil.move(str(tar_file), str(archive_dir))
 
 
 def delete_archived_input(dataset_name: str):
     """
-    Delete the archived dataset from archive directory.
+    Delete the archived .tar file from the archive directory.
     """
-    archive_dir: Path = INPUT_DIR / f"archive/{dataset_name}"
-    if archive_dir.is_dir():
-        shutil.rmtree(archive_dir)
+    archived_file: Path = INPUT_DIR / f"archive/{dataset_name}.tar"
+    if archived_file.is_file():
+        os.remove(archived_file)

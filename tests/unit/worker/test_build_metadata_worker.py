@@ -88,7 +88,9 @@ def test_import(requests_mock: RequestsMocker):
         for req in requests_mock.request_history
     ]
     assert requests_made == EXPECTED_REQUESTS
-    assert (Path(INPUT_DIR_ARCHIVE) / f"{DATASET_NAME}").exists()
+    assert (
+        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
+    ).exists()
 
 
 def test_delete_working_dir_file_is_called(

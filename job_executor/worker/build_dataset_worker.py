@@ -1,6 +1,7 @@
 import logging
 from multiprocessing import Queue
 from pathlib import Path
+import shutil
 from time import perf_counter
 
 from job_executor.adapter import job_service, local_storage
@@ -23,13 +24,16 @@ def _clean_working_dir(dataset_name: str):
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
         WORKING_DIR / f"{dataset_name}.csv",
-        WORKING_DIR / f"{dataset_name}_validated.csv",
         WORKING_DIR / f"{dataset_name}_enriched.csv",
         WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
         WORKING_DIR / f"{dataset_name}.db",
+        WORKING_DIR / dataset_name,
     ]
     for file_path in generated_files:
-        local_storage.delete_working_dir_file(file_path)
+        if file_path.is_dir():
+            shutil.rmtree(file_path)
+        else:
+            local_storage.delete_working_dir_file(file_path)
 
 
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
@@ -43,9 +47,10 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
             f"{dataset_name} and job {job_id}"
         )
 
+        local_storage.archive_input_files(dataset_name)
+
         dataset_decryptor.unpackage(dataset_name)
 
-        local_storage.archive_input_files(dataset_name)
         job_service.update_job_status(job_id, "validating")
 
         (
