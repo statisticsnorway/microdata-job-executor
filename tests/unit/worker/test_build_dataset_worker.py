@@ -296,10 +296,13 @@ def test_import(requests_mock: RequestsMocker):
     assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}.tar")
     assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}")
     assert not os.path.exists(f"{WORKING_DIR}/{DATASET_NAME}")
-    assert not os.path.isdir(f"{WORKING_DIR}/{DATASET_NAME}.csv")
-    assert not os.path.isdir(f"{WORKING_DIR}/{DATASET_NAME}.json")
+    assert not os.path.isfile(f"{WORKING_DIR}/{DATASET_NAME}.csv")
+    assert not os.path.isfile(f"{WORKING_DIR}/{DATASET_NAME}.json")
     assert os.path.isfile(f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.parquet")
     assert os.path.isfile(f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.json")
+    assert not (
+        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
+    ).exists()
     requests_made = [
         {"method": req.method, "json": req.json(), "url": req.url}
         for req in requests_mock.request_history
@@ -309,10 +312,6 @@ def test_import(requests_mock: RequestsMocker):
         assert request_matches(
             requests_made[index], EXPECTED_REQUESTS_IMPORT[index]
         )
-
-    assert not (
-        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
-    ).exists()
 
 
 def request_matches(request: dict, other: dict):
