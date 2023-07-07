@@ -1,7 +1,6 @@
 import logging
 from multiprocessing import Queue
 from pathlib import Path
-import shutil
 from time import perf_counter
 
 from job_executor.adapter import job_service, local_storage
@@ -31,7 +30,7 @@ def _clean_working_dir(dataset_name: str):
     ]
     for file_path in generated_files:
         if file_path.is_dir():
-            shutil.rmtree(file_path)
+            local_storage.delete_working_dir_dir(file_path)
         else:
             local_storage.delete_working_dir_file(file_path)
 

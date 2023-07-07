@@ -15,9 +15,15 @@ WORKING_DIR = local_storage.WORKING_DIR
 
 
 def _clean_working_dir(dataset_name: str):
-    generated_files = [WORKING_DIR / f"{dataset_name}.json"]
+    generated_files = [
+        WORKING_DIR / f"{dataset_name}.json",
+        WORKING_DIR / dataset_name,
+    ]
     for file_path in generated_files:
-        local_storage.delete_working_dir_file(file_path)
+        if file_path.is_dir():
+            local_storage.delete_working_dir_dir(file_path)
+        else:
+            local_storage.delete_working_dir_file(file_path)
 
 
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
