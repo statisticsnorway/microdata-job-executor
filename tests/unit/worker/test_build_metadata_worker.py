@@ -23,6 +23,11 @@ EXPECTED_DIR = "tests/resources/expected"
 JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
 EXPECTED_REQUESTS = [
     {
+        "json": {"status": "decrypting"},
+        "method": "PUT",
+        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+    },
+    {
         "json": {"status": "validating"},
         "method": "PUT",
         "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",

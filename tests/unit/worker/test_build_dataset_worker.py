@@ -89,6 +89,11 @@ PSEUDONYM_DICT = {
 
 EXPECTED_REQUESTS_PARTITIONED = [
     {
+        "json": {"status": "decrypting"},
+        "method": "PUT",
+        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+    },
+    {
         "json": {"status": "validating"},
         "method": "PUT",
         "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
@@ -183,6 +188,11 @@ EXPECTED_REQUESTS_PARTITIONED = [
 ]
 
 EXPECTED_REQUESTS_IMPORT = [
+    {
+        "json": {"status": "decrypting"},
+        "method": "PUT",
+        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+    },
     {
         "json": {"status": "validating"},
         "method": "PUT",
