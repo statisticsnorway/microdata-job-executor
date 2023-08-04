@@ -11,6 +11,7 @@ from job_executor.model import DatastoreVersion
 class JobStatus(str, Enum):
     QUEUED = "queued"
     INITIATED = "initiated"
+    DECRYPTING = "decrypting"
     VALIDATING = "validating"
     TRANSFORMING = "transforming"
     PSEUDONYMIZING = "pseudonymizing"

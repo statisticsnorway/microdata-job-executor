@@ -39,6 +39,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         local_storage.archive_input_files(dataset_name)
 
+        job_service.update_job_status(job_id, "decrypting")
         dataset_decryptor.unpackage(dataset_name)
 
         job_service.update_job_status(job_id, "validating")
