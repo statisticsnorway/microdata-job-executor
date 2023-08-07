@@ -6,6 +6,7 @@ def _initialize_environment() -> dict:
         "INPUT_DIR": os.environ["INPUT_DIR"],
         "WORKING_DIR": os.environ["WORKING_DIR"],
         "DATASTORE_DIR": os.environ["DATASTORE_DIR"],
+        "RSA_KEYS_DIRECTORY": os.environ["RSA_KEYS_DIRECTORY"],
         "PSEUDONYM_SERVICE_URL": os.environ["PSEUDONYM_SERVICE_URL"],
         "JOB_SERVICE_URL": os.environ["JOB_SERVICE_URL"],
         "NUMBER_OF_WORKERS": int(os.environ["NUMBER_OF_WORKERS"]),

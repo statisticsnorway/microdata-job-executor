@@ -3,13 +3,16 @@ import os
 import shutil
 from multiprocessing import Queue
 from pathlib import Path
+from microdata_tools import package_dataset
 
-from pytest_mock import MockerFixture
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.worker.steps import dataset_validator
+from job_executor.config import environment
 from job_executor.adapter.local_storage import INPUT_DIR
-from job_executor.worker.build_metadata_worker import run_worker, local_storage
+from job_executor.worker.build_metadata_worker import run_worker
+from tests.unit.worker.test_build_dataset_worker import _create_rsa_public_key
+
+RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
 
 DATASET_NAME = "KJOENN"
@@ -19,6 +22,11 @@ INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
 EXPECTED_DIR = "tests/resources/expected"
 JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
 EXPECTED_REQUESTS = [
+    {
+        "json": {"status": "decrypting"},
+        "method": "PUT",
+        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+    },
     {
         "json": {"status": "validating"},
         "method": "PUT",
@@ -47,6 +55,15 @@ def setup_function():
         shutil.rmtree("tests/resources_backup")
     shutil.copytree("tests/resources", "tests/resources_backup")
 
+    _create_rsa_public_key(RSA_KEYS_DIRECTORY)
+    for dataset in os.listdir(INPUT_DIR):
+        shutil.move(f"{INPUT_DIR}/{dataset}", f"{INPUT_DIR}/raw/{dataset}")
+        package_dataset(
+            rsa_keys_dir=RSA_KEYS_DIRECTORY,
+            dataset_dir=Path(f"{INPUT_DIR}/raw/{dataset}"),
+            output_dir=Path(f"{INPUT_DIR}"),
+        )
+
 
 def teardown_function():
     shutil.rmtree("tests/resources")
@@ -74,36 +91,9 @@ def test_import(requests_mock: RequestsMocker):
         for req in requests_mock.request_history
     ]
     assert requests_made == EXPECTED_REQUESTS
-    assert (Path(INPUT_DIR_ARCHIVE) / f"{DATASET_NAME}").exists()
 
-
-def test_delete_working_dir_file_is_called(
-    requests_mock: RequestsMocker, mocker: MockerFixture
-):
-    spy = mocker.patch.object(local_storage, "delete_working_dir_file")
-    requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
-    )
-    run_worker(JOB_ID, DATASET_NAME, Queue())
-    spy.assert_called()
-    assert not Path(f"{WORKING_DIR}/{DATASET_NAME}").exists()
-
-
-def test_delete_working_dir_on_failure(
-    requests_mock: RequestsMocker, mocker: MockerFixture
-):
-    spy = mocker.patch.object(local_storage, "delete_working_dir_file")
-    requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
-    )
-    run_worker(JOB_ID, DATASET_NAME, Queue())
-    spy.assert_called()
-    mocker.patch.object(
-        dataset_validator,
-        "run_for_dataset",
-        side_effect=Exception("mocked error"),
-    )
-    run_worker(JOB_ID, DATASET_NAME, Queue())
-    spy.assert_called()
-    os.listdir(local_storage.WORKING_DIR)
-    assert not Path(f"{WORKING_DIR}/{DATASET_NAME}").exists()
+    assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}")
+    assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}.json")
+    assert not (
+        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
+    ).exists()

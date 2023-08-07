@@ -5,15 +5,25 @@ from time import perf_counter
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.adapter import job_service, local_storage
-from job_executor.worker.steps import dataset_validator, dataset_transformer
+from job_executor.worker.steps import (
+    dataset_decryptor,
+    dataset_validator,
+    dataset_transformer,
+)
 
 WORKING_DIR = local_storage.WORKING_DIR
 
 
 def _clean_working_dir(dataset_name: str):
-    generated_files = [WORKING_DIR / f"{dataset_name}.json"]
+    generated_files = [
+        WORKING_DIR / f"{dataset_name}.json",
+        WORKING_DIR / dataset_name,
+    ]
     for file_path in generated_files:
-        local_storage.delete_working_dir_file(file_path)
+        if file_path.is_dir():
+            local_storage.delete_working_dir_dir(file_path)
+        else:
+            local_storage.delete_working_dir_file(file_path)
 
 
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
@@ -28,6 +38,10 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         )
 
         local_storage.archive_input_files(dataset_name)
+
+        job_service.update_job_status(job_id, "decrypting")
+        dataset_decryptor.unpackage(dataset_name)
+
         job_service.update_job_status(job_id, "validating")
         metadata_file_path = dataset_validator.run_for_metadata(dataset_name)
         input_metadata = local_storage.get_working_dir_input_metadata(
@@ -35,10 +49,12 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         )
         description = input_metadata["dataRevision"]["description"][0]["value"]
         job_service.update_description(job_id, description)
+        local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
 
         job_service.update_job_status(job_id, "transforming")
         dataset_transformer.run(metadata_file_path)
         local_storage.delete_working_dir_file(metadata_file_path)
+        local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
     except BuilderStepError as e:
         error_message = "Failed during building metdata"
