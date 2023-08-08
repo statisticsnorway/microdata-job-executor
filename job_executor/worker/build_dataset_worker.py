@@ -22,7 +22,7 @@ WORKING_DIR = Path(environment.get("WORKING_DIR"))
 def _clean_working_dir(dataset_name: str):
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
-        WORKING_DIR / f"{dataset_name}.csv",
+        WORKING_DIR / f"{dataset_name}.parquet",
         WORKING_DIR / f"{dataset_name}_enriched.csv",
         WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
         WORKING_DIR / dataset_name,
