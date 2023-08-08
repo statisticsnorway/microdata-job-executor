@@ -25,7 +25,6 @@ def _clean_working_dir(dataset_name: str):
         WORKING_DIR / f"{dataset_name}.csv",
         WORKING_DIR / f"{dataset_name}_enriched.csv",
         WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
-        WORKING_DIR / f"{dataset_name}.db",
         WORKING_DIR / dataset_name,
     ]
     for file_path in generated_files:
@@ -59,9 +58,6 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         ) = dataset_validator.run_for_dataset(dataset_name)
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
-        )
-        local_storage.delete_working_dir_file(
-            WORKING_DIR / f"{dataset_name}.db"
         )
         description = input_metadata["dataRevision"]["description"][0]["value"]
         job_service.update_description(job_id, description)
