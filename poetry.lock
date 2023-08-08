@@ -411,13 +411,13 @@ files = [
 
 [[package]]
 name = "microdata-tools"
-version = "0.4.0"
+version = "0.5.0"
 description = "Tools for the microdata.no platform"
 optional = false
 python-versions = ">=3.7.2,<4.0"
 files = [
-    {file = "microdata_tools-0.4.0-py3-none-any.whl", hash = "sha256:37942d6d9236c050a24a9b2c4aaef28334b104cd9ee0053df1d5a6af35d6cc79"},
-    {file = "microdata_tools-0.4.0.tar.gz", hash = "sha256:28db2843fa915c1e9bae623d0b9e2885d17073d8ec70bc0e040e0277448f5056"},
+    {file = "microdata_tools-0.5.0-py3-none-any.whl", hash = "sha256:88c9b407fa1aa22af9b27f639965d1fa63933bbb77fa467150fe820a82f57358"},
+    {file = "microdata_tools-0.5.0.tar.gz", hash = "sha256:6684e82085b932a7ed4f5deaf765a0b078cb5f6f71b9757a0d4fbd9107f8b635"},
 ]
 
 [package.dependencies]
@@ -936,4 +936,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "55151482cba9a036419ea5f8d1fc745b06aa981ddf30efbf934329d66bbd4f10"
+content-hash = "4ec436bfb7b07d006d2c332882d8ae0055563ef1fa8d762bfee0829216e68b3e"
