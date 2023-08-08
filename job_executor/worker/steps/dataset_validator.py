@@ -1,14 +1,14 @@
-from pathlib import Path
 import logging
+from pathlib import Path
 from typing import Tuple
-from microdata_validator import validate, validate_metadata
+
+from microdata_tools import validate_dataset, validate_metadata
 
 from job_executor.exception import BuilderStepError
 from job_executor.config import environment
 
 
 logger = logging.getLogger()
-
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
@@ -21,7 +21,7 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
     """
     validation_errors = []
     try:
-        validation_errors = validate(
+        validation_errors = validate_dataset(
             dataset_name,
             input_directory=str(WORKING_DIR),
             working_directory=str(WORKING_DIR),
@@ -42,7 +42,7 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
         )
 
     return (
-        WORKING_DIR / f"{dataset_name}.csv",
+        WORKING_DIR / f"{dataset_name}.parquet",
         WORKING_DIR / f"{dataset_name}.json",
     )
 
