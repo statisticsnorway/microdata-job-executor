@@ -10,9 +10,8 @@ from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.worker.steps import (
     dataset_decryptor,
     dataset_validator,
-    dataset_converter,
     dataset_transformer,
-    dataset_enricher,
+    dataset_partitioner,
     dataset_pseudonymizer,
 )
 
@@ -23,7 +22,6 @@ def _clean_working_dir(dataset_name: str):
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
         WORKING_DIR / f"{dataset_name}.parquet",
-        WORKING_DIR / f"{dataset_name}_enriched.csv",
         WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
         WORKING_DIR / dataset_name,
     ]
@@ -50,8 +48,11 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         job_service.update_job_status(job_id, "decrypting")
         dataset_decryptor.unpackage(dataset_name)
 
+        # TODO: microdata-tools should produce the start_year field
+        #       conditionally based on temporality_type
+        #       post a PR in microdata_tools because we should expect
+        #       that after this step
         job_service.update_job_status(job_id, "validating")
-
         (
             validated_data_file_path,
             metadata_file_path,
@@ -68,26 +69,30 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         local_storage.delete_working_dir_file(metadata_file_path)
 
         temporality_type = transformed_metadata.temporality
-        temporal_coverage = transformed_metadata.temporal_coverage.dict()
-        data_type = transformed_metadata.measure_variable.data_type
 
         job_service.update_job_status(job_id, "pseudonymizing")
         pseudonymized_data_path = dataset_pseudonymizer.run(
             validated_data_file_path, transformed_metadata, job_id
-        )
+        )  # TODO: consider rewriting a bit, and add test
         local_storage.delete_working_dir_file(validated_data_file_path)
-        job_service.update_job_status(job_id, "enriching")
-        enriched_data_path = dataset_enricher.run(
-            pseudonymized_data_path, temporal_coverage, data_type
-        )
-        local_storage.delete_working_dir_file(pseudonymized_data_path)
+
         job_service.update_job_status(job_id, "converting")
-        dataset_converter.run(
-            dataset_name, enriched_data_path, temporality_type, data_type
-        )
-        local_storage.delete_working_dir_file(enriched_data_path)
+        # TODO:
+        # status/accumulated => partition
+        #   * then: delete parquet onefile
+        # event/fixed => rename parquet file til DATASETNAME_DRAFT.parquet
+        if temporality_type in ["STATUS", "ACCUMULATED"]:
+            # TODO: write unit tests for dataset_partitioner
+            dataset_partitioner.run(pseudonymized_data_path)
+            local_storage.delete_working_dir_file(pseudonymized_data_path)
+        else:
+            # TODO: rename file from pseudonymized_data_path to
+            # DATASETNAME_DRAFT.parquet
+            ...
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
+        # TODO: make sure all the test_build_dataset_worker run as before unchanged (?)
+        # TODO: consider adding more tests to compensate for the loss of converter tests
         logger.info("Dataset built successfully")
     except BuilderStepError as e:
         logger.error(str(e))
