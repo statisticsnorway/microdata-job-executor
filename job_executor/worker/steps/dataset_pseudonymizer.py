@@ -2,10 +2,12 @@ import logging
 from pathlib import Path
 from typing import Tuple, Union
 
-import microdata_validator
+import microdata_tools
+import pyarrow
+from pyarrow import dataset, compute, parquet
 
-from job_executor.exception import BuilderStepError
 from job_executor.adapter import pseudonym_service
+from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
 
 logger = logging.getLogger()
@@ -20,186 +22,97 @@ def _get_unit_types(
     )
 
 
-def _pseudonymize_identifier_only(
-    input_csv_path: Path, unit_id_type: str, job_id: str
-) -> Path:
-    unique_identifiers = set()
-    with open(input_csv_path, newline="", encoding="utf8") as csv_file:
-        for line in csv_file:
-            unit_id = line.strip().split(";")[1]
-            unique_identifiers.add(unit_id)
-    identifier_to_pseudonym = pseudonym_service.pseudonymize(
-        list(unique_identifiers), unit_id_type, job_id
-    )
-    output_csv_path = (
-        input_csv_path.parent / f"{input_csv_path.stem}_pseudonymized.csv"
-    )
-    target_file = open(output_csv_path, "w", newline="", encoding="utf-8")
-    with open(input_csv_path, newline="", encoding="utf-8") as csv_file:
-        for line in csv_file:
-            row = line.strip().split(";")
-            line_number: int = row[0]
-            unit_id: str = row[1]
-            value: str = row[2]
-            start_date: str = row[3]
-            stop_date: str = row[4]
-            target_file.write(
-                ";".join(
-                    [
-                        str(line_number),
-                        str(identifier_to_pseudonym[unit_id]),
-                        value,
-                        start_date,
-                        stop_date,
-                    ]
-                )
-                + "\n"
-            )
-    target_file.close()
-    return output_csv_path
-
-
-def _pseudonymize_measure_only(
-    input_csv_path: Path, unit_id_type: str, job_id: str
-) -> Path:
-    unique_measure_values = set()
-    with open(input_csv_path, newline="", encoding="utf-8") as csv_file:
-        for line in csv_file:
-            value = line.strip().split(";")[2]
-            unique_measure_values.add(value)
-    value_to_pseudonym = pseudonym_service.pseudonymize(
-        list(unique_measure_values), unit_id_type, job_id
-    )
-    output_csv_path = (
-        input_csv_path.parent / f"{input_csv_path.stem}_pseudonymized.csv"
-    )
-    target_file = open(output_csv_path, "w", newline="", encoding="utf-8")
-    with open(input_csv_path, newline="", encoding="utf-8") as csv_file:
-        for line in csv_file:
-            row = line.strip().split(";")
-            line_number: int = row[0]
-            unit_id: str = row[1]
-            value: str = row[2]
-            start_date: str = row[3]
-            stop_date: str = row[4]
-            target_file.write(
-                ";".join(
-                    [
-                        str(line_number),
-                        unit_id,
-                        str(value_to_pseudonym[value]),
-                        start_date,
-                        stop_date,
-                    ]
-                )
-                + "\n"
-            )
-    target_file.close()
-    return output_csv_path
-
-
-def _pseudonymize_identifier_and_measure(
-    input_csv_path: Path,
-    identifier_unit_id_type: str,
-    measure_unit_id_type: str,
+def _pseudonymize_column(
+    input_dataset: dataset.FileSystemDataset,
+    column_name: str,
+    unit_id_type: str,
     job_id: str,
-) -> Path:
-    unique_idents = set()
-    unique_measure_values = set()
-    with open(input_csv_path, newline="", encoding="utf-8") as csv_file:
-        for line in csv_file:
-            row = line.strip().split(";")
-            unit_id = row[1]
-            value = row[2]
-            unique_idents.add(unit_id)
-            unique_measure_values.add(value)
+) -> pyarrow.Array:
+    identifiers_table = input_dataset.to_table(columns=[column_name])
+    unique_identifiers = compute.unique(
+        identifiers_table[column_name]
+    ).to_pylist()
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
-        list(unique_idents), identifier_unit_id_type, job_id
+        unique_identifiers, unit_id_type, job_id
     )
-    value_to_pseudonym = pseudonym_service.pseudonymize(
-        list(unique_measure_values), measure_unit_id_type, job_id
-    )
-    output_csv_path = (
-        input_csv_path.parent / f"{input_csv_path.stem}_pseudonymized.csv"
-    )
-    target_file = open(output_csv_path, "w", newline="", encoding="utf-8")
-    with open(input_csv_path, newline="", encoding="utf-8") as csv_file:
-        for line in csv_file:
-            row = line.strip().split(";")
-            line_number: int = row[0]
-            unit_id: str = row[1]
-            value: str = row[2]
-            start_date: str = row[3]
-            stop_date: str = row[4]
-            target_file.write(
-                ";".join(
-                    [
-                        str(line_number),
-                        str(identifier_to_pseudonym[unit_id]),
-                        str(value_to_pseudonym[value]),
-                        start_date,
-                        stop_date,
-                    ]
-                )
-                + "\n"
-            )
-    target_file.close()
-    return output_csv_path
+    return [
+        identifier_to_pseudonym[identifier]
+        for identifier in identifiers_table[column_name].to_pylist()
+    ]
 
 
-def _pseudonymize_csv(
-    input_csv_path: Path,
+def _pseudonymize(
+    input_parquet_path: Path,
     identifier_unit_id_type: Union[str, None],
     measure_unit_id_type: Union[str, None],
     job_id: str,
 ) -> Path:
-    if identifier_unit_id_type and not measure_unit_id_type:
-        logger.info("Pseudonymizing identifier")
-        return _pseudonymize_identifier_only(
-            input_csv_path, identifier_unit_id_type, job_id
+    # TODO: consider rewriting more explicit easier to read code
+    input_dataset = dataset.dataset(input_parquet_path)
+    unit_id_pseudonyms = (
+        None
+        if identifier_unit_id_type is None
+        else _pseudonymize_column(
+            input_dataset, "unit_id", identifier_unit_id_type, job_id
         )
-    elif measure_unit_id_type and not identifier_unit_id_type:
-        logger.info("Pseudonymizing measure")
-        return _pseudonymize_measure_only(
-            input_csv_path, measure_unit_id_type, job_id
+    )
+    value_pseudonyms = (
+        None
+        if measure_unit_id_type is None
+        else _pseudonymize_column(
+            input_dataset, "value", measure_unit_id_type, job_id
         )
-    elif identifier_unit_id_type and measure_unit_id_type:
-        logger.info("Pseudonymizing identifier and measure")
-        return _pseudonymize_identifier_and_measure(
-            input_csv_path,
-            identifier_unit_id_type,
-            measure_unit_id_type,
-            job_id,
-        )
-    else:
-        logger.info("No pseudonymization")
-        return input_csv_path
+    )
+    column_names = input_dataset.schema.names
+    if unit_id_pseudonyms:
+        column_names = [name for name in column_names if name != "unit_id"]
+    if value_pseudonyms:
+        column_names = [name for name in column_names if name != "values"]
+    unprocessed_columns = input_dataset.to_table(columns=column_names)
+    pseudonymized_table = pyarrow.Table.from_arrays(
+        [
+            column
+            for column in [
+                unit_id_pseudonyms,
+                value_pseudonyms,
+                *[unprocessed_columns[name] for name in column_names],
+            ]
+            if column is not None
+        ],
+        input_dataset.schema.names,
+    )
+    output_path = (
+        input_parquet_path.parent
+        / f"{str(input_parquet_path.stem)}_pseudonymized.parquet"
+    )
+    parquet.write_table(pseudonymized_table, output_path)
+    return output_path
 
 
-def run(input_csv_path: Path, metadata: Metadata, job_id: str) -> Path:
+def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
     """
     Pseudonymizes the identifier column of the dataset. Requests pseudonyms
     from an external service and replaces all values in the identifier column.
     """
     try:
-        logger.info(f"Pseudonymizing data {input_csv_path}")
+        logger.info(f"Pseudonymizing data {input_parquet_path}")
         identifier_unit_type, measure_unit_type = _get_unit_types(metadata)
         identifier_unit_id_type = (
             None
             if identifier_unit_type is None
-            else microdata_validator.get_unit_id_type_for_unit_type(
+            else microdata_tools.get_unit_id_type_for_unit_type(
                 identifier_unit_type
             )
         )
         measure_unit_id_type = (
             None
             if measure_unit_type is None
-            else microdata_validator.get_unit_id_type_for_unit_type(
+            else microdata_tools.get_unit_id_type_for_unit_type(
                 measure_unit_type
             )
         )
-        output_file = _pseudonymize_csv(
-            input_csv_path,
+        output_file = _pseudonymize(
+            input_parquet_path,
             identifier_unit_id_type,
             measure_unit_id_type,
             job_id,
