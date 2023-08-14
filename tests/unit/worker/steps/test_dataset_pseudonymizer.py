@@ -14,10 +14,13 @@ from job_executor.adapter import pseudonym_service
 
 
 TABLE_SIZE = 1000
+UNIT_ID_INPUT = [f"i{count}" for count in range(TABLE_SIZE)]
+UNIT_ID_PSEUDONYMIZED = [f"{count}" for count in range(TABLE_SIZE)]
+
 INPUT_TABLE = pyarrow.Table.from_pydict(
     {
-        "unit_id": [f"i{count}" for count in range(TABLE_SIZE)],
-        "value": ["a"] * TABLE_SIZE,
+        "unit_id": UNIT_ID_INPUT,
+        "value": UNIT_ID_INPUT,
         "start_year": [2020] * TABLE_SIZE,
         "start_epoch_days": [18200] * TABLE_SIZE,
         "stop_epoch_days": [18201] * TABLE_SIZE,
@@ -26,13 +29,24 @@ INPUT_TABLE = pyarrow.Table.from_pydict(
 
 EXPECTED_TABLE = pyarrow.Table.from_pydict(
     {
-        "unit_id": [f"{count}" for count in range(TABLE_SIZE)],
-        "value": ["a"] * TABLE_SIZE,
+        "unit_id": UNIT_ID_PSEUDONYMIZED,
+        "value": UNIT_ID_INPUT,
         "start_year": [2020] * TABLE_SIZE,
         "start_epoch_days": [18200] * TABLE_SIZE,
         "stop_epoch_days": [18201] * TABLE_SIZE,
     }
 )
+
+EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_PSEUDONYMIZED,
+        "value": UNIT_ID_PSEUDONYMIZED,
+        "start_year": [2020] * TABLE_SIZE,
+        "start_epoch_days": [18200] * TABLE_SIZE,
+        "stop_epoch_days": [18201] * TABLE_SIZE,
+    }
+)
+
 
 WORKING_DIR = Path("tests/resources/worker/steps/pseudonymizer")
 INPUT_PARQUET_PATH = WORKING_DIR / "input.parquet"
@@ -47,6 +61,11 @@ with open(
     f"{WORKING_DIR}/metadata_invalid_unit_type.json", encoding="utf-8"
 ) as file:
     INVALID_METADATA = Metadata(**json.load(file))
+with open(
+    f"{WORKING_DIR}/metadata_psudonymize_unit_id_and_value.json",
+    encoding="utf-8",
+) as file:
+    PSEUDONYMIZE_UNIT_ID_AND_VALUE_METADATA = Metadata(**json.load(file))
 
 
 @pytest.fixture(autouse=True)
@@ -89,15 +108,31 @@ def test_pseudonymizer(mocker):
 
 
 def test_pseudonymizer_unit_id_and_value(mocker):
-    # TODO: write this test
-    # * metadata that contains a unit_id in both identifier and measure
-    # * input dataset that makes sense with metadata
-    # * expect identifiers to be switched with pseudonyms in both
-    #   unit_id and value columns
     mocker.patch.object(
         pseudonym_service, "pseudonymize", return_value=PSEUDONYM_DICT
     )
-    ...
+
+    # Pseudonymize
+    pseudonymized_output_path = dataset_pseudonymizer.run(
+        INPUT_PARQUET_PATH,
+        PSEUDONYMIZE_UNIT_ID_AND_VALUE_METADATA,
+        JOB_ID,
+    )
+    actual_table = dataset.dataset(pseudonymized_output_path).to_table()
+
+    # Validate the content
+    column_names = [
+        "unit_id",
+        "value",
+        "start_year",
+        "start_epoch_days",
+        "stop_epoch_days",
+    ]
+    for column_name in column_names:
+        assert (
+            actual_table[column_name].to_pylist()
+            == EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED[column_name].to_pylist()
+        )
 
 
 def test_pseudonymizer_adapter_failure():
