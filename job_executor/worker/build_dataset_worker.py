@@ -74,8 +74,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         job_service.update_job_status(job_id, "pseudonymizing")
         pseudonymized_data_path = dataset_pseudonymizer.run(
             validated_data_file_path, transformed_metadata, job_id
-        )  # TODO: consider rewriting a bit, and add test
-        # (if measure has unitType and identifier has unittype) *2
+        )
         local_storage.delete_working_dir_file(validated_data_file_path)
 
         job_service.update_job_status(job_id, "converting")
