@@ -170,11 +170,14 @@ EXPECTED_REQUESTS_PARTITIONED = [
             "?unit_id_type=FNR&job_id=1234-1234-1234-1234"
         ),
     },
-    {
-        "json": {"status": "enriching"},
-        "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
-    },
+    # TODO:
+    # need to update status messages
+    # also need to update in job service t
+    # {
+    #     "json": {"status": "enriching"},
+    #     "method": "PUT",
+    #     "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+    # },
     {
         "json": {"status": "converting"},
         "method": "PUT",
@@ -230,11 +233,14 @@ EXPECTED_REQUESTS_IMPORT = [
             "?unit_id_type=FNR&job_id=1234-1234-1234-1234"
         ),
     },
-    {
-        "json": {"status": "enriching"},
-        "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
-    },
+    # TODO:
+    # need to update status messages
+    # also need to update in job service t
+    # {
+    #     "json": {"status": "enriching"},
+    #     "method": "PUT",
+    #     "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+    # },
     {
         "json": {"status": "converting"},
         "method": "PUT",
