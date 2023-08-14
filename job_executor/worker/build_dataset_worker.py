@@ -1,5 +1,6 @@
 import logging
 from multiprocessing import Queue
+import os
 from pathlib import Path
 from time import perf_counter
 
@@ -51,7 +52,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         # TODO: microdata-tools should produce the start_year field
         #       conditionally based on temporality_type
         #       post a PR in microdata_tools because we should expect
-        #       that after this step
+        #       that after this step *1
         job_service.update_job_status(job_id, "validating")
         (
             validated_data_file_path,
@@ -74,25 +75,23 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         pseudonymized_data_path = dataset_pseudonymizer.run(
             validated_data_file_path, transformed_metadata, job_id
         )  # TODO: consider rewriting a bit, and add test
+        # (if measure has unitType and identifier has unittype) *2
         local_storage.delete_working_dir_file(validated_data_file_path)
 
         job_service.update_job_status(job_id, "converting")
-        # TODO:
-        # status/accumulated => partition
-        #   * then: delete parquet onefile
-        # event/fixed => rename parquet file til DATASETNAME_DRAFT.parquet
         if temporality_type in ["STATUS", "ACCUMULATED"]:
-            # TODO: write unit tests for dataset_partitioner
-            dataset_partitioner.run(pseudonymized_data_path)
+            dataset_partitioner.run(pseudonymized_data_path, dataset_name)
             local_storage.delete_working_dir_file(pseudonymized_data_path)
         else:
-            # TODO: rename file from pseudonymized_data_path to
-            # DATASETNAME_DRAFT.parquet
-            ...
+            target_path = os.path.join(
+                os.path.dirname(pseudonymized_data_path),
+                f"{dataset_name}__DRAFT.parquet",
+            )
+            os.rename(pseudonymized_data_path, target_path)
+
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
-        # TODO: make sure all the test_build_dataset_worker run as before unchanged (?)
-        # TODO: consider adding more tests to compensate for the loss of converter tests
+        # TODO: consider adding more tests to compensate for the loss of converter tests *2
         logger.info("Dataset built successfully")
     except BuilderStepError as e:
         logger.error(str(e))

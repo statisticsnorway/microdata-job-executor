@@ -1,13 +1,15 @@
 from pathlib import Path
 
 from pyarrow import dataset
+from pyarrow import parquet
 
 
-def run(data_path: Path):
-    # TODO:
-    # Partitioning logic:
-    # Look up how it is done in old dataset_converter.py step
-    # We know that this is called only for datasets with
-    # temporality_type in ["STATUS", "ACCUMULATED"]
-    dataset.dataset(data_path).to_table()
-    ...
+def run(data_path: Path, dataset_name: str):
+    table = dataset.dataset(data_path).to_table()
+
+    output_dir = data_path.parent / f"{dataset_name}__DRAFT"
+
+    # Write dataset partitioned by 'start_year'
+    parquet.write_to_dataset(
+        table, root_path=output_dir, partition_cols=["start_year"]
+    )
