@@ -53,6 +53,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         #       conditionally based on temporality_type
         #       post a PR in microdata_tools because we should expect
         #       that after this step *1
+        # TODO: microdata-tools-0.6.0 produces start_year only on STATUS & ACCUMULATED
         job_service.update_job_status(job_id, "validating")
         (
             validated_data_file_path,
@@ -77,7 +78,9 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         )
         local_storage.delete_working_dir_file(validated_data_file_path)
 
-        job_service.update_job_status(job_id, "converting")
+        # TODO: update job status
+        # TODO: check job-service start_year
+        job_service.update_job_status(job_id, "partitioning")
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             dataset_partitioner.run(pseudonymized_data_path, dataset_name)
             local_storage.delete_working_dir_file(pseudonymized_data_path)

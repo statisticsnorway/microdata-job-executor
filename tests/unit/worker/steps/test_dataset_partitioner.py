@@ -55,31 +55,32 @@ def teardown_function():
 
 def test_partitioner(mocker):
     # test files with temporality_type in ["STATUS", "ACCUMULATED"]:
-    # end result of this is:
-    #  dataset_name__DRAFT/start_year=2020.parquet
-    #  dataset_name__DRAFT/start_year=2021.parquet
-    #  dataset_name__DRAFT/start_year=2022.parquet
     dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
     dataset_partitioner.run(dataset_path, "input")
     output_dir = dataset_path.parent / "input__DRAFT"
 
     assert output_dir.exists()
-    # for year in [2020, 2021, 2022]:
-    #     partition_path = output_dir / f"start_year={year}.parquet"
-    #     assert partition_path.exists()
+    # Check each year's subdirectory
+    for year in [2020, 2021, 2022]:
+        partition_path = output_dir / f"start_year={year}"
 
-    #     # Step 4: Load data from each partition & verify data
-    #     table_from_partition = pyarrow.parquet.read_table(partition_path)
-    #     assert all(
-    #         value == year
-    #         for value in table_from_partition.column("start_year")
-    #     )
-    #     assert len(table_from_partition) == 1000  # Each year has 1000 records
+        # 1. Verify the subdirectory exists
+        assert partition_path.exists() and partition_path.is_dir()
+
+        # 2. Verify each subdirectory contains exactly one file
+        files = list(partition_path.iterdir())
+        assert len(files) == 1
+
+        # Load the parquet file and check its length
+        table_from_partition = pyarrow.parquet.read_table(files[0])
+        assert len(table_from_partition) == 1000  # Each year has 1000 records
+
+        # column names are the same
 
 
 def test_partitioner_no_partions(mocker):
     # test files without  if temporality_type in ["STATUS", "ACCUMULATED"]:
-    # end result of this is dataset_name__DRAFT.parquet.
+    #
     assert True
     ...
 
