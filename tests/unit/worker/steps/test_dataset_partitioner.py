@@ -7,6 +7,7 @@ import pyarrow
 from pyarrow import parquet
 
 from job_executor.worker.steps import dataset_partitioner
+from job_executor.exception import BuilderStepError
 
 
 WORKING_DIR = Path("tests/resources/worker/steps/partitioner")
@@ -75,16 +76,22 @@ def test_partitioner(mocker):
         table_from_partition = pyarrow.parquet.read_table(files[0])
         assert len(table_from_partition) == 1000  # Each year has 1000 records
 
-        # column names are the same
+        # column names are the same except for the partition column
+        assert table_from_partition.column_names == [
+            "unit_id",
+            "value",
+            "start_epoch_days",
+            "stop_epoch_days",
+        ]
 
 
-def test_partitioner_no_partions(mocker):
-    # test files without  if temporality_type in ["STATUS", "ACCUMULATED"]:
-    #
-    assert True
-    ...
+def test_partitioner_missing_start_year(mocker):
+    # remove start_year column from input table
+    input_table = INPUT_TABLE.remove_column(2)
+    parquet.write_table(
+        input_table, WORKING_DIR / "input_pseudonymized.parquet"
+    )
 
-
-def test_partitioner_failure():
-    assert True
-    ...
+    dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
+    with pytest.raises(BuilderStepError):
+        dataset_partitioner.run(dataset_path, "input")
