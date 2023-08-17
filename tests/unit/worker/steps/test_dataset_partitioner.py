@@ -42,6 +42,9 @@ def setup_function():
     if os.path.isdir(f"{WORKING_DIR}_backup"):
         shutil.rmtree(f"{WORKING_DIR}_backup")
 
+    if not os.path.isdir(WORKING_DIR):
+        os.mkdir(WORKING_DIR)
+
     shutil.copytree(WORKING_DIR, f"{WORKING_DIR}_backup")
 
     parquet.write_table(
