@@ -27,12 +27,6 @@ INPUT_TABLE = pyarrow.Table.from_pydict(
 )
 
 
-# with open(
-#     f"{WORKING_DIR}/metadata_partition.json", encoding="utf-8"
-# ) as file:
-#     METADATA_PARTITIONER = Metadata(**json.load(file))
-
-
 @pytest.fixture(autouse=True)
 def set_working_dir_partitioner(monkeypatch):
     monkeypatch.setenv("WORKING_DIR", str(WORKING_DIR))
@@ -58,7 +52,6 @@ def teardown_function():
 
 
 def test_partitioner(mocker):
-    # test files with temporality_type in ["STATUS", "ACCUMULATED"]:
     dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
     dataset_partitioner.run(dataset_path, "input")
     output_dir = dataset_path.parent / "input__DRAFT"
@@ -75,11 +68,11 @@ def test_partitioner(mocker):
         files = list(partition_path.iterdir())
         assert len(files) == 1
 
-        # Load the parquet file and check its length
+        # 3. Load the parquet file and check its length
         table_from_partition = pyarrow.parquet.read_table(files[0])
         assert len(table_from_partition) == 1000  # Each year has 1000 records
 
-        # column names are the same except for the partition column
+        # 4. column names are the same except for the partition column
         assert table_from_partition.column_names == [
             "unit_id",
             "value",

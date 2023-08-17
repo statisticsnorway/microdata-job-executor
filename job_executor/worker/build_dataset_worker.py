@@ -49,11 +49,6 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         job_service.update_job_status(job_id, "decrypting")
         dataset_decryptor.unpackage(dataset_name)
 
-        # TODO: microdata-tools should produce the start_year field
-        #       conditionally based on temporality_type
-        #       post a PR in microdata_tools because we should expect
-        #       that after this step *1
-        # TODO: microdata-tools-0.6.0 produces start_year only on STATUS & ACCUMULATED
         job_service.update_job_status(job_id, "validating")
         (
             validated_data_file_path,
@@ -78,8 +73,6 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         )
         local_storage.delete_working_dir_file(validated_data_file_path)
 
-        # TODO: update job status
-        # TODO: check job-service start_year
         job_service.update_job_status(job_id, "partitioning")
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             dataset_partitioner.run(pseudonymized_data_path, dataset_name)
@@ -93,7 +86,6 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
-        # TODO: consider adding more tests to compensate for the loss of converter tests *2
         logger.info("Dataset built successfully")
     except BuilderStepError as e:
         logger.error(str(e))
