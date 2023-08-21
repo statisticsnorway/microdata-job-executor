@@ -44,6 +44,15 @@ EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED = pyarrow.Table.from_pydict(
     }
 )
 
+EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_INPUT,
+        "value": UNIT_ID_PSEUDONYMIZED,
+        "start_epoch_days": [18200] * TABLE_SIZE,
+        "stop_epoch_days": [18201] * TABLE_SIZE,
+    }
+)
+
 
 WORKING_DIR = Path("tests/resources/worker/steps/pseudonymizer")
 INPUT_PARQUET_PATH = WORKING_DIR / "input.parquet"
@@ -62,6 +71,11 @@ with open(
     encoding="utf-8",
 ) as file:
     PSEUDONYMIZE_UNIT_ID_AND_VALUE_METADATA = Metadata(**json.load(file))
+with open(
+    f"{WORKING_DIR}/metadata_psudonymize_value.json",
+    encoding="utf-8",
+) as file:
+    PSEUDONYMIZE_ONLY_VALUE_METADATA = Metadata(**json.load(file))
 
 
 @pytest.fixture(autouse=True)
@@ -90,6 +104,7 @@ def test_pseudonymizer(mocker):
     assert str(
         dataset_pseudonymizer.run(INPUT_PARQUET_PATH, METADATA, JOB_ID)
     ) == str(OUTPUT_PARQUET_PATH)
+
     actual_table = dataset.dataset(OUTPUT_PARQUET_PATH).to_table()
     column_names = [
         "unit_id",
@@ -97,6 +112,7 @@ def test_pseudonymizer(mocker):
         "start_epoch_days",
         "stop_epoch_days",
     ]
+
     for column_name in column_names:
         assert (
             actual_table[column_name].to_pylist()
@@ -128,6 +144,35 @@ def test_pseudonymizer_unit_id_and_value(mocker):
         assert (
             actual_table[column_name].to_pylist()
             == EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED[column_name].to_pylist()
+        )
+
+
+def test_pseudonymizer_only_value(mocker):
+    mocker.patch.object(
+        pseudonym_service, "pseudonymize", return_value=PSEUDONYM_DICT
+    )
+
+    # Pseudonymize
+    pseudonymized_output_path = dataset_pseudonymizer.run(
+        INPUT_PARQUET_PATH,
+        PSEUDONYMIZE_ONLY_VALUE_METADATA,
+        JOB_ID,
+    )
+    actual_table = dataset.dataset(pseudonymized_output_path).to_table()
+
+    # Validate the content
+    column_names = [
+        "unit_id",
+        "value",
+        "start_epoch_days",
+        "stop_epoch_days",
+    ]
+    for column_name in column_names:
+        assert (
+            actual_table[column_name].to_pylist()
+            == EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED[
+                column_name
+            ].to_pylist()
         )
 
 
