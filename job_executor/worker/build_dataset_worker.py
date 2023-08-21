@@ -23,7 +23,7 @@ def _clean_working_dir(dataset_name: str):
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
         WORKING_DIR / f"{dataset_name}.parquet",
-        WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
+        WORKING_DIR / f"{dataset_name}_pseudonymized.parquet",
         WORKING_DIR / dataset_name,
     ]
     for file_path in generated_files:

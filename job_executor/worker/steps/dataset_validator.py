@@ -14,8 +14,8 @@ WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
     """
-    Validates the data and metadata file in the input directory
-    and moves the files to the working_directory using the microdata-validator.
+    Validates the data and metadata file in the working_directory
+    using the microdata-tools.
 
     Returns path to validated data and metadata in working directory.
     """
@@ -38,7 +38,7 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
             logger.error(error)
         raise BuilderStepError(
             "Failed to validate dataset. "
-            "Resolve errors with the microdata-validator before uploading."
+            "Resolve errors with the microdata-tools validator before uploading."
         )
 
     return (
@@ -50,7 +50,7 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
 def run_for_metadata(dataset_name: str) -> Path:
     """
     Validates the metadata in the given file with the
-    microdata-validator schema and moves file to working directory.
+    microdata-tools schema and moves file to working directory.
 
     Returns path to validated metadata in working directory.
     """
@@ -73,6 +73,6 @@ def run_for_metadata(dataset_name: str) -> Path:
             logger.error(error)
         raise BuilderStepError(
             "Failed to validate metadata. "
-            "Resolve errors with the microdata-validator before uploading."
+            "Resolve errors with the microdata-tools validator before uploading."
         )
     return WORKING_DIR / f"{dataset_name}.json"

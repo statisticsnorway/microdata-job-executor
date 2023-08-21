@@ -55,5 +55,5 @@ Then set the PSEUDONYM_SERVICE_URL and JOB_SERVICE_URL to http://localhost:8080 
 * [PyMongo](https://pymongo.readthedocs.io/en/stable/) - MongoDB Driver
 * [PyArrow](https://arrow.apache.org/docs/python/) - Apache Arrow
 * [Pandas](https://pandas.pydata.org/) - Data analysis and manipulation
-* [microdata-validator](https://pypi.org/project/microdata-validator/) - dataset validation
+* [microdata-tools](https://pypi.org/project/microdata-tools/) - dataset packaging & validation
 
