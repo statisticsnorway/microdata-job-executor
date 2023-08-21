@@ -21,7 +21,6 @@ INPUT_TABLE = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_INPUT,
         "value": UNIT_ID_INPUT,
-        "start_year": [2020] * TABLE_SIZE,
         "start_epoch_days": [18200] * TABLE_SIZE,
         "stop_epoch_days": [18201] * TABLE_SIZE,
     }
@@ -31,7 +30,6 @@ EXPECTED_TABLE = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_PSEUDONYMIZED,
         "value": UNIT_ID_INPUT,
-        "start_year": [2020] * TABLE_SIZE,
         "start_epoch_days": [18200] * TABLE_SIZE,
         "stop_epoch_days": [18201] * TABLE_SIZE,
     }
@@ -41,7 +39,6 @@ EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_PSEUDONYMIZED,
         "value": UNIT_ID_PSEUDONYMIZED,
-        "start_year": [2020] * TABLE_SIZE,
         "start_epoch_days": [18200] * TABLE_SIZE,
         "stop_epoch_days": [18201] * TABLE_SIZE,
     }
@@ -51,7 +48,6 @@ EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED = pyarrow.Table.from_pydict(
 WORKING_DIR = Path("tests/resources/worker/steps/pseudonymizer")
 INPUT_PARQUET_PATH = WORKING_DIR / "input.parquet"
 OUTPUT_PARQUET_PATH = WORKING_DIR / "input_pseudonymized.parquet"
-parquet.write_table(INPUT_TABLE, INPUT_PARQUET_PATH)
 
 JOB_ID = "123-123-123-123"
 PSEUDONYM_DICT = {f"i{count}": f"{count}" for count in range(TABLE_SIZE)}
@@ -79,6 +75,8 @@ def setup_function():
 
     shutil.copytree(WORKING_DIR, f"{WORKING_DIR}_backup")
 
+    parquet.write_table(INPUT_TABLE, INPUT_PARQUET_PATH)
+
 
 def teardown_function():
     shutil.rmtree(WORKING_DIR)
@@ -96,7 +94,6 @@ def test_pseudonymizer(mocker):
     column_names = [
         "unit_id",
         "value",
-        "start_year",
         "start_epoch_days",
         "stop_epoch_days",
     ]
@@ -124,7 +121,6 @@ def test_pseudonymizer_unit_id_and_value(mocker):
     column_names = [
         "unit_id",
         "value",
-        "start_year",
         "start_epoch_days",
         "stop_epoch_days",
     ]
