@@ -16,13 +16,14 @@ JOB_ID_PARTITIONER = "321-321-321-321"
 TABLE_SIZE = 3000
 UNIT_ID_INPUT = [f"i{count}" for count in range(TABLE_SIZE)]
 YEARS = [2020] * 1000 + [2021] * 1000 + [2022] * 1000
+START_EPOCH_DAYS = [18262] * 1000 + [18628] * 1000 + [18993] * 1000
 INPUT_TABLE = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_INPUT,
         "value": UNIT_ID_INPUT,
         "start_year": YEARS,
-        "start_epoch_days": [18200] * TABLE_SIZE,
-        "stop_epoch_days": [18201] * TABLE_SIZE,
+        "start_epoch_days": START_EPOCH_DAYS,
+        "stop_epoch_days": [day + 1 for day in START_EPOCH_DAYS],
     }
 )
 
@@ -79,6 +80,20 @@ def test_partitioner(mocker):
             "start_epoch_days",
             "stop_epoch_days",
         ]
+
+        # 5. Check if start_epoch_days is within the correct start_year
+        start_epochs = table_from_partition.column(
+            "start_epoch_days"
+        ).to_pylist()
+
+        if year == 2020:
+            assert all(18262 <= epoch < 18628 for epoch in start_epochs)
+        elif year == 2021:
+            assert all(18628 <= epoch < 18993 for epoch in start_epochs)
+        elif year == 2022:
+            assert all(18993 <= epoch for epoch in start_epochs)
+        else:
+            raise AssertionError(f"Unexpected year: {year}")
 
 
 def test_partitioner_missing_start_year(mocker):
