@@ -2,9 +2,11 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import microdata_tools
 import pyarrow
 from pyarrow import dataset, compute, parquet
+
+import microdata_tools
+from microdata_tools.validation.model.metadata import UnitType
 
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError, UnregisteredUnitTypeError
@@ -27,7 +29,7 @@ def _get_unit_types(
 def _pseudonymize_column(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: str,
+    unit_id_type: Union[None, UnitType],
     job_id: str,
 ) -> Optional[pyarrow.Array]:
     """
@@ -64,8 +66,8 @@ def _get_columns_excluding(
 
 def _pseudonymize(
     input_parquet_path: Path,
-    identifier_unit_id_type: Optional[str],
-    measure_unit_id_type: Optional[str],
+    identifier_unit_id_type: Optional[UnitType],
+    measure_unit_id_type: Optional[UnitType],
     job_id: str,
 ) -> Path:
     input_dataset = dataset.dataset(input_parquet_path)
