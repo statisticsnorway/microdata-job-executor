@@ -79,30 +79,21 @@ def _pseudonymize(
         input_dataset, "value", measure_unit_id_type, job_id
     )
 
-    original_column_names = input_dataset.schema.names
+    column_names = input_dataset.schema.names
 
-    # Initialize arrays_to_include with the same length as original columns with None values
-    arrays_to_include = [None] * len(original_column_names)
+    columns = []
+    for column_name in column_names:
+        if column_name == "unit_id" and unit_id_pseudonyms:
+            columns.append(unit_id_pseudonyms)
+            continue
+        if column_name == "value" and value_pseudonyms:
+            columns.append(value_pseudonyms)
+            continue
+        columns.append(
+            input_dataset.to_table(columns=[column_name])[column_name]
+        )
 
-    # Replace data for pseudonymized columns
-    if unit_id_pseudonyms:
-        unit_id_index = original_column_names.index("unit_id")
-        arrays_to_include[unit_id_index] = unit_id_pseudonyms
-
-    if value_pseudonyms:
-        value_index = original_column_names.index("value")
-        arrays_to_include[value_index] = value_pseudonyms
-
-    # Replace None values with original column data
-    for i, column_data in enumerate(arrays_to_include):
-        if column_data is None:
-            arrays_to_include[i] = input_dataset.to_table(
-                columns=[original_column_names[i]]
-            )[original_column_names[i]].chunk(0)
-
-    pseudonymized_table = pyarrow.Table.from_arrays(
-        arrays_to_include, original_column_names
-    )
+    pseudonymized_table = pyarrow.Table.from_arrays(columns, column_names)
 
     return pseudonymized_table
 
