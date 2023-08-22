@@ -29,12 +29,7 @@
           }
         }
       ],
-      "format": "RandomUInt48",
-      "keyType": {
-        "name": "FORETAK",
-        "label": "Foretak",
-        "description": "N/A"
-      }
+      "format": "RandomUInt48"      
     }
   ],
   "measureVariable": {

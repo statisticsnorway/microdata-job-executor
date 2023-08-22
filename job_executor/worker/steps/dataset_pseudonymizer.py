@@ -6,15 +6,12 @@ import pyarrow
 from pyarrow import dataset, compute, parquet
 
 import microdata_tools
-from microdata_tools.validation.model.metadata import UnitType
 
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError, UnregisteredUnitTypeError
 from job_executor.model import Metadata
 
 logger = logging.getLogger()
-
-PSEUDONYMIZABLE_UNIT_ID_TYPES = ["FNR"]
 
 
 def _get_unit_types(
@@ -29,14 +26,14 @@ def _get_unit_types(
 def _pseudonymize_column(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: Union[None, UnitType],
+    unit_id_type: Union[None, str],
     job_id: str,
 ) -> Optional[pyarrow.Array]:
     """
     Pseudonymizes a column if a pseudonymizable unit ID type is provided.
     Returns None otherwise.
     """
-    if not unit_id_type or unit_id_type not in PSEUDONYMIZABLE_UNIT_ID_TYPES:
+    if not unit_id_type:
         return None
 
     identifiers_table = input_dataset.to_table(columns=[column_name])
@@ -67,8 +64,8 @@ def _get_columns_excluding(
 
 def _pseudonymize(
     input_parquet_path: Path,
-    identifier_unit_id_type: Optional[UnitType],
-    measure_unit_id_type: Optional[UnitType],
+    identifier_unit_id_type: Optional[str],
+    measure_unit_id_type: Optional[str],
     job_id: str,
 ) -> Path:
     input_dataset = dataset.dataset(input_parquet_path)
