@@ -14,7 +14,7 @@ from job_executor.model import Metadata
 
 logger = logging.getLogger()
 
-VALID_UNIT_ID_TYPES = ["FNR"]
+PSEUDONYMIZABLE_UNIT_ID_TYPES = ["FNR"]
 
 
 def _get_unit_types(
@@ -33,9 +33,10 @@ def _pseudonymize_column(
     job_id: str,
 ) -> Optional[pyarrow.Array]:
     """
-    Pseudonymizes a column if a valid unit ID type is provided. Returns None otherwise.
+    Pseudonymizes a column if a pseudonymizable unit ID type is provided.
+    Returns None otherwise.
     """
-    if not unit_id_type or unit_id_type not in VALID_UNIT_ID_TYPES:
+    if not unit_id_type or unit_id_type not in PSEUDONYMIZABLE_UNIT_ID_TYPES:
         return None
 
     identifiers_table = input_dataset.to_table(columns=[column_name])
