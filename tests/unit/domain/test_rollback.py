@@ -162,10 +162,7 @@ def test_rollback_interrupted_worker():
     generated_files_foedested = [
         "FOEDESTED.json",
         "FOEDESTED__DRAFT.json",
-        "FOEDESTED.db",
         "FOEDESTED.csv",
-        "FOEDESTED_pseudonymized.csv",
-        "FOEDESTED_pseudonymized_enriched.csv",
         "FOEDESTED__DRAFT.parquet",
     ]
     pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)

@@ -1,5 +1,6 @@
 import logging
 from multiprocessing import Queue
+import os
 from pathlib import Path
 from time import perf_counter
 
@@ -10,9 +11,8 @@ from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.worker.steps import (
     dataset_decryptor,
     dataset_validator,
-    dataset_converter,
     dataset_transformer,
-    dataset_enricher,
+    dataset_partitioner,
     dataset_pseudonymizer,
 )
 
@@ -22,10 +22,8 @@ WORKING_DIR = Path(environment.get("WORKING_DIR"))
 def _clean_working_dir(dataset_name: str):
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
-        WORKING_DIR / f"{dataset_name}.csv",
-        WORKING_DIR / f"{dataset_name}_enriched.csv",
-        WORKING_DIR / f"{dataset_name}_pseudonymized.csv",
-        WORKING_DIR / f"{dataset_name}.db",
+        WORKING_DIR / f"{dataset_name}.parquet",
+        WORKING_DIR / f"{dataset_name}_pseudonymized.parquet",
         WORKING_DIR / dataset_name,
     ]
     for file_path in generated_files:
@@ -52,16 +50,12 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         dataset_decryptor.unpackage(dataset_name)
 
         job_service.update_job_status(job_id, "validating")
-
         (
             validated_data_file_path,
             metadata_file_path,
         ) = dataset_validator.run_for_dataset(dataset_name)
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
-        )
-        local_storage.delete_working_dir_file(
-            WORKING_DIR / f"{dataset_name}.db"
         )
         description = input_metadata["dataRevision"]["description"][0]["value"]
         job_service.update_description(job_id, description)
@@ -72,24 +66,24 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         local_storage.delete_working_dir_file(metadata_file_path)
 
         temporality_type = transformed_metadata.temporality
-        temporal_coverage = transformed_metadata.temporal_coverage.dict()
-        data_type = transformed_metadata.measure_variable.data_type
 
         job_service.update_job_status(job_id, "pseudonymizing")
         pseudonymized_data_path = dataset_pseudonymizer.run(
             validated_data_file_path, transformed_metadata, job_id
         )
         local_storage.delete_working_dir_file(validated_data_file_path)
-        job_service.update_job_status(job_id, "enriching")
-        enriched_data_path = dataset_enricher.run(
-            pseudonymized_data_path, temporal_coverage, data_type
-        )
-        local_storage.delete_working_dir_file(pseudonymized_data_path)
-        job_service.update_job_status(job_id, "converting")
-        dataset_converter.run(
-            dataset_name, enriched_data_path, temporality_type, data_type
-        )
-        local_storage.delete_working_dir_file(enriched_data_path)
+
+        job_service.update_job_status(job_id, "partitioning")
+        if temporality_type in ["STATUS", "ACCUMULATED"]:
+            dataset_partitioner.run(pseudonymized_data_path, dataset_name)
+            local_storage.delete_working_dir_file(pseudonymized_data_path)
+        else:
+            target_path = os.path.join(
+                os.path.dirname(pseudonymized_data_path),
+                f"{dataset_name}__DRAFT.parquet",
+            )
+            os.rename(pseudonymized_data_path, target_path)
+
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
         logger.info("Dataset built successfully")

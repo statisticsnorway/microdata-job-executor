@@ -171,12 +171,7 @@ EXPECTED_REQUESTS_PARTITIONED = [
         ),
     },
     {
-        "json": {"status": "enriching"},
-        "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
-    },
-    {
-        "json": {"status": "converting"},
+        "json": {"status": "partitioning"},
         "method": "PUT",
         "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
     },
@@ -231,12 +226,7 @@ EXPECTED_REQUESTS_IMPORT = [
         ),
     },
     {
-        "json": {"status": "enriching"},
-        "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
-    },
-    {
-        "json": {"status": "converting"},
+        "json": {"status": "partitioning"},
         "method": "PUT",
         "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
     },
