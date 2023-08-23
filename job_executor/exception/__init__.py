@@ -52,7 +52,3 @@ class UnnecessaryUpdateException(Exception):
 
 class StartupException(Exception):
     ...
-
-
-class UnregisteredUnitTypeError(Exception):
-    ...

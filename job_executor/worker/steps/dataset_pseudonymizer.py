@@ -6,9 +6,10 @@ import pyarrow
 from pyarrow import dataset, compute, parquet
 
 import microdata_tools
+from microdata_tools.validation.exceptions import UnregisteredUnitTypeError
 
 from job_executor.adapter import pseudonym_service
-from job_executor.exception import BuilderStepError, UnregisteredUnitTypeError
+from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
 
 logger = logging.getLogger()

@@ -185,4 +185,4 @@ def test_pseudonymizer_adapter_failure():
 def test_pseudonymizer_invalid_unit_id_type():
     with pytest.raises(BuilderStepError) as e:
         dataset_pseudonymizer.run(INPUT_PARQUET_PATH, INVALID_METADATA, JOB_ID)
-    assert "Failed to pseudonymize dataset" == str(e.value)
+    assert f"Failed to pseudonymize, UnregisteredUnitType: {str(e)}"

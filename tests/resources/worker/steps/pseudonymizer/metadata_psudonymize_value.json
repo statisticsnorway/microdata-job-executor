@@ -12,8 +12,8 @@
   "identifierVariables": [
     {
       "variableRole": "Identifier",
-      "name": "FORETAK",
-      "label": "Foretak",
+      "name": "input",
+      "label": "input",
       "notPseudonym": true,
       "dataType": "String",
       "representedVariables": [
@@ -34,8 +34,8 @@
   ],
   "measureVariable": {
     "variableRole": "Measure",
-    "name": "input",
-    "label": "input",
+    "name": "PERSON",
+    "label": "Person",
     "notPseudonym": true,
     "dataType": "String",
     "representedVariables": [
