@@ -7,6 +7,8 @@ from pyarrow import dataset, compute, parquet
 
 import microdata_tools
 from microdata_tools.validation.exceptions import UnregisteredUnitTypeError
+from microdata_tools.validation.model.metadata import UnitType, UnitIdType
+
 
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError
@@ -17,7 +19,7 @@ logger = logging.getLogger()
 
 def _get_unit_types(
     metadata: Metadata,
-) -> Tuple[Union[str, None], Union[str, None]]:
+) -> Tuple[Union[UnitType, None], Union[UnitType, None]]:
     return (
         metadata.get_identifier_key_type_name(),
         metadata.get_measure_key_type_name(),
@@ -27,7 +29,7 @@ def _get_unit_types(
 def _pseudonymize_column(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: Union[None, str],
+    unit_id_type: Union[None, UnitIdType],
     job_id: str,
 ) -> Optional[pyarrow.Array]:
     """
@@ -65,8 +67,8 @@ def _get_columns_excluding(
 
 def _pseudonymize(
     input_parquet_path: Path,
-    identifier_unit_id_type: Optional[str],
-    measure_unit_id_type: Optional[str],
+    identifier_unit_id_type: Optional[UnitIdType],
+    measure_unit_id_type: Optional[UnitIdType],
     job_id: str,
 ) -> Path:
     input_dataset = dataset.dataset(input_parquet_path)
