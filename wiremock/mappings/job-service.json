@@ -40,6 +40,16 @@
         "status": 200,
         "body": "{\"message\": \"OK\"}"
       }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/maintenance-status"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"message\": \"OK\", \"paused\": 1}"
+      }
     }
   ]
 }
