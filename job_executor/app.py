@@ -131,6 +131,42 @@ def check_tmp_directory():
         raise StartupException("tmp directory exists")
 
 
+def query_for_jobs() -> dict[str, List[Job]]:
+    """Query jobs and return them as a dictionary."""
+
+    # Initialize empty lists
+    built_jobs: List[Job] = []
+    queued_manager_jobs: List[Job] = []
+    queued_worker_jobs: List[Job] = []
+
+    # Explicitly check if system is paused
+    if is_system_paused():
+        logger.info("System is paused. Not fetching new jobs.")
+    else:
+        # Fetch jobs
+        built_jobs = job_service.get_jobs(job_status="built")
+        queued_manager_jobs = job_service.get_jobs(
+            job_status="queued",
+            operations=[
+                "SET_STATUS",
+                "BUMP",
+                "DELETE_DRAFT",
+                "REMOVE",
+                "DELETE_ARCHIVE",
+            ],
+        )
+        queued_worker_jobs = job_service.get_jobs(
+            job_status="queued",
+            operations=["PATCH_METADATA", "ADD", "CHANGE"],
+        )
+
+    return {
+        "built_jobs": built_jobs,
+        "queued_manager_jobs": queued_manager_jobs,
+        "queued_worker_jobs": queued_worker_jobs,
+    }
+
+
 try:
     fix_interrupted_jobs()
     check_tmp_directory()
@@ -147,63 +183,44 @@ def main():
     log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))
     log_thread.start()
 
-    sleep_interval = 5
-
     try:
         while True:
-            # Explicitly check if system is paused
-            if is_system_paused():
-                logger.info("System is paused. Not fetching new jobs.")
-                sleep_interval = 60
-            else:
-                # Process jobs as usual
-                workers = [worker for worker in workers if worker.is_alive()]
-                built_jobs = job_service.get_jobs(job_status="built")
-                queued_manager_jobs = job_service.get_jobs(
-                    job_status="queued",
-                    operations=[
-                        "SET_STATUS",
-                        "BUMP",
-                        "DELETE_DRAFT",
-                        "REMOVE",
-                        "DELETE_ARCHIVE",
-                    ],
+            time.sleep(5)
+
+            job_dict = query_for_jobs()
+            queued_worker_jobs = job_dict["queued_worker_jobs"]
+            built_jobs = job_dict["built_jobs"]
+            queued_manager_jobs = job_dict["queued_manager_jobs"]
+
+            workers = [worker for worker in workers if worker.is_alive()]
+
+            available_jobs = (
+                len(queued_worker_jobs)
+                + len(built_jobs)
+                + len(queued_manager_jobs)
+            )
+            if available_jobs:
+                logger.info(
+                    f"Found {len(queued_worker_jobs)}/{len(built_jobs)}"
+                    f"/{len(queued_manager_jobs)}"
+                    f" (worker, built, queued manager jobs)"
                 )
-                queued_worker_jobs = job_service.get_jobs(
-                    job_status="queued",
-                    operations=["PATCH_METADATA", "ADD", "CHANGE"],
-                )
-                available_jobs = (
-                    len(queued_worker_jobs)
-                    + len(built_jobs)
-                    + len(queued_manager_jobs)
-                )
-                if available_jobs:
-                    logger.info(
-                        f"Found {len(queued_worker_jobs)}/{len(built_jobs)}"
-                        f"/{len(queued_manager_jobs)}"
-                        f" (worker, built, queued manager jobs)"
+            for job in queued_worker_jobs:
+                if len(workers) < NUMBER_OF_WORKERS:
+                    _handle_worker_job(job, workers, logging_queue)
+
+            for job in built_jobs + queued_manager_jobs:
+                try:
+                    _handle_manager_job(job)
+                except Exception as exc:
+                    # All exceptions that occur during the handling of a job
+                    # are resolved by rolling back. The exceptions that
+                    # reach here are exceptions raised by the rollback.
+                    logger.exception(
+                        f"{job.job_id} failed and could not roll back",
+                        exc_info=exc,
                     )
-                for job in queued_worker_jobs:
-                    if len(workers) < NUMBER_OF_WORKERS:
-                        _handle_worker_job(job, workers, logging_queue)
-
-                for job in built_jobs + queued_manager_jobs:
-                    try:
-                        _handle_manager_job(job)
-                    except Exception as exc:
-                        # All exceptions that occur during the handling of a job
-                        # are resolved by rolling back. The exceptions that
-                        # reach here are exceptions raised by the rollback.
-                        logger.exception(
-                            f"{job.job_id} failed and could not roll back",
-                            exc_info=exc,
-                        )
-                        raise exc
-
-                sleep_interval = 5
-
-            time.sleep(sleep_interval)
+                    raise exc
 
     except Exception as exc:
         logger.exception("Service stopped by exception", exc_info=exc)

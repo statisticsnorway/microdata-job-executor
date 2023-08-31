@@ -92,3 +92,17 @@ def test_no_connection(requests_mock: RequestsMocker):
     with pytest.raises(HttpResponseError) as e:
         job_service.update_description(JOB_ID, DESCRIPTION)
     assert ERROR_RESPONSE in str(e)
+
+
+def test_get_maintenance_status(requests_mock: RequestsMocker):
+    requests_mock.get(
+        f"{JOB_SERVICE_URL}/maintenance-status",
+        json={
+            "id": "321",
+            "paused": False,
+            "msg": "OK",
+            "created_at": "2023-05-08T06:31:00.519222",
+        },
+    )
+    maintenance_status = job_service.get_maintenance_status()
+    assert maintenance_status.paused is False
