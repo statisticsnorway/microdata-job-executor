@@ -130,9 +130,8 @@ def rollback_worker_phase_import_job(
     ]
     generated_data_files = [
         f"{dataset_name}.db",
-        f"{dataset_name}.csv",
-        f"{dataset_name}_pseudonymized.csv",
-        f"{dataset_name}_pseudonymized_enriched.csv",
+        f"{dataset_name}.parquet",
+        f"{dataset_name}_pseudonymized.parquet",
         f"{dataset_name}__DRAFT.parquet",
     ]
     generated_data_directory = f"{dataset_name}__DRAFT"
