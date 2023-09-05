@@ -98,10 +98,9 @@ def test_get_maintenance_status(requests_mock: RequestsMocker):
     requests_mock.get(
         f"{JOB_SERVICE_URL}/maintenance-status",
         json={
-            "id": "321",
             "paused": False,
             "msg": "OK",
-            "created_at": "2023-05-08T06:31:00.519222",
+            "timestamp": "2023-05-08T06:31:00.519222",
         },
     )
     maintenance_status = job_service.get_maintenance_status()
