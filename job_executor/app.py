@@ -4,7 +4,7 @@ import threading
 import time
 import logging
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 from multiprocessing import Process, Queue
 
 import json_logging
@@ -25,11 +25,19 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 NUMBER_OF_WORKERS = environment.get("NUMBER_OF_WORKERS")
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
+datastore = None
+
 
 def is_system_paused() -> bool:
     """Return True if the system is paused, otherwise False."""
-    maintenance_status = job_service.get_maintenance_status()
-    return maintenance_status.paused
+    try:
+        maintenance_status = job_service.get_maintenance_status()
+        return maintenance_status.paused
+    except Exception as e:
+        logger.exception(
+            "Exception when getting maintenance status", exc_info=e
+        )
+        raise
 
 
 def logger_thread(logging_queue: Queue):
@@ -131,52 +139,65 @@ def check_tmp_directory():
         raise StartupException("tmp directory exists")
 
 
-def query_for_jobs() -> dict[str, List[Job]]:
+def query_for_jobs() -> Dict[str, List[Job]]:
     """Query jobs and return them as a dictionary."""
 
-    # Initialize empty lists
-    built_jobs: List[Job] = []
-    queued_manager_jobs: List[Job] = []
-    queued_worker_jobs: List[Job] = []
+    job_dict = {
+        "built_jobs": [],
+        "queued_manager_jobs": [],
+        "queued_worker_jobs": [],
+    }
 
-    # Explicitly check if system is paused
-    if is_system_paused():
-        logger.info("System is paused. Not fetching new jobs.")
-    else:
-        # Fetch jobs
-        built_jobs = job_service.get_jobs(job_status="built")
-        queued_manager_jobs = job_service.get_jobs(
-            job_status="queued",
-            operations=[
+    job_mapping = {
+        "built_jobs": {"status": "built", "operations": None},
+        "queued_manager_jobs": {
+            "status": "queued",
+            "operations": [
                 "SET_STATUS",
                 "BUMP",
                 "DELETE_DRAFT",
                 "REMOVE",
                 "DELETE_ARCHIVE",
             ],
-        )
-        queued_worker_jobs = job_service.get_jobs(
-            job_status="queued",
-            operations=["PATCH_METADATA", "ADD", "CHANGE"],
-        )
-
-    return {
-        "built_jobs": built_jobs,
-        "queued_manager_jobs": queued_manager_jobs,
-        "queued_worker_jobs": queued_worker_jobs,
+        },
+        "queued_worker_jobs": {
+            "status": "queued",
+            "operations": ["PATCH_METADATA", "ADD", "CHANGE"],
+        },
     }
 
+    try:
+        # Explicitly check if the system is paused
+        if is_system_paused():
+            logger.info("System is paused. Not fetching new jobs.")
+        else:
+            for job_type, criteria in job_mapping.items():
+                job_dict[job_type] = job_service.get_jobs(
+                    job_status=criteria["status"],
+                    operations=criteria["operations"],
+                )
 
-try:
-    fix_interrupted_jobs()
-    check_tmp_directory()
-    datastore = Datastore()
-except Exception as e:
-    logger.exception("Exception when initializing", exc_info=e)
-    sys.exit("Exception when initializing")
+        return job_dict
+
+    except Exception as e:
+        logger.exception("Exception when querying for jobs", exc_info=e)
+        return job_dict
+
+
+def initialize_app():
+    global datastore
+    try:
+        fix_interrupted_jobs()
+        check_tmp_directory()
+        datastore = Datastore()
+    except Exception as e:
+        logger.exception("Exception when initializing", exc_info=e)
+        sys.exit("Exception when initializing")
 
 
 def main():
+    initialize_app()
+
     workers: List[Process] = []
     logging_queue = Queue()
 
