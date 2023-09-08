@@ -7,6 +7,7 @@ from requests import RequestException, Response
 from job_executor.config import environment
 from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.exception import HttpResponseError, HttpRequestError
+from job_executor.model.maintenance_status import MaintenanceStatus
 
 JOB_SERVICE_URL = environment.get("JOB_SERVICE_URL")
 DEFAULT_REQUESTS_TIMEOUT = (10, 60)  # (read timeout, connect timeout)
@@ -56,6 +57,15 @@ def update_description(job_id: str, new_description: str):
     )
     if response.status_code != 200:
         raise HttpResponseError(f"{response.status_code}: {response.text}")
+
+
+def get_maintenance_status() -> MaintenanceStatus:
+    request_url = f"{JOB_SERVICE_URL}/maintenance-status"
+    response = execute_request("GET", request_url)
+    if response.status_code != 200:
+        raise HttpResponseError(f"{response.text}")
+
+    return MaintenanceStatus(**response.json())
 
 
 def execute_request(method: str, url: str, **kwargs) -> Response:

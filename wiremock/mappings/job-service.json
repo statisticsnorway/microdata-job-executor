@@ -40,6 +40,16 @@
         "status": 200,
         "body": "{\"message\": \"OK\"}"
       }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/maintenance-status"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"message\": \"OK\", \"paused\": False, \"timestamp\": \"2023-05-08T06:31:00.519222\"}"
+      }
     }
   ]
 }
