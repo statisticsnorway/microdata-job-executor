@@ -20,13 +20,17 @@ logger = logging.getLogger()
 def _get_unit_types(
     metadata: Metadata,
 ) -> Tuple[Union[UnitType, None], Union[UnitType, None]]:
+    """
+    Extracts the identifier & measure unit type from the metadata.
+    using microdata_tools/validator.
+    """
     return (
         metadata.get_identifier_key_type_name(),
         metadata.get_measure_key_type_name(),
     )
 
 
-def _pseudonymize_column(
+def _fetch_column_pseudonyms(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
     unit_id_type: Union[None, UnitIdType],
@@ -56,13 +60,17 @@ def _pseudonymize_column(
     return pseudonymized_data
 
 
-def _get_pseudonymized_column(
+def _get_column_pseudonyms_array(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
     unit_id_type: Optional[UnitIdType],
     job_id: str,
 ) -> pyarrow.Array:
-    pseudonyms = _pseudonymize_column(
+    """
+    Pseudonymizes a column if a pseudonymizable unit ID type is provided.
+    Returns the original column otherwise.
+    """
+    pseudonyms = _fetch_column_pseudonyms(
         input_dataset, column_name, unit_id_type, job_id
     )
 
@@ -77,6 +85,9 @@ def _get_regular_column(
     column_name: str,
     arrow_type: pyarrow.DataType,
 ) -> pyarrow.Array:
+    """
+    Returns a column as is, casting it to the provided arrow type.
+    """
     return input_dataset.to_table(columns=[column_name])[column_name].cast(
         arrow_type
     )
@@ -87,18 +98,18 @@ def _pseudonymize(
     identifier_unit_id_type: Optional[UnitIdType],
     measure_unit_id_type: Optional[UnitIdType],
     job_id: str,
-) -> Path:
+) -> pyarrow.Table:
     input_dataset = dataset.dataset(input_parquet_path)
     columns = []
 
     # Handle potential pseudonymized columns
     columns.append(
-        _get_pseudonymized_column(
+        _get_column_pseudonyms_array(
             input_dataset, "unit_id", identifier_unit_id_type, job_id
         )
     )
     columns.append(
-        _get_pseudonymized_column(
+        _get_column_pseudonyms_array(
             input_dataset, "value", measure_unit_id_type, job_id
         )
     )
