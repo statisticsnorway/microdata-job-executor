@@ -156,18 +156,7 @@ def test_pseudonymizer(mocker):
     ) == str(OUTPUT_PARQUET_PATH)
 
     actual_table = dataset.dataset(OUTPUT_PARQUET_PATH).to_table()
-    column_names = [
-        "unit_id",
-        "value",
-        "start_epoch_days",
-        "stop_epoch_days",
-    ]
-
-    for column_name in column_names:
-        assert (
-            actual_table[column_name].to_pylist()
-            == EXPECTED_TABLE[column_name].to_pylist()
-        )
+    _validate_content(actual_table, EXPECTED_TABLE)
 
     expected_types = {
         "unit_id": "int64",
@@ -192,19 +181,7 @@ def test_pseudonymizer_unit_id_and_value(mocker):
         JOB_ID,
     )
     actual_table = dataset.dataset(pseudonymized_output_path).to_table()
-
-    # Validate the content
-    column_names = [
-        "unit_id",
-        "value",
-        "start_epoch_days",
-        "stop_epoch_days",
-    ]
-    for column_name in column_names:
-        assert (
-            actual_table[column_name].to_pylist()
-            == EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED[column_name].to_pylist()
-        )
+    _validate_content(actual_table, EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED)
 
     expected_types = {
         "unit_id": "int64",
@@ -229,21 +206,9 @@ def test_pseudonymizer_only_value(mocker):
         JOB_ID,
     )
     actual_table = dataset.dataset(pseudonymized_output_path).to_table()
-
-    # Validate the content
-    column_names = [
-        "unit_id",
-        "value",
-        "start_epoch_days",
-        "stop_epoch_days",
-    ]
-    for column_name in column_names:
-        assert (
-            actual_table[column_name].to_pylist()
-            == EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED[
-                column_name
-            ].to_pylist()
-        )
+    _validate_content(
+        actual_table, EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED
+    )
 
     expected_types = {
         "unit_id": "string",
@@ -267,19 +232,7 @@ def test_pseudonymizer_start_year(mocker):
     ) == str(OUTPUT_PARQUET_PATH_START_YEAR)
 
     actual_table = dataset.dataset(OUTPUT_PARQUET_PATH_START_YEAR).to_table()
-    column_names = [
-        "unit_id",
-        "value",
-        "start_year",
-        "start_epoch_days",
-        "stop_epoch_days",
-    ]
-
-    for column_name in column_names:
-        assert (
-            actual_table[column_name].to_pylist()
-            == EXPECTED_TABLE_START_YEAR[column_name].to_pylist()
-        )
+    _validate_content(actual_table, EXPECTED_TABLE_START_YEAR)
 
     expected_types = {
         "unit_id": "int64",
@@ -321,3 +274,15 @@ def _verify_parquet_schema(parquet_file_path, expected_types):
     for column_name, expected_type in expected_types.items():
         actual_type = schema.field(column_name).type
         assert str(actual_type) == expected_type
+
+
+def _validate_content(actual_table, expected_table):
+    """
+    Validate the content of the actual table against the expected table.
+    """
+
+    for column_name in expected_table.schema.names:
+        assert (
+            actual_table[column_name].to_pylist()
+            == expected_table[column_name].to_pylist()
+        )
