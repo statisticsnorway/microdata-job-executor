@@ -99,9 +99,21 @@ def _pseudonymize(
         if column_name == "value" and value_pseudonyms:
             columns.append(value_pseudonyms)
             continue
-        columns.append(
-            input_dataset.to_table(columns=[column_name])[column_name]
-        )
+        if column_name in [
+            "start_year",
+            "start_epoch_days",
+            "stop_epoch_days",
+        ]:
+            columns.append(
+                input_dataset.to_table(columns=[column_name])[
+                    column_name
+                ].cast(pyarrow.int16())
+            )
+            continue
+        else:
+            columns.append(
+                input_dataset.to_table(columns=[column_name])[column_name]
+            )
 
     pseudonymized_table = pyarrow.Table.from_arrays(columns, column_names)
 

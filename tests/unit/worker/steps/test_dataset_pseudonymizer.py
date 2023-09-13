@@ -30,10 +30,38 @@ INPUT_TABLE = pyarrow.Table.from_pydict(
     }
 )
 
+INPUT_TABLE_START_YEAR = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_INPUT,
+        "value": UNIT_ID_INPUT,
+        "start_year": pyarrow.array([2020] * TABLE_SIZE, type=pyarrow.int16()),
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+    }
+)
+
 EXPECTED_TABLE = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_PSEUDONYMIZED,
         "value": UNIT_ID_INPUT,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+    }
+)
+
+EXPECTED_TABLE_START_YEAR = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_PSEUDONYMIZED,
+        "value": UNIT_ID_INPUT,
+        "start_year": pyarrow.array([2020] * TABLE_SIZE, type=pyarrow.int16()),
         "start_epoch_days": pyarrow.array(
             [18200] * TABLE_SIZE, type=pyarrow.int16()
         ),
@@ -74,6 +102,11 @@ WORKING_DIR = Path("tests/resources/worker/steps/pseudonymizer")
 INPUT_PARQUET_PATH = WORKING_DIR / "input.parquet"
 OUTPUT_PARQUET_PATH = WORKING_DIR / "input_pseudonymized.parquet"
 
+INPUT_PARQUET_PATH_START_YEAR = WORKING_DIR / "input_start_year.parquet"
+OUTPUT_PARQUET_PATH_START_YEAR = (
+    WORKING_DIR / "input_start_year_pseudonymized.parquet"
+)
+
 JOB_ID = "123-123-123-123"
 PSEUDONYM_DICT = {f"i{count}": count for count in range(TABLE_SIZE)}
 with open(f"{WORKING_DIR}/metadata.json", encoding="utf-8") as file:
@@ -106,6 +139,7 @@ def setup_function():
     shutil.copytree(WORKING_DIR, f"{WORKING_DIR}_backup")
 
     parquet.write_table(INPUT_TABLE, INPUT_PARQUET_PATH)
+    parquet.write_table(INPUT_TABLE_START_YEAR, INPUT_PARQUET_PATH_START_YEAR)
 
 
 def teardown_function():
@@ -136,10 +170,10 @@ def test_pseudonymizer(mocker):
         )
 
     expected_types = {
-        "unit_id": "INT64",
-        "value": "BYTE_ARRAY",
-        "start_epoch_days": "INT32",  # ! INT16", 🙃
-        "stop_epoch_days": "INT32",  # ! INT16", 🤯
+        "unit_id": "int64",
+        "value": "string",
+        "start_epoch_days": "int16",
+        "stop_epoch_days": "int16",
     }
 
     # Checking the parquet schema is what we expect
@@ -173,10 +207,10 @@ def test_pseudonymizer_unit_id_and_value(mocker):
         )
 
     expected_types = {
-        "unit_id": "INT64",
-        "value": "INT64",
-        "start_epoch_days": "INT32",  # ! INT16", 🙃
-        "stop_epoch_days": "INT32",  # ! INT16", 🤯
+        "unit_id": "int64",
+        "value": "int64",
+        "start_epoch_days": "int16",
+        "stop_epoch_days": "int16",
     }
 
     # Checking the parquet schema is what we expect
@@ -211,6 +245,53 @@ def test_pseudonymizer_only_value(mocker):
             ].to_pylist()
         )
 
+    expected_types = {
+        "unit_id": "string",
+        "value": "int64",
+        "start_epoch_days": "int16",
+        "stop_epoch_days": "int16",
+    }
+
+    # Checking the parquet schema is what we expect
+    _verify_parquet_schema(OUTPUT_PARQUET_PATH, expected_types)
+
+
+def test_pseudonymizer_start_year(mocker):
+    mocker.patch.object(
+        pseudonym_service, "pseudonymize", return_value=PSEUDONYM_DICT
+    )
+    assert str(
+        dataset_pseudonymizer.run(
+            INPUT_PARQUET_PATH_START_YEAR, METADATA, JOB_ID
+        )
+    ) == str(OUTPUT_PARQUET_PATH_START_YEAR)
+
+    actual_table = dataset.dataset(OUTPUT_PARQUET_PATH_START_YEAR).to_table()
+    column_names = [
+        "unit_id",
+        "value",
+        "start_year",
+        "start_epoch_days",
+        "stop_epoch_days",
+    ]
+
+    for column_name in column_names:
+        assert (
+            actual_table[column_name].to_pylist()
+            == EXPECTED_TABLE_START_YEAR[column_name].to_pylist()
+        )
+
+    expected_types = {
+        "unit_id": "int64",
+        "value": "string",
+        "start_year": "int16",
+        "start_epoch_days": "int16",
+        "stop_epoch_days": "int16",
+    }
+
+    # Checking the parquet schema is what we expect
+    _verify_parquet_schema(OUTPUT_PARQUET_PATH_START_YEAR, expected_types)
+
 
 def test_pseudonymizer_adapter_failure():
     with pytest.raises(BuilderStepError) as e:
@@ -224,14 +305,19 @@ def test_pseudonymizer_invalid_unit_id_type():
     assert f"Failed to pseudonymize, UnregisteredUnitType: {str(e)}"
 
 
+# In Parquet, the physical type refers to how the data is stored.
+# INT32 and INT16 are both physically stored as INT32 in Parquet files.
+# The logical type can provide additional context about the data.
+# For example, it can tell you that a certain INT32 physical column is to be interpreted
+# as a INT16 logical type.
 def _verify_parquet_schema(parquet_file_path, expected_types):
-    parquet_file = parquet.ParquetFile(parquet_file_path)
-    schema = parquet_file.schema
+    """
+    Checks the logical type of each column in the parquet file to make sure
+    they are what we expect.
+    """
+    table = parquet.read_table(parquet_file_path)
+    schema = table.schema
 
     for column_name, expected_type in expected_types.items():
-        # Determine column index by its name
-        column_index = schema.names.index(column_name)
-
-        actual_type = schema.column(column_index).physical_type
-        print(f"{column_name} is {actual_type}")
-        assert actual_type == expected_type
+        actual_type = schema.field(column_name).type
+        assert str(actual_type) == expected_type
