@@ -34,7 +34,9 @@ INPUT_TABLE_START_YEAR = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_INPUT,
         "value": UNIT_ID_INPUT,
-        "start_year": pyarrow.array([2020] * TABLE_SIZE, type=pyarrow.int16()),
+        "start_year": pyarrow.array(
+            [str(year) for year in [2020] * TABLE_SIZE]
+        ),
         "start_epoch_days": pyarrow.array(
             [18200] * TABLE_SIZE, type=pyarrow.int16()
         ),
@@ -61,7 +63,9 @@ EXPECTED_TABLE_START_YEAR = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_PSEUDONYMIZED,
         "value": UNIT_ID_INPUT,
-        "start_year": pyarrow.array([2020] * TABLE_SIZE, type=pyarrow.int16()),
+        "start_year": pyarrow.array(
+            [str(year) for year in [2020] * TABLE_SIZE]
+        ),
         "start_epoch_days": pyarrow.array(
             [18200] * TABLE_SIZE, type=pyarrow.int16()
         ),
@@ -237,7 +241,7 @@ def test_pseudonymizer_start_year(mocker):
     expected_types = {
         "unit_id": "int64",
         "value": "string",
-        "start_year": "int16",
+        "start_year": "string",
         "start_epoch_days": "int16",
         "stop_epoch_days": "int16",
     }

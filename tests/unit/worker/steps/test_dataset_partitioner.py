@@ -15,7 +15,7 @@ JOB_ID_PARTITIONER = "321-321-321-321"
 
 TABLE_SIZE = 3000
 UNIT_ID_INPUT = [f"i{count}" for count in range(TABLE_SIZE)]
-YEARS = [2020] * 1000 + [2021] * 1000 + [2022] * 1000
+YEARS = ["2020"] * 1000 + ["2021"] * 1000 + ["2022"] * 1000
 START_EPOCH_DAYS = [18262] * 1000 + [18628] * 1000 + [18993] * 1000
 INPUT_TABLE = pyarrow.Table.from_pydict(
     {
