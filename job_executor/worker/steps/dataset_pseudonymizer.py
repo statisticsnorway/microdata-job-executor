@@ -45,13 +45,22 @@ def _pseudonymize_column(
         identifiers_table[column_name]
     ).to_pylist()
 
+    unique_identifiers = [str(item) for item in unique_identifiers]
+
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
         unique_identifiers, unit_id_type, job_id
     )
 
-    return [
-        identifier_to_pseudonym[identifier] for identifier in identifiers_list
+    pseudonymized_data = [
+        int(identifier_to_pseudonym[identifier])
+        for identifier in identifiers_list
     ]
+
+    pseudonymized_array = pyarrow.array(
+        pseudonymized_data, type=pyarrow.int64()
+    )
+
+    return pseudonymized_array
 
 
 def _get_columns_excluding(
@@ -113,6 +122,7 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
     """
     try:
         logger.info(f"Pseudonymizing data {input_parquet_path}")
+
         identifier_unit_type, measure_unit_type = _get_unit_types(metadata)
         identifier_unit_id_type = (
             None
