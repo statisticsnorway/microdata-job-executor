@@ -125,7 +125,7 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
         (
             True,
             {
-                "built_jobs": [],
+                "built_jobs": JOB_LIST,
                 "queued_manager_jobs": [],
                 "queued_worker_jobs": [],
             },
@@ -143,13 +143,16 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
 def test_query_for_jobs(
     is_paused, expected_result, requests_mock, monkeypatch
 ):
-    # Mock the is_system_paused method
     monkeypatch.setattr("job_executor.app.is_system_paused", lambda: is_paused)
 
+    # Always return built jobs even if system is paused
+    # If system is paused, return empty list for queued and queued_manager jobs
     def mock_get_jobs(job_status=None, operations=None):
         if job_status == "built":
-            return JOB_LIST if not is_paused else []
+            return JOB_LIST
         elif job_status == "queued":
+            return JOB_LIST if not is_paused else []
+        elif job_status == "queued_manager":
             return JOB_LIST if not is_paused else []
 
     monkeypatch.setattr(

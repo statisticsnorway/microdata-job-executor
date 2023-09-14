@@ -140,7 +140,18 @@ def check_tmp_directory():
 
 
 def query_for_jobs() -> Dict[str, List[Job]]:
-    """Query jobs and return them as a dictionary."""
+    """
+    Retrieves different types of jobs based on the system's state (paused or active).
+
+    When the system is paused, only jobs with a 'built' status are fetched.
+    In the active state, jobs are fetched based on their operations.
+
+    Returns:
+        Dict[str, List[Job]]: A dictionary structured as:
+        - "built_jobs": Jobs that have already been built.
+        - "queued_manager_jobs": Jobs in the queue with managerial operations.
+        - "queued_worker_jobs": Jobs in the queue with worker operations.
+    """
 
     job_dict = {
         "built_jobs": [],
@@ -167,9 +178,12 @@ def query_for_jobs() -> Dict[str, List[Job]]:
     }
 
     try:
-        # Explicitly check if the system is paused
+        # If System is paused we only want to fetch built jobs
         if is_system_paused():
-            logger.info("System is paused. Not fetching new jobs.")
+            logger.info("System is paused. Only fetching built jobs.")
+            job_dict["built_jobs"] = job_service.get_jobs(
+                job_status="built", operations=None
+            )
         else:
             for job_type, criteria in job_mapping.items():
                 job_dict[job_type] = job_service.get_jobs(
