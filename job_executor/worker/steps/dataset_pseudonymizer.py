@@ -77,7 +77,12 @@ def _get_column_pseudonyms_array(
     if pseudonyms:
         return pyarrow.array(pseudonyms).cast(pyarrow.int64())
     else:
-        return input_dataset.to_table(columns=[column_name])[column_name]
+        # get logical type of column
+        column_type = input_dataset.schema.field(column_name).type
+        # cast column to logical type - just to be safe
+        return input_dataset.to_table(columns=[column_name])[column_name].cast(
+            column_type
+        )
 
 
 def _get_regular_column(
