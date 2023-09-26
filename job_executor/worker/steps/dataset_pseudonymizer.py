@@ -20,18 +20,22 @@ logger = logging.getLogger()
 def _get_unit_types(
     metadata: Metadata,
 ) -> Tuple[Union[UnitType, None], Union[UnitType, None]]:
+    """
+    Extracts the identifier & measure unit type from the metadata.
+    using microdata_tools/validator.
+    """
     return (
         metadata.get_identifier_key_type_name(),
         metadata.get_measure_key_type_name(),
     )
 
 
-def _pseudonymize_column(
+def _fetch_column_pseudonyms(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
     unit_id_type: Union[None, UnitIdType],
     job_id: str,
-) -> Optional[pyarrow.Array]:
+) -> Optional[List[str]]:
     """
     Pseudonymizes a column if a pseudonymizable unit ID type is provided.
     Returns None otherwise.
@@ -40,29 +44,58 @@ def _pseudonymize_column(
         return None
 
     identifiers_table = input_dataset.to_table(columns=[column_name])
-    identifiers_list = identifiers_table[column_name].to_pylist()
-    unique_identifiers = compute.unique(
-        identifiers_table[column_name]
-    ).to_pylist()
+
+    string_identifiers = identifiers_table[column_name].cast(pyarrow.string())
+    unique_identifiers = compute.unique(string_identifiers).to_pylist()
 
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
         unique_identifiers, unit_id_type, job_id
     )
 
-    return [
+    identifiers_list = string_identifiers.to_pylist()
+    pseudonymized_data = [
         identifier_to_pseudonym[identifier] for identifier in identifiers_list
     ]
 
+    return pseudonymized_data
 
-def _get_columns_excluding(
-    dataset: dataset.FileSystemDataset, excluded_columns: List[str]
-) -> List[str]:
+
+def _get_column_pseudonyms_array(
+    input_dataset: dataset.FileSystemDataset,
+    column_name: str,
+    unit_id_type: Optional[UnitIdType],
+    job_id: str,
+) -> pyarrow.Array:
     """
-    Get a list of column names from the dataset excluding the specified columns.
+    Pseudonymizes a column if a pseudonymizable unit ID type is provided.
+    Returns the original column otherwise.
     """
-    return [
-        name for name in dataset.schema.names if name not in excluded_columns
-    ]
+    pseudonyms = _fetch_column_pseudonyms(
+        input_dataset, column_name, unit_id_type, job_id
+    )
+
+    if pseudonyms:
+        return pyarrow.array(pseudonyms).cast(pyarrow.int64())
+    else:
+        # get logical type of column
+        column_type = input_dataset.schema.field(column_name).type
+        # cast column to logical type - just to be safe
+        return input_dataset.to_table(columns=[column_name])[column_name].cast(
+            column_type
+        )
+
+
+def _get_regular_column(
+    input_dataset: dataset.FileSystemDataset,
+    column_name: str,
+    arrow_type: pyarrow.DataType,
+) -> pyarrow.Array:
+    """
+    Returns a column as is, casting it to the provided arrow type.
+    """
+    return input_dataset.to_table(columns=[column_name])[column_name].cast(
+        arrow_type
+    )
 
 
 def _pseudonymize(
@@ -70,31 +103,38 @@ def _pseudonymize(
     identifier_unit_id_type: Optional[UnitIdType],
     measure_unit_id_type: Optional[UnitIdType],
     job_id: str,
-) -> Path:
+) -> pyarrow.Table:
     input_dataset = dataset.dataset(input_parquet_path)
-
-    unit_id_pseudonyms = _pseudonymize_column(
-        input_dataset, "unit_id", identifier_unit_id_type, job_id
-    )
-    value_pseudonyms = _pseudonymize_column(
-        input_dataset, "value", measure_unit_id_type, job_id
-    )
-
-    column_names = input_dataset.schema.names
-
     columns = []
-    for column_name in column_names:
-        if column_name == "unit_id" and unit_id_pseudonyms:
-            columns.append(unit_id_pseudonyms)
-            continue
-        if column_name == "value" and value_pseudonyms:
-            columns.append(value_pseudonyms)
-            continue
+
+    # Handle potential pseudonymized columns
+    columns.append(
+        _get_column_pseudonyms_array(
+            input_dataset, "unit_id", identifier_unit_id_type, job_id
+        )
+    )
+    columns.append(
+        _get_column_pseudonyms_array(
+            input_dataset, "value", measure_unit_id_type, job_id
+        )
+    )
+
+    # Handle regular columns
+    if "start_year" in input_dataset.schema.names:
         columns.append(
-            input_dataset.to_table(columns=[column_name])[column_name]
+            _get_regular_column(input_dataset, "start_year", pyarrow.string())
         )
 
-    pseudonymized_table = pyarrow.Table.from_arrays(columns, column_names)
+    columns.append(
+        _get_regular_column(input_dataset, "start_epoch_days", pyarrow.int16())
+    )
+    columns.append(
+        _get_regular_column(input_dataset, "stop_epoch_days", pyarrow.int16())
+    )
+
+    pseudonymized_table = pyarrow.Table.from_arrays(
+        columns, input_dataset.schema.names
+    )
 
     return pseudonymized_table
 
@@ -113,6 +153,7 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
     """
     try:
         logger.info(f"Pseudonymizing data {input_parquet_path}")
+
         identifier_unit_type, measure_unit_type = _get_unit_types(metadata)
         identifier_unit_id_type = (
             None
