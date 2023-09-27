@@ -52,7 +52,10 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
 
         job_service.update_job_status(job_id, "transforming")
-        dataset_transformer.run(metadata_file_path)
+        transformed_metadata_json = dataset_transformer.run(input_metadata)
+        local_storage.write_working_dir_metadata(
+            dataset_name, transformed_metadata_json
+        )
         local_storage.delete_working_dir_file(metadata_file_path)
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")

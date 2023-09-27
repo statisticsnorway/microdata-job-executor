@@ -8,6 +8,7 @@ from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
+from job_executor.model.metadata import Metadata
 from job_executor.worker.steps import (
     dataset_decryptor,
     dataset_validator,
@@ -62,8 +63,12 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
         job_service.update_job_status(job_id, "transforming")
-        transformed_metadata = dataset_transformer.run(metadata_file_path)
+        transformed_metadata_json = dataset_transformer.run(input_metadata)
+        local_storage.write_working_dir_metadata(
+            dataset_name, transformed_metadata_json
+        )
         local_storage.delete_working_dir_file(metadata_file_path)
+        transformed_metadata = Metadata(**transformed_metadata_json)
 
         temporality_type = transformed_metadata.temporality
 
