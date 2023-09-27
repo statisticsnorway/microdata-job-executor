@@ -167,15 +167,20 @@ def _transform_variable(variable: dict, role: str, start: str, stop: str):
         if "description" in variable
         else "N/A"
     )
+    not_pseudonym = (
+        "unitType" not in variable
+        or not variable["unitType"]["requiresPseudonymization"]
+    )
     transformed_variable = {
         "variableRole": role,
         "name": variable["shortName"],
         "label": _get_norwegian_text(variable["name"]),
-        "notPseudonym": (
-            "unitType" not in variable
-            or not variable["unitType"]["requiresPseudonymization"]
+        "notPseudonym": not_pseudonym,
+        "dataType": (
+            _transform_data_type(variable["dataType"])
+            if not_pseudonym
+            else "Long"
         ),
-        "dataType": _transform_data_type(variable["dataType"]),
         "representedVariables": _create_represented_variables(
             description=variable_description,
             value_domain=variable["valueDomain"],
