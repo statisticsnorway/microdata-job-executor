@@ -3,7 +3,7 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Union
+from typing import Dict, Union
 
 from pydantic import ValidationError
 
@@ -155,6 +155,17 @@ def write_metadata_all(metadata_all: dict, version: str):
     _write_json(
         metadata_all, DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
     )
+
+
+def write_working_dir_metadata(dataset_name: str, metadata: Dict) -> None:
+    """
+    Writes a json to a the working directory as the processed metadata file
+    named: {dataset_name}__DRAFT.json
+
+    * dataset_name: str - name of dataset
+    * metadata: Dict - dictionary to write as json
+    """
+    _write_json(metadata, WORKING_DIR / f"{dataset_name}__DRAFT.json")
 
 
 def get_working_dir_metadata(dataset_name: str) -> dict:

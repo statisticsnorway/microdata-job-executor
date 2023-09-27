@@ -1,11 +1,8 @@
-import json
 import logging
-from pathlib import Path
 from datetime import datetime
-from typing import Union
+from typing import Dict, Union
 
 from job_executor.exception import BuilderStepError
-from job_executor.model import Metadata
 from job_executor.model.metadata import DATA_TYPES_MAPPING
 
 logger = logging.getLogger()
@@ -167,15 +164,20 @@ def _transform_variable(variable: dict, role: str, start: str, stop: str):
         if "description" in variable
         else "N/A"
     )
+    not_pseudonym = (
+        "unitType" not in variable
+        or not variable["unitType"]["requiresPseudonymization"]
+    )
     transformed_variable = {
         "variableRole": role,
         "name": variable["shortName"],
         "label": _get_norwegian_text(variable["name"]),
-        "notPseudonym": (
-            "unitType" not in variable
-            or not variable["unitType"]["requiresPseudonymization"]
+        "notPseudonym": not_pseudonym,
+        "dataType": (
+            _transform_data_type(variable["dataType"])
+            if not_pseudonym
+            else "Long"
         ),
-        "dataType": _transform_data_type(variable["dataType"]),
         "representedVariables": _create_represented_variables(
             description=variable_description,
             value_domain=variable["valueDomain"],
@@ -263,11 +265,8 @@ def _get_temporal_coverage(start, stop) -> dict:
     return period
 
 
-def _transform_metadata(metadata_file_path: Path) -> str:
-    with open(metadata_file_path, encoding="utf-8") as json_file:
-        metadata = json.load(json_file)
-    logger.info(f"Transforming metadata {metadata_file_path}")
-
+def _transform_metadata(metadata: Dict) -> Dict:
+    logger.info("Transforming metadata")
     # These values are found by going through the data file.
     # When we do transformation of metadata alone, we do not
     # have these fields and choose to ignore them.
@@ -301,27 +300,18 @@ def _transform_metadata(metadata_file_path: Path) -> str:
         transformed["temporalStatusDates"] = _transform_temporal_status_dates(
             metadata["dataRevision"].get("temporalStatusDates", None)
         )
-    transformed_metadata_file_path = (
-        metadata_file_path.parent / f"{metadata_file_path.stem}__DRAFT.json"
-    )
-    with open(transformed_metadata_file_path, "w", encoding="utf-8") as f:
-        json.dump(transformed, f)
-
     logger.info("Finished transformation")
-    return Metadata(**transformed)
+    return transformed
 
 
-def run(metadata_file_path: Path) -> Metadata:
+def run(metadata: Dict) -> Dict:
     """
     Transforms a metadatafile from the input model to the SIKT
     metadata model that is stored in the datastore.
     Returns the path of the transformed metadata file.
     """
     try:
-        logger.info(f"Transforming metadata {metadata_file_path}")
-        transformed_metadata = _transform_metadata(metadata_file_path)
-        logger.info("Transformed metadata")
-        return transformed_metadata
+        return _transform_metadata(metadata)
     except Exception as e:
         logger.error(f"Error during transformation: {str(e)}")
         raise BuilderStepError("Failed to transform dataset") from e
