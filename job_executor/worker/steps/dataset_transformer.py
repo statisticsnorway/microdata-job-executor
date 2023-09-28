@@ -1,11 +1,42 @@
 import logging
 from datetime import datetime
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 from job_executor.exception import BuilderStepError
 from job_executor.model.metadata import DATA_TYPES_MAPPING
 
 logger = logging.getLogger()
+
+
+def _get_norwegian_text(texts: list) -> str:
+    return next(
+        element for element in texts if element["languageCode"] == "no"
+    )["value"]
+
+
+def _days_since_epoch(date_string: str) -> int:
+    epoch = datetime.utcfromtimestamp(0)
+    date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+    return (date_obj - epoch).days
+
+
+def _get_variable_role(attribute_type: str) -> str:
+    return {"stop": "Stop", "start": "Start", "source": "Source"}.get(
+        attribute_type.lower(), attribute_type
+    )
+
+
+def _get_temporal_coverage(
+    start: Union[None, str], stop: Union[None, str]
+) -> dict:
+    period = {"start": start if start is None else _days_since_epoch(start)}
+    if stop:
+        period["stop"] = _days_since_epoch(stop)
+    return period
+
+
+def _transform_data_type(data_type: str) -> str:
+    return DATA_TYPES_MAPPING.get(data_type, data_type)
 
 
 def _transform_temporal_status_dates(status_dates: Union[list, None]) -> list:
@@ -16,28 +47,10 @@ def _transform_temporal_status_dates(status_dates: Union[list, None]) -> list:
     )
 
 
-def _create_represented_variables(
-    description: str,
-    value_domain: dict,
-    temporal_coverage_start: str,
-    temporal_coverage_latest: str,
-) -> list:
-    sentinel_and_missing_values = value_domain.get(
-        "sentinelAndMissingValues", []
-    )
-    if "codeList" in value_domain:
-        return _represented_variables_from_code_list(
-            description=description,
-            sentinel_and_missing_values=sentinel_and_missing_values,
-            code_items=value_domain["codeList"],
-        )
-    else:
-        return _represented_variables_from_description(
-            description=description,
-            value_domain=value_domain,
-            start=temporal_coverage_start,
-            stop=temporal_coverage_latest,
-        )
+def _transform_subject_fields(subject_fields: List[dict]) -> List[str]:
+    return [
+        _get_norwegian_text(subject_field) for subject_field in subject_fields
+    ]
 
 
 def _represented_variables_from_description(
@@ -73,6 +86,7 @@ def _represented_variables_from_code_list(
     code_items: list,
 ) -> list:
     ONE_DAY = 1
+
     valid_from_dates = [
         _days_since_epoch(item["validFrom"])
         for item in code_items
@@ -158,6 +172,30 @@ def _represented_variables_from_code_list(
     return represented_variables
 
 
+def _create_represented_variables(
+    description: str,
+    value_domain: dict,
+    temporal_coverage_start: str,
+    temporal_coverage_latest: str,
+) -> list:
+    sentinel_and_missing_values = value_domain.get(
+        "sentinelAndMissingValues", []
+    )
+    if "codeList" in value_domain:
+        return _represented_variables_from_code_list(
+            description=description,
+            sentinel_and_missing_values=sentinel_and_missing_values,
+            code_items=value_domain["codeList"],
+        )
+    else:
+        return _represented_variables_from_description(
+            description=description,
+            value_domain=value_domain,
+            start=temporal_coverage_start,
+            stop=temporal_coverage_latest,
+        )
+
+
 def _transform_variable(variable: dict, role: str, start: str, stop: str):
     variable_description = (
         _get_norwegian_text(variable["description"])
@@ -199,70 +237,16 @@ def _transform_variable(variable: dict, role: str, start: str, stop: str):
 
 
 def _transform_attribute_variables(metadata: dict, start: str, stop: str):
-    attributes = [
-        next(
-            (
-                variable
-                for variable in metadata["attributeVariables"]
-                if variable["variableRole"] == "Start"
-            ),
-            None,
-        ),
-        next(
-            (
-                variable
-                for variable in metadata["attributeVariables"]
-                if variable["variableRole"] == "Stop"
-            ),
-            None,
-        ),
-    ]
     return [
         _transform_variable(
-            attribute,
-            _get_variable_role(attribute["variableRole"]),
+            variable,
+            _get_variable_role(variable["variableRole"]),
             start,
             stop,
         )
-        for attribute in attributes
-        if attribute is not None
+        for variable in metadata["attributeVariables"]
+        if variable["variableRole"] in ["Start", "Stop"]
     ]
-
-
-def _transform_subject_fields(metadata: dict) -> list:
-    subject_fields = metadata["subjectFields"]
-    return [
-        _get_norwegian_text(subject_field) for subject_field in subject_fields
-    ]
-
-
-def _get_norwegian_text(texts: list) -> str:
-    return next(
-        element for element in texts if element["languageCode"] == "no"
-    )["value"]
-
-
-def _days_since_epoch(date_string: str) -> int:
-    epoch = datetime.utcfromtimestamp(0)
-    date_obj = datetime.strptime(date_string, "%Y-%m-%d")
-    return (date_obj - epoch).days
-
-
-def _get_variable_role(attribute_type: str) -> str:
-    return {"stop": "Stop", "start": "Start", "source": "Source"}.get(
-        attribute_type.lower(), attribute_type
-    )
-
-
-def _transform_data_type(data_type: str) -> str:
-    return DATA_TYPES_MAPPING.get(data_type, data_type)
-
-
-def _get_temporal_coverage(start, stop) -> dict:
-    period = {"start": start if start is None else _days_since_epoch(start)}
-    if stop:
-        period["stop"] = _days_since_epoch(stop)
-    return period
 
 
 def _transform_metadata(metadata: Dict) -> Dict:
@@ -273,6 +257,7 @@ def _transform_metadata(metadata: Dict) -> Dict:
     # They are in that case NOT used to update metadata state.
     start = metadata["dataRevision"].get("temporalCoverageStart", None)
     stop = metadata["dataRevision"].get("temporalCoverageLatest", None)
+
     transformed_identifiers = [
         _transform_variable(identifier, "Identifier", start, stop)
         for identifier in metadata["identifierVariables"]
@@ -280,6 +265,10 @@ def _transform_metadata(metadata: Dict) -> Dict:
     transformed_measure = _transform_variable(
         metadata["measureVariables"][0], "Measure", start, stop
     )
+    transformed_attributes = _transform_attribute_variables(
+        metadata, start, stop
+    )
+
     transformed = {
         "name": metadata["shortName"],
         "populationDescription": _get_norwegian_text(
@@ -288,13 +277,11 @@ def _transform_metadata(metadata: Dict) -> Dict:
         "languageCode": "no",
         "temporality": metadata["temporalityType"],
         "sensitivityLevel": metadata["sensitivityLevel"],
-        "subjectFields": _transform_subject_fields(metadata),
+        "subjectFields": _transform_subject_fields(metadata["subjectFields"]),
         "temporalCoverage": _get_temporal_coverage(start, stop),
         "identifierVariables": transformed_identifiers,
         "measureVariable": transformed_measure,
-        "attributeVariables": _transform_attribute_variables(
-            metadata, start, stop
-        ),
+        "attributeVariables": transformed_attributes,
     }
     if metadata["temporalityType"] == "STATUS":
         transformed["temporalStatusDates"] = _transform_temporal_status_dates(
