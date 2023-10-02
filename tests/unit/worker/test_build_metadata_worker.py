@@ -12,6 +12,7 @@ from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.worker.build_metadata_worker import run_worker
 from tests.unit.worker.test_build_dataset_worker import _create_rsa_public_key
 
+
 RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
 
@@ -19,7 +20,7 @@ DATASET_NAME = "KJOENN"
 JOB_ID = "1234-1234-1234-1234"
 WORKING_DIR = os.environ["WORKING_DIR"]
 INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
-EXPECTED_DIR = "tests/resources/expected"
+EXPECTED_DIR = "tests/resources/worker/build_metadata/expected"
 JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
 EXPECTED_REQUESTS = [
     {
@@ -97,3 +98,4 @@ def test_import(requests_mock: RequestsMocker):
     assert not (
         Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
     ).exists()
+

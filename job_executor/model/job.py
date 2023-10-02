@@ -88,7 +88,7 @@ class Log(CamelModel, extra=Extra.forbid):
     at: datetime.datetime
     message: str
 
-    def dict(self, **kwargs):  # pylint: disable=unused-argument
+    def dict(self, **kwargs):
         return {"at": self.at.isoformat(), "message": self.message}
 
 
@@ -99,3 +99,4 @@ class Job(CamelModel, use_enum_values=True):
     log: Optional[List[Log]] = []
     created_at: str
     created_by: UserInfo
+
