@@ -7,14 +7,16 @@ from microdata_tools.validation.components import (
 )
 
 
-TEST_DATA_PATH = Path("tests/resources/worker/steps/transformer/input_data")
+INPUT_DATA_PATH = Path("tests/resources/worker/steps/transformer/input_data")
+EXPECTED_DATA_PATH = Path("tests/resources/worker/steps/transformer/expected")
 
 PERSON_IDENTIFIER = unit_type_variables.get("PERSON")
 BK_HELSTASJONSKONSULTASJON_IDENTIFIER = unit_type_variables.get(
     "BK_HELSESTASJONSKONSULTASJON"
 )
+
 KREFTREG_DS_DESCRIBED = json.load(
-    open(TEST_DATA_PATH / "KREFTREG_DS_described.json")
+    open(INPUT_DATA_PATH / "KREFTREG_DS_described.json")
 )
 KREFTREG_DS_DESCRIBED["identifierVariables"] = [
     unit_type_variables.get("PERSON")
@@ -25,7 +27,7 @@ KREFTREG_DS_DESCRIBED["attributeVariables"] = [
 ]
 
 KREFTREG_DS_ENUMERATED = json.load(
-    open(TEST_DATA_PATH / "KREFTREG_DS_enumerated.json")
+    open(INPUT_DATA_PATH / "KREFTREG_DS_enumerated.json")
 )
 KREFTREG_DS_ENUMERATED["identifierVariables"] = [
     unit_type_variables.get("PERSON")
@@ -35,19 +37,32 @@ KREFTREG_DS_ENUMERATED["attributeVariables"] = [
     temporal_attributes.generate_stop_time_attribute("STATUS"),
 ]
 
-UTDANNING_PATCH = json.load(open(TEST_DATA_PATH / "UTDANNING_PATCH.json"))
+UTDANNING_PATCH = json.load(open(INPUT_DATA_PATH / "UTDANNING_PATCH.json"))
 UTDANNING_PATCH["identifierVariables"] = [unit_type_variables.get("PERSON")]
 UTDANNING_PATCH["attributeVariables"] = [
     temporal_attributes.generate_start_time_attribute("STATUS"),
     temporal_attributes.generate_stop_time_attribute("STATUS"),
 ]
 
-UTDANNING = json.load(open(TEST_DATA_PATH / "UTDANNING.json"))
+UTDANNING = json.load(open(INPUT_DATA_PATH / "UTDANNING.json"))
 UTDANNING["identifierVariables"] = [unit_type_variables.get("PERSON")]
 UTDANNING["attributeVariables"] = [
     temporal_attributes.generate_start_time_attribute("STATUS"),
     temporal_attributes.generate_stop_time_attribute("STATUS"),
 ]
+
+DESCRIBED_EXPECTED = json.load(
+    open(EXPECTED_DATA_PATH / "KREFTREG_DS_described.json")
+)
+STATUS_EXPECTED = json.load(
+    open(EXPECTED_DATA_PATH / "UTDANNING.json")
+)
+STATUS_PATCH_EXPECTED = json.load(
+    open(EXPECTED_DATA_PATH / "UTDANNING_PATCH.json")
+)
+ENUMERATED_EXPECTED = json.load(
+    open(EXPECTED_DATA_PATH / "KREFTREG_DS_enumerated.json")
+)
 
 CODELIST = [
     {
@@ -157,3 +172,4 @@ TRANSFORMED_CODELIST_WITH_MISSING_VALUES = [
     }
     for represented in TRANSFORMED_CODELIST
 ]
+
