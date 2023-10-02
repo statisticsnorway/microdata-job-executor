@@ -85,6 +85,9 @@ def _represented_variables_from_code_list(
     sentinel_and_missing_values: list,
     code_items: list,
 ) -> list:
+    if not code_items:
+        raise ValueError("Code list can not be empty")
+
     ONE_DAY = 1
 
     valid_from_dates = [
