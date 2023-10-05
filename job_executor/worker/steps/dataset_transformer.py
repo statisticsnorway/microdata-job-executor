@@ -240,15 +240,33 @@ def _transform_variable(variable: dict, role: str, start: str, stop: str):
 
 
 def _transform_attribute_variables(metadata: dict, start: str, stop: str):
+    attributes = [
+        next(
+            (
+                variable
+                for variable in metadata["attributeVariables"]
+                if variable["variableRole"] == "Start"
+            ),
+            None,
+        ),
+        next(
+            (
+                variable
+                for variable in metadata["attributeVariables"]
+                if variable["variableRole"] == "Stop"
+            ),
+            None,
+        ),
+    ]
     return [
         _transform_variable(
-            variable,
-            _get_variable_role(variable["variableRole"]),
+            attribute,
+            _get_variable_role(attribute["variableRole"]),
             start,
             stop,
         )
-        for variable in metadata["attributeVariables"]
-        if variable["variableRole"] in ["Start", "Stop"]
+        for attribute in attributes
+        if attribute is not None
     ]
 
 
