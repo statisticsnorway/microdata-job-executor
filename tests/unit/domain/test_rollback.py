@@ -69,9 +69,10 @@ def setup_function():
     if os.path.isdir("tests/resources_backup"):
         shutil.rmtree("tests/resources_backup")
     shutil.copytree("tests/resources", "tests/resources_backup")
-    shutil.rmtree("tests/resources/TEST_DATASTORE")
+    shutil.rmtree("tests/resources/datastores/TEST_DATASTORE")
     shutil.move(
-        "tests/resources/ROLLBACK_DATASTORE", "tests/resources/TEST_DATASTORE"
+        "tests/resources/datastores/ROLLBACK_DATASTORE",
+        "tests/resources/datastores/TEST_DATASTORE",
     )
 
 
@@ -120,10 +121,10 @@ def test_rollback_interrupted_bump():
 
 
 def test_rollback_interrupted_bump_patch():
-    shutil.rmtree("tests/resources/TEST_DATASTORE")
+    shutil.rmtree("tests/resources/datastores/TEST_DATASTORE")
     shutil.move(
-        "tests/resources/ROLLBACK_DATASTORE_PATCH",
-        "tests/resources/TEST_DATASTORE",
+        "tests/resources/datastores/ROLLBACK_DATASTORE_PATCH",
+        "tests/resources/datastores/TEST_DATASTORE",
     )
     draft_version_backup = _read_json(
         DATASTORE_TEMP_DIR / "draft_version.json"

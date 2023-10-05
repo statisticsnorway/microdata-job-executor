@@ -21,9 +21,10 @@ DATA_VERSIONS_RELEASED = DATASTORE_INFO_DIR / "data_versions__1_0.json"
 
 def setup_module():
     shutil.copytree("tests/resources", "tests/resources_backup")
-    shutil.rmtree("tests/resources/TEST_DATASTORE")
+    shutil.rmtree("tests/resources/datastores/TEST_DATASTORE")
     shutil.move(
-        "tests/resources/EMPTY_DATASTORE", "tests/resources/TEST_DATASTORE"
+        "tests/resources/datastores/EMPTY_DATASTORE",
+        "tests/resources/datastores/TEST_DATASTORE",
     )
 
 

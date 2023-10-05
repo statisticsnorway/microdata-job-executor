@@ -19,7 +19,7 @@ class TimePeriod(CamelModel):
     start: Union[int, None]
     stop: Optional[Union[int, None]]
 
-    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
+    def dict(self, **kwargs) -> dict:
         return (
             {"start": self.start, "stop": self.stop}
             if self.stop is not None
@@ -75,7 +75,7 @@ class ValueDomain(CamelModel):
             and self.missing_values is None
         )
 
-    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
+    def dict(self, **kwargs) -> dict:
         if self.is_described_value_domain():
             return {
                 key: value
@@ -187,7 +187,7 @@ class Variable(CamelModel):
     def get_key_type_name(self):
         return None if self.key_type is None else self.key_type.name
 
-    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
+    def dict(self, **kwargs) -> dict:
         dict_representation = {
             "name": self.name,
             "label": self.label,
@@ -378,7 +378,7 @@ class Metadata(CamelModel):
             del metadata_dict["temporalStatusDates"]
         return Metadata(**metadata_dict)
 
-    def dict(self, **kwargs) -> dict:  # pylint: disable=unused-argument
+    def dict(self, **kwargs) -> dict:
         metadata_dict = {
             "name": self.name,
             "temporality": self.temporality,
