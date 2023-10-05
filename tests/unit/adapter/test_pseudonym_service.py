@@ -1,6 +1,6 @@
 import pytest
 from requests_mock import Mocker as RequestsMocker
-from microdata_tools.validation.components.unit_id_types import UnitIdType
+from microdata_tools.validation.model.metadata import UnitIdType
 
 from job_executor.config import environment, secrets
 from job_executor.adapter import pseudonym_service
