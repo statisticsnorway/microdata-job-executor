@@ -1,5 +1,7 @@
 import pytest
 from requests_mock import Mocker as RequestsMocker
+from microdata_tools.validation.model.metadata import UnitIdType
+
 from job_executor.config import environment, secrets
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import HttpResponseError
@@ -10,7 +12,7 @@ PSEUDONYM_SERVICE_URL = environment.get("PSEUDONYM_SERVICE_URL")
 API_KEY = secrets.get("PSEUDONYM_SERVICE_API_KEY")
 
 URL = f"{PSEUDONYM_SERVICE_URL}/?unit_id_type=FNR&job_id={JOB_ID}"
-UNIT_ID_TYPE = "FNR"
+UNIT_ID_TYPE = UnitIdType.FNR
 IDENTIFIERS = ["test1", "test2"]
 PSEUDONYM_DICT = {"test1": "value", "test2": "value"}
 
