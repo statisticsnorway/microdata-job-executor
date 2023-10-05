@@ -1,11 +1,10 @@
 from typing import List
 
 import requests
+from microdata_tools.validation.model.metadata import UnitIdType
 
 from job_executor.config import environment, secrets
 from job_executor.exception import HttpResponseError
-
-from microdata_tools.validation.model.metadata import UnitIdType
 
 
 PSEUDONYM_SERVICE_URL = environment.get("PSEUDONYM_SERVICE_URL")
@@ -16,7 +15,7 @@ def pseudonymize(
     idents: List[str], unit_id_type: UnitIdType, job_id: str
 ) -> dict:
     response = requests.post(
-        f"{PSEUDONYM_SERVICE_URL}?_type={unit_id_type.value}&job_id={job_id}",
+        f"{PSEUDONYM_SERVICE_URL}?unit_id_type={unit_id_type.value}&job_id={job_id}",
         json=idents,
         headers={
             "Content-Type": "application/json",
