@@ -120,17 +120,16 @@ def _pseudonymize(
     )
 
     # Handle regular columns
-    if "start_year" in input_dataset.schema.names:
-        columns.append(
-            _get_regular_column(input_dataset, "start_year", pyarrow.string())
-        )
-
     columns.append(
         _get_regular_column(input_dataset, "start_epoch_days", pyarrow.int16())
     )
     columns.append(
         _get_regular_column(input_dataset, "stop_epoch_days", pyarrow.int16())
     )
+    if "start_year" in input_dataset.schema.names:
+        columns.append(
+            _get_regular_column(input_dataset, "start_year", pyarrow.string())
+        )
 
     pseudonymized_table = pyarrow.Table.from_arrays(
         columns, input_dataset.schema.names
