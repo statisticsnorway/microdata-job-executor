@@ -34,14 +34,14 @@ INPUT_TABLE_START_YEAR = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_INPUT,
         "value": UNIT_ID_INPUT,
-        "start_year": pyarrow.array(
-            [str(year) for year in [2020] * TABLE_SIZE]
-        ),
         "start_epoch_days": pyarrow.array(
             [18200] * TABLE_SIZE, type=pyarrow.int16()
         ),
         "stop_epoch_days": pyarrow.array(
             [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "start_year": pyarrow.array(
+            [str(year) for year in [2020] * TABLE_SIZE]
         ),
     }
 )
@@ -63,14 +63,14 @@ EXPECTED_TABLE_START_YEAR = pyarrow.Table.from_pydict(
     {
         "unit_id": UNIT_ID_PSEUDONYMIZED,
         "value": UNIT_ID_INPUT,
-        "start_year": pyarrow.array(
-            [str(year) for year in [2020] * TABLE_SIZE]
-        ),
         "start_epoch_days": pyarrow.array(
             [18200] * TABLE_SIZE, type=pyarrow.int16()
         ),
         "stop_epoch_days": pyarrow.array(
             [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "start_year": pyarrow.array(
+            [str(year) for year in [2020] * TABLE_SIZE]
         ),
     }
 )
