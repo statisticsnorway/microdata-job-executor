@@ -2,13 +2,11 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import pyarrow
-from pyarrow import dataset, compute, parquet
-
 import microdata_tools
+import pyarrow
 from microdata_tools.validation.exceptions import UnregisteredUnitTypeError
 from microdata_tools.validation.model.metadata import UnitType, UnitIdType
-
+from pyarrow import dataset, compute, parquet
 
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError
@@ -189,5 +187,6 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
         ) from e
 
     except Exception as e:
+        logger.exception("Error stacktrace during pseudonymization", exc_info=e)
         logger.error(f"Error during pseudonymization: {str(e)}")
         raise BuilderStepError("Failed to pseudonymize dataset") from e
