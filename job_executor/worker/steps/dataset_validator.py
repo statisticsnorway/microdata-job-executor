@@ -34,11 +34,11 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
             "Unexpected error when validating dataset"
         ) from e
     if validation_errors:
-        for error in validation_errors:
-            logger.error(error)
+        logger.error("Dataset failed validation with microdata-tools")
         raise BuilderStepError(
             "Failed to validate dataset. "
-            "Resolve errors with the microdata-tools validator before uploading."
+            "Resolve errors with the microdata-tools validator before uploading. "
+            "Remember to update to the latest version of microdata-tools. "
         )
 
     return (
@@ -69,10 +69,10 @@ def run_for_metadata(dataset_name: str) -> Path:
             "Unexpected error when validating metadata"
         ) from e
     if validation_errors:
-        for error in validation_errors:
-            logger.error(error)
+        logger.error("Dataset failed validation with microdata-tools")
         raise BuilderStepError(
             "Failed to validate metadata. "
             "Resolve errors with the microdata-tools validator before uploading."
+            "Remember to update to the latest version of microdata-tools. "
         )
     return WORKING_DIR / f"{dataset_name}.json"
