@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import shutil
 from pathlib import Path
 
@@ -66,8 +66,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                 os.remove(data_versions_path)
 
         metadata_all_path = (
-            datastore_info_dir
-            / f"metadata_all__{bumped_version_metadata}.json"
+            datastore_info_dir / f"metadata_all__{bumped_version_metadata}.json"
         )
         if metadata_all_path.exists():
             logger.info(f"{job_id}: Deleting {metadata_all_path}")
@@ -154,6 +153,12 @@ def rollback_worker_phase_import_job(
                 f'{job_id}: Deleting data directory "{parquet_directory}"'
             )
             shutil.rmtree(parquet_directory)
+        dataset_directory = WORKING_DIR_PATH / dataset_name
+        if dataset_directory.exists() and os.path.isdir(dataset_directory):
+            logger.info(
+                f'{job_id}: Deleting dataset directory "{dataset_directory}"'
+            )
+            shutil.rmtree(dataset_directory)
 
 
 def rollback_manager_phase_import_job(
