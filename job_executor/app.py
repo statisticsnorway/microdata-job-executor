@@ -13,7 +13,7 @@ from job_executor.adapter import job_service
 from job_executor.config import environment
 from job_executor.config.log import CustomJSONLog
 from job_executor.domain import rollback
-from job_executor.exception import StartupException
+from job_executor.exception import RollbackException, StartupException
 from job_executor.model import Job, Datastore
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
@@ -60,9 +60,11 @@ def fix_interrupted_jobs():
         job for job in in_progress_jobs if job.status not in queued_statuses
     ]
     logger.info(f"Found {len(interrupted_jobs)} interrupted jobs")
-
-    for job in interrupted_jobs:
-        fix_interrupted_job(job)
+    try:
+        for job in interrupted_jobs:
+            fix_interrupted_job(job)
+    except RollbackException as e:
+        raise StartupException(e) from e
 
 
 def fix_interrupted_job(job):
@@ -115,7 +117,7 @@ def fix_interrupted_job(job):
         except Exception as exc:
             error_message = f"Failed rollback for {job.job_id}"
             logger.exception(error_message, exc_info=exc)
-            raise StartupException(error_message) from exc
+            raise RollbackException(error_message) from exc
         logger.info(
             'Setting status to "failed" for '
             f"interrupted job with id {job.job_id}"
@@ -131,7 +133,7 @@ def fix_interrupted_job(job):
             f"for job {job.job_id}"
         )
         logger.error(log_message)
-        raise StartupException(log_message)
+        raise RollbackException(log_message)
 
 
 def check_tmp_directory():
