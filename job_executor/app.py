@@ -1,28 +1,28 @@
+import logging
 import os
 import sys
 import threading
 import time
-import logging
+from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Dict, List
-from multiprocessing import Process, Queue
 
 import json_logging
-from job_executor.exception import StartupException
 
-from job_executor.model import Job, Datastore
-from job_executor.domain import rollback
 from job_executor.adapter import job_service
 from job_executor.config import environment
 from job_executor.config.log import CustomJSONLog
+from job_executor.domain import rollback
+from job_executor.exception import RollbackException, StartupException
+from job_executor.model import Job, Datastore
+from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
-
 
 json_logging.init_non_web(custom_formatter=CustomJSONLog, enable_json=True)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
-NUMBER_OF_WORKERS = environment.get("NUMBER_OF_WORKERS")
+NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
 datastore = None
@@ -60,77 +60,80 @@ def fix_interrupted_jobs():
         job for job in in_progress_jobs if job.status not in queued_statuses
     ]
     logger.info(f"Found {len(interrupted_jobs)} interrupted jobs")
+    try:
+        for job in interrupted_jobs:
+            fix_interrupted_job(job)
+    except RollbackException as e:
+        raise StartupException(e) from e
 
-    for job in interrupted_jobs:
-        job_operation = job.parameters.operation
-        logger.info(
-            f"{job.job_id}: Rolling back job with operation "
-            f'"{job_operation}"'
-        )
-        if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
-            if job.status == "importing":
-                rollback.rollback_manager_phase_import_job(
-                    job.job_id, job_operation, job.parameters.target
-                )
-                logger.info(
-                    f"{job.job_id}: Rolled back importing of job with "
-                    f'operation "{job_operation}". Retrying from status '
-                    '"built"'
-                )
-                job_service.update_job_status(
-                    job.job_id,
-                    "built",
-                    "Reset to built status will be due to "
-                    "unexpected interruption",
-                )
-            else:
-                rollback.rollback_worker_phase_import_job(
-                    job.job_id, job_operation, job.parameters.target
-                )
-                logger.info(
-                    f'{job.job_id}: Setting status to "failed" for '
-                    f"interrupted job"
-                )
-                job_service.update_job_status(
-                    job.job_id,
-                    "failed",
-                    "Job was failed due to an unexpected interruption",
-                )
-        elif job_operation in ["SET_STATUS", "DELETE_DRAFT", "REMOVE"]:
+
+def fix_interrupted_job(job):
+    job_operation = job.parameters.operation
+    logger.info(
+        f"{job.job_id}: Rolling back job with operation " f'"{job_operation}"'
+    )
+    if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
+        if job.status == "importing":
+            rollback.rollback_manager_phase_import_job(
+                job.job_id, job_operation, job.parameters.target
+            )
             logger.info(
-                'Setting status to "queued" for '
-                f"interrupted job with id {job.job_id}"
+                f"{job.job_id}: Rolled back importing of job with "
+                f'operation "{job_operation}". Retrying from status '
+                '"built"'
             )
             job_service.update_job_status(
                 job.job_id,
-                "queued",
-                "Retrying due to an unexpected interruption.",
+                "built",
+                "Reset to built status will be due to "
+                "unexpected interruption",
             )
-        elif job_operation == "BUMP":
-            try:
-                rollback.rollback_bump(
-                    job.job_id, job.parameters.bump_manifesto
-                )
-            except Exception as exc:
-                error_message = f"Failed rollback for {job.job_id}"
-                logger.exception(error_message, exc_info=exc)
-                raise StartupException(error_message) from exc
+        else:
+            rollback.rollback_worker_phase_import_job(
+                job.job_id, job_operation, job.parameters.target
+            )
             logger.info(
-                'Setting status to "failed" for '
-                f"interrupted job with id {job.job_id}"
+                f'{job.job_id}: Setting status to "failed" for '
+                f"interrupted job"
             )
             job_service.update_job_status(
                 job.job_id,
                 "failed",
-                "Bump operation was interrupted and rolled back.",
+                "Job was failed due to an unexpected interruption",
             )
-        else:
-            log_message = (
-                f"Unrecognized job operation {job_operation}"
-                f"for job {job.job_id}"
-            )
-            logger.error(log_message)
-            raise StartupException(log_message)
+    elif job_operation in ["SET_STATUS", "DELETE_DRAFT", "REMOVE"]:
+        logger.info(
+            'Setting status to "queued" for '
+            f"interrupted job with id {job.job_id}"
+        )
+        job_service.update_job_status(
+            job.job_id,
+            "queued",
+            "Retrying due to an unexpected interruption.",
+        )
+    elif job_operation == "BUMP":
+        try:
+            rollback.rollback_bump(job.job_id, job.parameters.bump_manifesto)
+        except Exception as exc:
+            error_message = f"Failed rollback for {job.job_id}"
+            logger.exception(error_message, exc_info=exc)
+            raise RollbackException(error_message) from exc
+        logger.info(
+            'Setting status to "failed" for '
+            f"interrupted job with id {job.job_id}"
+        )
+        job_service.update_job_status(
+            job.job_id,
+            "failed",
+            "Bump operation was interrupted and rolled back.",
+        )
+    else:
+        log_message = (
+            f"Unrecognized job operation {job_operation}"
+            f"for job {job.job_id}"
+        )
+        logger.error(log_message)
+        raise RollbackException(log_message)
 
 
 def check_tmp_directory():
@@ -212,7 +215,7 @@ def initialize_app():
 def main():
     initialize_app()
 
-    workers: List[Process] = []
+    workers: List[Worker] = []
     logging_queue = Queue()
 
     log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))
@@ -226,6 +229,11 @@ def main():
             queued_worker_jobs = job_dict["queued_worker_jobs"]
             built_jobs = job_dict["built_jobs"]
             queued_manager_jobs = job_dict["queued_manager_jobs"]
+
+            dead_workers = [
+                worker for worker in workers if not worker.is_alive()
+            ]
+            clean_up_after_dead_workers(dead_workers)
 
             workers = [worker for worker in workers if worker.is_alive()]
 
@@ -265,30 +273,53 @@ def main():
         log_thread.join()
 
 
-def _handle_worker_job(job: Job, workers: List[Process], logging_queue: Queue):
+def clean_up_after_dead_workers(dead_workers: List[Worker]) -> None:
+    if len(dead_workers) > 0:
+        in_progress_jobs = job_service.get_jobs(ignore_completed=True)
+        for dead_worker in dead_workers:
+            job = next(
+                (
+                    job
+                    for job in in_progress_jobs
+                    if dead_worker.job_id == job.job_id
+                ),
+                None,  # not found in in_progress => completed or failed
+            )
+            if job and job.status not in ["queued", "built"]:
+                logger.info(f"Worker died and did not finish job {job.job_id}")
+                fix_interrupted_job(job)
+
+
+def _handle_worker_job(job: Job, workers: List[Worker], logging_queue: Queue):
     dataset_name = job.parameters.target
     job_id = job.job_id
     operation = job.parameters.operation
     if operation in ["ADD", "CHANGE"]:
-        worker = Process(
-            target=build_dataset_worker.run_worker,
-            args=(
-                job_id,
-                dataset_name,
-                logging_queue,
+        worker = Worker(
+            process=Process(
+                target=build_dataset_worker.run_worker,
+                args=(
+                    job_id,
+                    dataset_name,
+                    logging_queue,
+                ),
             ),
+            job_id=job_id,
         )
         workers.append(worker)
         job_service.update_job_status(job_id, "initiated")
         worker.start()
     elif operation == "PATCH_METADATA":
-        worker = Process(
-            target=build_metadata_worker.run_worker,
-            args=(
-                job_id,
-                dataset_name,
-                logging_queue,
+        worker = Worker(
+            process=Process(
+                target=build_metadata_worker.run_worker,
+                args=(
+                    job_id,
+                    dataset_name,
+                    logging_queue,
+                ),
             ),
+            job_id=job_id,
         )
         workers.append(worker)
         job_service.update_job_status(job_id, "initiated")

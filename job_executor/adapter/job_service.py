@@ -5,8 +5,8 @@ import requests
 from requests import RequestException, Response
 
 from job_executor.config import environment
-from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.exception import HttpResponseError, HttpRequestError
+from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.maintenance_status import MaintenanceStatus
 
 JOB_SERVICE_URL = environment.get("JOB_SERVICE_URL")
