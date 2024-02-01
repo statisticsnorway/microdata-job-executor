@@ -46,7 +46,7 @@ RUN poetryVersion=$(poetry version -s); buildNumber=${BUILD_NUMBER}; newVersion=
 RUN poetry export > requirements.txt
 
 # Production image
-FROM python:3.10-slim
+FROM python:3.13.0a3-slim
 
 # Create user
 RUN groupadd --gid 180291 microdata \
