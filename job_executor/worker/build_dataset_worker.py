@@ -1,6 +1,6 @@
+import os
 import logging
 from multiprocessing import Queue
-import os
 from pathlib import Path
 from time import perf_counter
 
@@ -32,6 +32,19 @@ def _clean_working_dir(dataset_name: str):
             local_storage.delete_working_dir_dir(file_path)
         else:
             local_storage.delete_working_dir_file(file_path)
+
+
+def _dataset_requires_pseudonymization(input_metadata: dict) -> bool:
+    return any(
+        [
+            input_metadata["identifierVariables"][0]
+            .get("unitType", {})
+            .get("requiresPseudonymization", False),
+            input_metadata["measureVariables"][0]
+            .get("unitType", {})
+            .get("requiresPseudonymization", False),
+        ]
+    )
 
 
 def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
@@ -71,12 +84,14 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         transformed_metadata = Metadata(**transformed_metadata_json)
 
         temporality_type = transformed_metadata.temporality
-
-        job_service.update_job_status(job_id, "pseudonymizing")
-        pseudonymized_data_path = dataset_pseudonymizer.run(
-            validated_data_file_path, transformed_metadata, job_id
-        )
-        local_storage.delete_working_dir_file(validated_data_file_path)
+        if _dataset_requires_pseudonymization(input_metadata):
+            job_service.update_job_status(job_id, "pseudonymizing")
+            pseudonymized_data_path = dataset_pseudonymizer.run(
+                validated_data_file_path, transformed_metadata, job_id
+            )
+            local_storage.delete_working_dir_file(validated_data_file_path)
+        else:
+            pseudonymized_data_path = validated_data_file_path
 
         job_service.update_job_status(job_id, "partitioning")
         if temporality_type in ["STATUS", "ACCUMULATED"]:
@@ -88,7 +103,6 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
                 f"{dataset_name}__DRAFT.parquet",
             )
             os.rename(pseudonymized_data_path, target_path)
-
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
         logger.info("Dataset built successfully")
