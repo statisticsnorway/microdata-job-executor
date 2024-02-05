@@ -20,6 +20,8 @@ RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
 PARTITIONED_DATASET_NAME = "INNTEKT"
 DATASET_NAME = "BOSTED"
+NO_PSEUDONYM_DATASET_NAME = "KOMMUNE_FOLKETALL"
+NO_PSEUDONYM_FIXED_DATASET_NAME = "KOMMUNE_HOYESTE_PUNKT"
 JOB_ID = "1234-1234-1234-1234"
 WORKING_DIR = os.environ["WORKING_DIR"]
 INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
@@ -237,6 +239,13 @@ EXPECTED_REQUESTS_IMPORT = [
     },
 ]
 
+EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM = [
+    request
+    for request in EXPECTED_REQUESTS_IMPORT
+    if request["json"] != {"status": "pseudonymizing"}
+    and "mock.pseudonym.service" not in request["url"]
+]
+
 
 def setup_function():
     if os.path.isdir("tests/resources_backup"):
@@ -311,6 +320,78 @@ def test_import(requests_mock: RequestsMocker):
     for index, _ in enumerate(requests_made):
         assert request_matches(
             requests_made[index], EXPECTED_REQUESTS_IMPORT[index]
+        )
+
+
+def test_import_no_pseudonymization(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    run_worker(JOB_ID, NO_PSEUDONYM_DATASET_NAME, Queue())
+    assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}.tar")
+    assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
+    assert not os.path.exists(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
+    assert not os.path.isfile(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.csv")
+    assert not os.path.isfile(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.json"
+    )
+    assert os.path.isdir(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}__DRAFT")
+    assert os.path.isfile(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}__DRAFT.json"
+    )
+    assert not (
+        Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{NO_PSEUDONYM_DATASET_NAME}.tar"
+    ).exists()
+    requests_made = [
+        {"method": req.method, "json": req.json(), "url": req.url}
+        for req in requests_mock.request_history
+    ]
+    assert len(requests_made) == len(EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM)
+    for index, _ in enumerate(requests_made):
+        assert request_matches(
+            requests_made[index], EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM[index]
+        )
+
+
+def test_import_no_pseudonymization_no_partitioning(
+    requests_mock: RequestsMocker,
+):
+    requests_mock.put(
+        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    run_worker(JOB_ID, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())
+    print(os.listdir(f"{WORKING_DIR}"))
+    assert not os.path.exists(
+        f"{INPUT_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}.tar"
+    )
+    assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}")
+    assert not os.path.exists(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}"
+    )
+    assert not os.path.isfile(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}.csv"
+    )
+    assert not os.path.isfile(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}.json"
+    )
+    assert os.path.isfile(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}__DRAFT.parquet"
+    )
+    assert os.path.isfile(
+        f"{WORKING_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}__DRAFT.json"
+    )
+    assert not (
+        Path(INPUT_DIR_ARCHIVE)
+        / f"unpackaged/{NO_PSEUDONYM_FIXED_DATASET_NAME}.tar"
+    ).exists()
+    requests_made = [
+        {"method": req.method, "json": req.json(), "url": req.url}
+        for req in requests_mock.request_history
+    ]
+    assert len(requests_made) == len(EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM)
+    for index, _ in enumerate(requests_made):
+        assert request_matches(
+            requests_made[index], EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM[index]
         )
 
 
