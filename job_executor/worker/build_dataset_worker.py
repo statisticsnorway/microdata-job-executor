@@ -65,7 +65,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         job_service.update_job_status(job_id, "validating")
         (
-            validated_data_file_path,
+            data_path,
             metadata_file_path,
         ) = dataset_validator.run_for_dataset(dataset_name)
         input_metadata = local_storage.get_working_dir_input_metadata(
@@ -86,23 +86,22 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         temporality_type = transformed_metadata.temporality
         if _dataset_requires_pseudonymization(input_metadata):
             job_service.update_job_status(job_id, "pseudonymizing")
-            pseudonymized_data_path = dataset_pseudonymizer.run(
-                validated_data_file_path, transformed_metadata, job_id
+            pre_pseudonymized_data_path = data_path
+            data_path = dataset_pseudonymizer.run(
+                data_path, transformed_metadata, job_id
             )
-            local_storage.delete_working_dir_file(validated_data_file_path)
-        else:
-            pseudonymized_data_path = validated_data_file_path
+            local_storage.delete_working_dir_file(pre_pseudonymized_data_path)
 
         job_service.update_job_status(job_id, "partitioning")
         if temporality_type in ["STATUS", "ACCUMULATED"]:
-            dataset_partitioner.run(pseudonymized_data_path, dataset_name)
-            local_storage.delete_working_dir_file(pseudonymized_data_path)
+            dataset_partitioner.run(data_path, dataset_name)
+            local_storage.delete_working_dir_file(data_path)
         else:
             target_path = os.path.join(
-                os.path.dirname(pseudonymized_data_path),
+                os.path.dirname(data_path),
                 f"{dataset_name}__DRAFT.parquet",
             )
-            os.rename(pseudonymized_data_path, target_path)
+            os.rename(data_path, target_path)
         local_storage.delete_archived_input(dataset_name)
         job_service.update_job_status(job_id, "built")
         logger.info("Dataset built successfully")
