@@ -1,14 +1,14 @@
 from typing import Optional, List
-from enum import Enum
+from enum import StrEnum
 import datetime
 
-from pydantic import Extra, root_validator
+from pydantic import root_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     QUEUED = "queued"
     INITIATED = "initiated"
     DECRYPTING = "decrypting"
@@ -23,7 +23,7 @@ class JobStatus(str, Enum):
     FAILED = "failed"
 
 
-class Operation(str, Enum):
+class Operation(StrEnum):
     BUMP = "BUMP"
     ADD = "ADD"
     CHANGE = "CHANGE"
@@ -34,13 +34,13 @@ class Operation(str, Enum):
     DELETE_ARCHIVE = "DELETE_ARCHIVE"
 
 
-class ReleaseStatus(str, Enum):
+class ReleaseStatus(StrEnum):
     DRAFT = "DRAFT"
     PENDING_RELEASE = "PENDING_RELEASE"
     PENDING_DELETE = "PENDING_DELETE"
 
 
-class UserInfo(CamelModel, extra=Extra.forbid):
+class UserInfo(CamelModel, extra= "forbid"):
     user_id: str
     first_name: str
     last_name: str
@@ -49,11 +49,11 @@ class UserInfo(CamelModel, extra=Extra.forbid):
 class JobParameters(CamelModel, use_enum_values=True):
     operation: Operation
     target: str
-    bump_manifesto: Optional[DatastoreVersion]
-    description: Optional[str]
-    release_status: Optional[ReleaseStatus]
-    bump_from_version: Optional[str]
-    bump_to_version: Optional[str]
+    bump_manifesto: Optional[DatastoreVersion] = None
+    description: Optional[str] = None
+    release_status: Optional[ReleaseStatus] = None
+    bump_from_version: Optional[str] = None
+    bump_to_version: Optional[str] = None
 
     @root_validator(skip_on_failure=True)
     @classmethod
@@ -84,7 +84,7 @@ class JobParameters(CamelModel, use_enum_values=True):
             }
 
 
-class Log(CamelModel, extra=Extra.forbid):
+class Log(CamelModel, extra="forbid"):
     at: datetime.datetime
     message: str
 

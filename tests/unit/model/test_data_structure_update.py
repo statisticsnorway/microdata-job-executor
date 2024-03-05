@@ -27,7 +27,7 @@ DATA_STRUCTURE_UPDATE_MISSING_FIELD = {
 def test_data_structure_update():
     data_structure_update = DataStructureUpdate(**DATA_STRUCTURE_ADD_UPDATE)
     assert (
-        data_structure_update.dict(by_alias=True) == DATA_STRUCTURE_ADD_UPDATE
+        data_structure_update.model_dump(by_alias=True, exclude_none=True) == DATA_STRUCTURE_ADD_UPDATE
     )
 
 

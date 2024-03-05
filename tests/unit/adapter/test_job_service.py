@@ -43,7 +43,7 @@ ERROR_RESPONSE = "Internal Server Error"
 
 def test_get_jobs(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/jobs", json=[job.dict() for job in JOB_LIST]
+        f"{JOB_SERVICE_URL}/jobs", json=[job.model_dump() for job in JOB_LIST]
     )
     jobs = job_service.get_jobs()
     assert jobs == JOB_LIST

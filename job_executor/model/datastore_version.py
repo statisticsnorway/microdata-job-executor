@@ -25,7 +25,7 @@ class DatastoreVersion(CamelModel):
     def __iter__(self):
         return iter(
             [
-                DataStructureUpdate(**update.dict(by_alias=True))
+                DataStructureUpdate(**update.model_dump(by_alias=True, exclude_none=True))
                 for update in self.data_structure_updates
             ]
         )
@@ -118,12 +118,12 @@ class DraftVersion(DatastoreVersion):
         self, bump_manifesto: "DatastoreVersion"
     ) -> bool:
         pending_operations = [
-            update.dict()
+            update.model_dump()
             for update in self.data_structure_updates
             if update.release_status != "DRAFT"
         ]
         other_pending_operations = [
-            update.dict()
+            update.model_dump()
             for update in bump_manifesto.data_structure_updates
             if update.release_status != "DRAFT"
         ]
@@ -152,7 +152,7 @@ class DraftVersion(DatastoreVersion):
         return pending_updates, update_type
 
     def _write_to_file(self):
-        local_storage.write_draft_version(self.dict(by_alias=True))
+        local_storage.write_draft_version(self.model_dump(by_alias=True))
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
         dataset_update = next(

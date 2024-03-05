@@ -1,5 +1,5 @@
 from typing import List, Union
-from pydantic import root_validator
+from pydantic import root_validator, model_validator
 from job_executor.exception import BumpException
 
 from job_executor.model.camelcase_model import CamelModel
@@ -28,7 +28,7 @@ class MetadataAll(CamelModel):
     def __iter__(self):
         return iter(
             [
-                Metadata(**data_structure.dict(by_alias=True))
+                Metadata(**data_structure.model_dump(by_alias=True, exclude_none=True))
                 for data_structure in self.data_structures
             ]
         )
@@ -36,7 +36,7 @@ class MetadataAll(CamelModel):
     def get(self, dataset_name: str) -> Union[Metadata, None]:
         for metadata in self.data_structures:
             if metadata.name == dataset_name:
-                return Metadata(**metadata.dict())
+                return Metadata(**metadata.model_dump())
         return None
 
 
@@ -47,7 +47,7 @@ class MetadataAllDraft(MetadataAll):
         return local_storage.get_metadata_all("DRAFT")
 
     def _write_to_file(self):
-        local_storage.write_metadata_all(self.dict(by_alias=True), "DRAFT")
+        local_storage.write_metadata_all(self.model_dump(by_alias=True, exclude_none=True), "DRAFT")
 
     def remove(self, dataset_name: str):
         self.data_structures = [
@@ -72,7 +72,7 @@ class MetadataAllDraft(MetadataAll):
     ):
         previous_data_structures = [ds for ds in self.data_structures]
         self.data_structures = [
-            Metadata(**m.dict(by_alias=True)) for m in released_metadata
+            Metadata(**m.model_dump(by_alias=True, exclude_none=True)) for m in released_metadata
         ]
         for draft in draft_version:
             self.remove(draft.name)
