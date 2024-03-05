@@ -1,5 +1,5 @@
 from typing import List, Union
-from pydantic import root_validator, model_validator
+from pydantic import model_validator
 from job_executor.exception import BumpException
 
 from job_executor.model.camelcase_model import CamelModel
@@ -41,7 +41,7 @@ class MetadataAll(CamelModel):
 
 
 class MetadataAllDraft(MetadataAll):
-    @root_validator(pre=True)
+    @model_validator(mode="before")
     @classmethod
     def read_file(cls, _):
         return local_storage.get_metadata_all("DRAFT")

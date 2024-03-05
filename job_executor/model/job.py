@@ -2,7 +2,7 @@ from typing import Optional, List
 from enum import StrEnum
 import datetime
 
-from pydantic import root_validator
+from pydantic import model_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion
@@ -55,33 +55,28 @@ class JobParameters(CamelModel, use_enum_values=True):
     bump_from_version: Optional[str] = None
     bump_to_version: Optional[str] = None
 
-    @root_validator(skip_on_failure=True)
-    @classmethod
-    def validate_job_type(cls, values):
-        operation: Operation = values.get("operation")
+    @model_validator(mode = "after")
+    def validate_job_type(self: "JobParameters"):
+        operation: Operation = self.operation
         if operation == Operation.BUMP and (
-            values.get("bump_manifesto") is None
-            or values.get("description") is None
-            or values.get("bump_from_version") is None
-            or values.get("bump_to_version") is None
-            or values.get("target") != "DATASTORE"
+            self.bump_manifesto is None
+            or self.description is None
+            or self.bump_from_version is None
+            or self.bump_to_version is None
+            or self.target != "DATASTORE"
         ):
             raise ValueError("No supplied bump manifesto for BUMP operation")
         elif (
-            operation == Operation.REMOVE and values.get("description") is None
+            operation == Operation.REMOVE and self.description is None
         ):
             raise ValueError("Missing parameters for REMOVE operation")
         elif (
             operation == Operation.SET_STATUS
-            and values.get("release_status") is None
+            and self.release_status is None
         ):
             raise ValueError("Missing parameters for SET STATUS operation")
         else:
-            return {
-                key: value
-                for key, value in values.items()
-                if value is not None
-            }
+            return self
 
 
 class Log(CamelModel, extra="forbid"):

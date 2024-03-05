@@ -1,7 +1,7 @@
 from typing import List, Union, Tuple
 from datetime import datetime
 
-from pydantic import root_validator
+from pydantic import model_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model.data_structure_update import DataStructureUpdate
@@ -74,7 +74,7 @@ class DatastoreVersion(CamelModel):
 
 
 class DraftVersion(DatastoreVersion):
-    @root_validator(skip_on_failure=True, pre=True)
+    @model_validator(mode="before")
     @classmethod
     def read_file(cls, _):
         return local_storage.get_draft_version()

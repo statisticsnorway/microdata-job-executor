@@ -1,7 +1,7 @@
 from typing import List, Union
 from datetime import datetime
 
-from pydantic import root_validator
+from pydantic import model_validator
 from job_executor.exception import VersioningException
 
 from job_executor.model.camelcase_model import CamelModel
@@ -16,7 +16,7 @@ class DatastoreVersions(CamelModel, extra="forbid"):
     description: str
     versions: List[DatastoreVersion]
 
-    @root_validator(skip_on_failure=True, pre=True)
+    @model_validator(mode="before")
     @classmethod
     def read_file(cls, _):
         return local_storage.get_datastore_versions()

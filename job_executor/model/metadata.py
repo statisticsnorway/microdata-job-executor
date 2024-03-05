@@ -1,5 +1,5 @@
 from typing import List, Optional, Union
-from pydantic import root_validator
+from pydantic import model_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception import PatchingError, MetadataException
@@ -175,7 +175,7 @@ class Variable(CamelModel):
     key_type: Optional[KeyType] = None
     represented_variables: List[RepresentedVariable]
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
     @classmethod
     def remove_none(cls, values):
         return {
