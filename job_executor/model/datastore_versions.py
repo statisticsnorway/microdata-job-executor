@@ -1,5 +1,5 @@
 from typing import List, Union
-from datetime import datetime
+from datetime import datetime, UTC
 
 from pydantic import model_validator
 from job_executor.exception import VersioningException
@@ -26,7 +26,7 @@ class DatastoreVersions(CamelModel, extra="forbid"):
 
     def _get_current_epoch_seconds(self):
         return int(
-            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
+            (datetime.now(UTC).replace(tzinfo=None) - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)).total_seconds()
         )
 
     def add_new_release_version(

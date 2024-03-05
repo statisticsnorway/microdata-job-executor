@@ -1,5 +1,5 @@
 from typing import List, Union, Tuple
-from datetime import datetime
+from datetime import datetime, UTC
 
 from pydantic import model_validator
 
@@ -32,7 +32,7 @@ class DatastoreVersion(CamelModel):
 
     def _get_current_epoch_seconds(self):
         return int(
-            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
+            (datetime.now(UTC).replace(tzinfo=None) - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)).total_seconds()
         )
 
     def _calculate_update_type(self):
