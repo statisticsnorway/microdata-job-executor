@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import pytest
 
 from job_executor.worker.steps import dataset_transformer
