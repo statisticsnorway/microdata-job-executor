@@ -98,4 +98,3 @@ def test_import(requests_mock: RequestsMocker):
     assert not (
         Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
     ).exists()
-

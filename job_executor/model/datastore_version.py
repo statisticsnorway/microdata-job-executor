@@ -25,14 +25,19 @@ class DatastoreVersion(CamelModel):
     def __iter__(self):
         return iter(
             [
-                DataStructureUpdate(**update.model_dump(by_alias=True, exclude_none=True))
+                DataStructureUpdate(
+                    **update.model_dump(by_alias=True, exclude_none=True)
+                )
                 for update in self.data_structure_updates
             ]
         )
 
     def _get_current_epoch_seconds(self):
         return int(
-            (datetime.now(UTC).replace(tzinfo=None) - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)).total_seconds()
+            (
+                datetime.now(UTC).replace(tzinfo=None)
+                - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)
+            ).total_seconds()
         )
 
     def _calculate_update_type(self):

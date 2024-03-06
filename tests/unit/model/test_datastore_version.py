@@ -66,7 +66,10 @@ def teardown_function():
 
 def test_datastore_version():
     datastore_version = DatastoreVersion(**DATASTORE_VERSION)
-    assert datastore_version.model_dump(by_alias=True, exclude_none=True) == DATASTORE_VERSION
+    assert (
+        datastore_version.model_dump(by_alias=True, exclude_none=True)
+        == DATASTORE_VERSION
+    )
 
 
 def test_get_dataset_release_status():
@@ -83,7 +86,9 @@ def test_get_dataset_release_status():
 
 def test_draft_version():
     draft_version = DraftVersion()
-    assert draft_version.model_dump(by_alias=True, exclude_none=True) == load_json(DRAFT_VERSION_PATH)
+    assert draft_version.model_dump(
+        by_alias=True, exclude_none=True
+    ) == load_json(DRAFT_VERSION_PATH)
 
 
 def test_draft_version_delete_draft():

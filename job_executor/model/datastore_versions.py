@@ -22,11 +22,16 @@ class DatastoreVersions(CamelModel, extra="forbid"):
         return local_storage.get_datastore_versions()
 
     def _write_to_file(self):
-        local_storage.write_datastore_versions(self.model_dump(by_alias=True, exclude_none=True))
+        local_storage.write_datastore_versions(
+            self.model_dump(by_alias=True, exclude_none=True)
+        )
 
     def _get_current_epoch_seconds(self):
         return int(
-            (datetime.now(UTC).replace(tzinfo=None) - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)).total_seconds()
+            (
+                datetime.now(UTC).replace(tzinfo=None)
+                - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)
+            ).total_seconds()
         )
 
     def add_new_release_version(

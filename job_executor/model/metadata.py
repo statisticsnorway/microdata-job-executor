@@ -87,7 +87,9 @@ class ValueDomain(CamelModel):
             }
         elif self.is_enumerated_value_domain():
             return {
-                "codeList": [code_item.model_dump() for code_item in self.code_list],
+                "codeList": [
+                    code_item.model_dump() for code_item in self.code_list
+                ],
                 "missingValues": [
                     missing_value for missing_value in self.missing_values
                 ],
@@ -127,7 +129,9 @@ class ValueDomain(CamelModel):
             )
             for idx, code_item in enumerate(sorted_code_list):
                 patched["codeList"].append(
-                    code_item.patch(sorted_other_code_list[idx]).model_dump(by_alias=True, exclude_none=True)
+                    code_item.patch(sorted_other_code_list[idx]).model_dump(
+                        by_alias=True, exclude_none=True
+                    )
                 )
             return ValueDomain(**patched)
         else:
@@ -148,7 +152,9 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": other.description,
-                "validPeriod": self.valid_period.model_dump(by_alias=True, exclude_none=True),
+                "validPeriod": self.valid_period.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
                 "valueDomain": self.value_domain.patch(
                     other.value_domain
                 ).model_dump(by_alias=True, exclude_none=True),
@@ -159,8 +165,12 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": description,
-                "validPeriod": self.valid_period.model_dump(by_alias=True, exclude_none=True),
-                "valueDomain": self.value_domain.model_dump(by_alias=True, exclude_none=True),
+                "validPeriod": self.valid_period.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
+                "valueDomain": self.value_domain.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
             }
         )
 
@@ -193,14 +203,18 @@ class Variable(CamelModel):
             "dataType": self.data_type,
             "variableRole": self.variable_role,
             "representedVariables": [
-                represented_variable.model_dump(by_alias=True, exclude_none=True)
+                represented_variable.model_dump(
+                    by_alias=True, exclude_none=True
+                )
                 for represented_variable in self.represented_variables
             ],
         }
         if self.format is not None:
             dict_representation["format"] = self.format
         if self.key_type is not None:
-            dict_representation["keyType"] = self.key_type.model_dump(by_alias=True, exclude_none=True)
+            dict_representation["keyType"] = self.key_type.model_dump(
+                by_alias=True, exclude_none=True
+            )
         return dict_representation
 
     def validate_patching_fields(
@@ -362,7 +376,9 @@ class Metadata(CamelModel):
             "subjectFields": [field for field in other.subject_fields],
             "temporalCoverage": self.temporal_coverage.model_dump(),
             "measureVariable": (
-                self.measure_variable.patch(other.measure_variable).model_dump()
+                self.measure_variable.patch(
+                    other.measure_variable
+                ).model_dump()
             ),
             "identifierVariables": [
                 self.identifier_variables[0]

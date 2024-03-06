@@ -27,9 +27,9 @@ def teardown_function():
 
 def test_datastore_versions():
     datastore_versions = DatastoreVersions()
-    assert datastore_versions.model_dump(by_alias=True, exclude_none=True) == load_json(
-        DATASTORE_VERSIONS_PATH
-    )
+    assert datastore_versions.model_dump(
+        by_alias=True, exclude_none=True
+    ) == load_json(DATASTORE_VERSIONS_PATH)
 
 
 def test_add_new_release_version():

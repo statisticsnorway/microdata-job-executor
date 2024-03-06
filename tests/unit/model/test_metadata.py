@@ -44,22 +44,33 @@ def teardown_module():
 
 def test_metadata_all():
     metadata_all = MetadataAll(**load_json(METADATA_ALL_PATH))
-    assert metadata_all.model_dump(by_alias=True, exclude_none=True) == load_json(METADATA_ALL_PATH)
+    assert metadata_all.model_dump(
+        by_alias=True, exclude_none=True
+    ) == load_json(METADATA_ALL_PATH)
 
 
 def test_metadata():
     enumerated_metadata = Metadata(**ENUMERATED_METADATA)
-    assert enumerated_metadata.model_dump(by_alias=True, exclude_none=True) == ENUMERATED_METADATA
+    assert (
+        enumerated_metadata.model_dump(by_alias=True, exclude_none=True)
+        == ENUMERATED_METADATA
+    )
 
     described_metadata = Metadata(**DESCRIBED_METADATA)
-    assert described_metadata.model_dump(by_alias=True, exclude_none=True) == DESCRIBED_METADATA
+    assert (
+        described_metadata.model_dump(by_alias=True, exclude_none=True)
+        == DESCRIBED_METADATA
+    )
 
 
 def test_patch():
     metadata_in_datastore = Metadata(**METADATA_IN_DATASTORE)
     updated_metadata = Metadata(**UPDATED_METADATA)
     patched_metadata = metadata_in_datastore.patch(updated_metadata)
-    assert patched_metadata.model_dump(by_alias=True, exclude_none=True) == PATCHED_METADATA
+    assert (
+        patched_metadata.model_dump(by_alias=True, exclude_none=True)
+        == PATCHED_METADATA
+    )
 
 
 def test_patch_change_name_desc_when_measure_has_a_unit_type():

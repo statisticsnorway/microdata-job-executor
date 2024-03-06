@@ -28,7 +28,11 @@ class MetadataAll(CamelModel):
     def __iter__(self):
         return iter(
             [
-                Metadata(**data_structure.model_dump(by_alias=True, exclude_none=True))
+                Metadata(
+                    **data_structure.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                )
                 for data_structure in self.data_structures
             ]
         )
@@ -47,7 +51,9 @@ class MetadataAllDraft(MetadataAll):
         return local_storage.get_metadata_all("DRAFT")
 
     def _write_to_file(self):
-        local_storage.write_metadata_all(self.model_dump(by_alias=True, exclude_none=True), "DRAFT")
+        local_storage.write_metadata_all(
+            self.model_dump(by_alias=True, exclude_none=True), "DRAFT"
+        )
 
     def remove(self, dataset_name: str):
         self.data_structures = [
@@ -72,7 +78,8 @@ class MetadataAllDraft(MetadataAll):
     ):
         previous_data_structures = [ds for ds in self.data_structures]
         self.data_structures = [
-            Metadata(**m.model_dump(by_alias=True, exclude_none=True)) for m in released_metadata
+            Metadata(**m.model_dump(by_alias=True, exclude_none=True))
+            for m in released_metadata
         ]
         for draft in draft_version:
             self.remove(draft.name)

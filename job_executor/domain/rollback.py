@@ -66,7 +66,8 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                 os.remove(data_versions_path)
 
         metadata_all_path = (
-            datastore_info_dir / f"metadata_all__{bumped_version_metadata}.json"
+            datastore_info_dir
+            / f"metadata_all__{bumped_version_metadata}.json"
         )
         if metadata_all_path.exists():
             logger.info(f"{job_id}: Deleting {metadata_all_path}")

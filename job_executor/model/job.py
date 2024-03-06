@@ -40,7 +40,7 @@ class ReleaseStatus(StrEnum):
     PENDING_DELETE = "PENDING_DELETE"
 
 
-class UserInfo(CamelModel, extra= "forbid"):
+class UserInfo(CamelModel, extra="forbid"):
     user_id: str
     first_name: str
     last_name: str
@@ -55,7 +55,7 @@ class JobParameters(CamelModel, use_enum_values=True):
     bump_from_version: Optional[str] = None
     bump_to_version: Optional[str] = None
 
-    @model_validator(mode = "after")
+    @model_validator(mode="after")
     def validate_job_type(self: "JobParameters"):
         operation: Operation = self.operation
         if operation == Operation.BUMP and (
@@ -66,14 +66,9 @@ class JobParameters(CamelModel, use_enum_values=True):
             or self.target != "DATASTORE"
         ):
             raise ValueError("No supplied bump manifesto for BUMP operation")
-        elif (
-            operation == Operation.REMOVE and self.description is None
-        ):
+        elif operation == Operation.REMOVE and self.description is None:
             raise ValueError("Missing parameters for REMOVE operation")
-        elif (
-            operation == Operation.SET_STATUS
-            and self.release_status is None
-        ):
+        elif operation == Operation.SET_STATUS and self.release_status is None:
             raise ValueError("Missing parameters for SET STATUS operation")
         else:
             return self
@@ -94,4 +89,3 @@ class Job(CamelModel, use_enum_values=True):
     log: Optional[List[Log]] = []
     created_at: str
     created_by: UserInfo
-
