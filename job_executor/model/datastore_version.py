@@ -157,7 +157,9 @@ class DraftVersion(DatastoreVersion):
         return pending_updates, update_type
 
     def _write_to_file(self):
-        local_storage.write_draft_version(self.model_dump(by_alias=True))
+        local_storage.write_draft_version(
+            self.model_dump(by_alias=True, exclude_none=True)
+        )
 
     def set_draft_release_status(self, dataset_name: str, new_status: str):
         dataset_update = next(

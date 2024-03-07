@@ -309,7 +309,7 @@ class Datastore:
         )
         del new_metadata_all_dict["dataStructures"]
         new_metadata_all_dict["dataStructures"] = [
-            dataset.dict(by_alias=True, exclude_none=True)
+            dataset.model_dump(by_alias=True, exclude_none=True)
             for dataset in new_version_metadata
         ]
         new_metadata_all = MetadataAll(**new_metadata_all_dict)

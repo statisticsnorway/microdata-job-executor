@@ -19,13 +19,6 @@ class TimePeriod(CamelModel):
     start: Union[int, None]
     stop: Optional[Union[int, None]] = None
 
-    def dict(self, **kwargs) -> dict:
-        return (
-            {"start": self.start, "stop": self.stop}
-            if self.stop is not None
-            else {"start": self.start}
-        )
-
     def __eq__(self, other):
         return self.start == other.start and self.stop == other.stop
 
@@ -74,28 +67,6 @@ class ValueDomain(CamelModel):
             and self.code_list is None
             and self.missing_values is None
         )
-
-    def dict(self, **kwargs) -> dict:
-        if self.is_described_value_domain():
-            return {
-                key: value
-                for key, value in {
-                    "description": self.description,
-                    "unitOfMeasure": self.unit_of_measure,
-                }.items()
-                if value is not None
-            }
-        elif self.is_enumerated_value_domain():
-            return {
-                "codeList": [
-                    code_item.model_dump() for code_item in self.code_list
-                ],
-                "missingValues": [
-                    missing_value for missing_value in self.missing_values
-                ],
-            }
-        else:
-            raise MetadataException("Invalid ValueDomain")
 
     def patch(self, other: "ValueDomain"):
         patched = {}
@@ -152,12 +123,12 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": other.description,
-                "validPeriod": self.valid_period.dict(
-                    by_alias=True
+                "validPeriod": self.valid_period.model_dump(
+                    by_alias=True, exclude_none=True
                 ),
                 "valueDomain": self.value_domain.patch(
                     other.value_domain
-                ).dict(by_alias=True),
+                ).model_dump(by_alias=True, exclude_none=True),
             }
         )
 
@@ -165,11 +136,11 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": description,
-                "validPeriod": self.valid_period.dict(
-                    by_alias=True
+                "validPeriod": self.valid_period.model_dump(
+                    by_alias=True, exclude_none=True
                 ),
-                "valueDomain": self.value_domain.dict(
-                    by_alias=True
+                "valueDomain": self.value_domain.model_dump(
+                    by_alias=True, exclude_none=True
                 ),
             }
         )
@@ -194,28 +165,6 @@ class Variable(CamelModel):
 
     def get_key_type_name(self):
         return None if self.key_type is None else self.key_type.name
-
-    def dict(self, **kwargs) -> dict:
-        dict_representation = {
-            "name": self.name,
-            "label": self.label,
-            "notPseudonym": self.not_pseudonym,
-            "dataType": self.data_type,
-            "variableRole": self.variable_role,
-            "representedVariables": [
-                represented_variable.model_dump(
-                    by_alias=True, exclude_none=True
-                )
-                for represented_variable in self.represented_variables
-            ],
-        }
-        if self.format is not None:
-            dict_representation["format"] = self.format
-        if self.key_type is not None:
-            dict_representation["keyType"] = self.key_type.model_dump(
-                by_alias=True, exclude_none=True
-            )
-        return dict_representation
 
     def validate_patching_fields(
         self, other, with_name: bool = False, with_key_type: bool = False
@@ -374,16 +323,16 @@ class Metadata(CamelModel):
             "sensitivityLevel": self.sensitivity_level,
             "populationDescription": other.population_description,
             "subjectFields": [field for field in other.subject_fields],
-            "temporalCoverage": self.temporal_coverage.dict(),
+            "temporalCoverage": self.temporal_coverage.model_dump(),
             "measureVariable": (
                 self.measure_variable.patch(
                     other.measure_variable
-                ).dict()
+                ).model_dump()
             ),
             "identifierVariables": [
                 self.identifier_variables[0]
                 .patch(other.identifier_variables[0])
-                .dict()
+                .model_dump()
             ],
             "attributeVariables": self.attribute_variables,
             "temporalStatusDates": self.temporal_status_dates,
@@ -391,24 +340,3 @@ class Metadata(CamelModel):
         if self.temporal_status_dates is None:
             del metadata_dict["temporalStatusDates"]
         return Metadata(**metadata_dict)
-
-    def dict(self, **kwargs) -> dict:
-        metadata_dict = {
-            "name": self.name,
-            "temporality": self.temporality,
-            "languageCode": self.language_code,
-            "sensitivityLevel": self.sensitivity_level,
-            "populationDescription": self.population_description,
-            "subjectFields": [field for field in self.subject_fields],
-            "temporalCoverage": self.temporal_coverage.dict(),
-            "measureVariable": self.measure_variable.dict(),
-            "identifierVariables": [self.identifier_variables[0].dict()],
-            "attributeVariables": [
-                self.attribute_variables[0].dict(),
-                self.attribute_variables[1].dict(),
-            ],
-            "temporalStatusDates": self.temporal_status_dates,
-        }
-        if self.temporal_status_dates is None:
-            del metadata_dict["temporalStatusDates"]
-        return metadata_dict

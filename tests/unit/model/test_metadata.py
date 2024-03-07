@@ -52,13 +52,13 @@ def test_metadata_all():
 def test_metadata():
     enumerated_metadata = Metadata(**ENUMERATED_METADATA)
     assert (
-        enumerated_metadata.dict(by_alias=True)
+        enumerated_metadata.model_dump(by_alias=True, exclude_none=True)
         == ENUMERATED_METADATA
     )
 
     described_metadata = Metadata(**DESCRIBED_METADATA)
     assert (
-        described_metadata.dict(by_alias=True)
+        described_metadata.model_dump(by_alias=True, exclude_none=True)
         == DESCRIBED_METADATA
     )
 
@@ -68,7 +68,7 @@ def test_patch():
     updated_metadata = Metadata(**UPDATED_METADATA)
     patched_metadata = metadata_in_datastore.patch(updated_metadata)
     assert (
-        patched_metadata.dict(by_alias=True)
+        patched_metadata.model_dump(by_alias=True, exclude_none=True)
         == PATCHED_METADATA
     )
 
@@ -78,6 +78,6 @@ def test_patch_change_name_desc_when_measure_has_a_unit_type():
     updated_metadata = Metadata(**PATCH_UNIT_TYPE_UPDATED_METADATA)
     patched_metadata = metadata_in_datastore.patch(updated_metadata)
     assert (
-        patched_metadata.dict(by_alias=True)
+        patched_metadata.model_dump(by_alias=True, exclude_none=True)
         == PATCH_UNIT_TYPE_PATCHED_METADATA
     )

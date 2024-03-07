@@ -78,9 +78,6 @@ class Log(CamelModel, extra="forbid"):
     at: datetime.datetime
     message: str
 
-    def dict(self, **kwargs):
-        return {"at": self.at.isoformat(), "message": self.message}
-
 
 class Job(CamelModel, use_enum_values=True):
     job_id: str
