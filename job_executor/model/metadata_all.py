@@ -29,7 +29,7 @@ class MetadataAll(CamelModel):
         return iter(
             [
                 Metadata(
-                    **data_structure.model_dump(
+                    **data_structure.dict(
                         by_alias=True, exclude_none=True
                     )
                 )
@@ -40,7 +40,7 @@ class MetadataAll(CamelModel):
     def get(self, dataset_name: str) -> Union[Metadata, None]:
         for metadata in self.data_structures:
             if metadata.name == dataset_name:
-                return Metadata(**metadata.model_dump())
+                return Metadata(**metadata.dict())
         return None
 
 

@@ -152,12 +152,12 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": other.description,
-                "validPeriod": self.valid_period.model_dump(
-                    by_alias=True, exclude_none=True
+                "validPeriod": self.valid_period.dict(
+                    by_alias=True
                 ),
                 "valueDomain": self.value_domain.patch(
                     other.value_domain
-                ).model_dump(by_alias=True, exclude_none=True),
+                ).dict(by_alias=True),
             }
         )
 
@@ -165,11 +165,11 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": description,
-                "validPeriod": self.valid_period.model_dump(
-                    by_alias=True, exclude_none=True
+                "validPeriod": self.valid_period.dict(
+                    by_alias=True
                 ),
-                "valueDomain": self.value_domain.model_dump(
-                    by_alias=True, exclude_none=True
+                "valueDomain": self.value_domain.dict(
+                    by_alias=True
                 ),
             }
         )
@@ -374,16 +374,16 @@ class Metadata(CamelModel):
             "sensitivityLevel": self.sensitivity_level,
             "populationDescription": other.population_description,
             "subjectFields": [field for field in other.subject_fields],
-            "temporalCoverage": self.temporal_coverage.model_dump(),
+            "temporalCoverage": self.temporal_coverage.dict(),
             "measureVariable": (
                 self.measure_variable.patch(
                     other.measure_variable
-                ).model_dump()
+                ).dict()
             ),
             "identifierVariables": [
                 self.identifier_variables[0]
                 .patch(other.identifier_variables[0])
-                .model_dump()
+                .dict()
             ],
             "attributeVariables": self.attribute_variables,
             "temporalStatusDates": self.temporal_status_dates,
@@ -400,12 +400,12 @@ class Metadata(CamelModel):
             "sensitivityLevel": self.sensitivity_level,
             "populationDescription": self.population_description,
             "subjectFields": [field for field in self.subject_fields],
-            "temporalCoverage": self.temporal_coverage.model_dump(),
-            "measureVariable": self.measure_variable.model_dump(),
-            "identifierVariables": [self.identifier_variables[0].model_dump()],
+            "temporalCoverage": self.temporal_coverage.dict(),
+            "measureVariable": self.measure_variable.dict(),
+            "identifierVariables": [self.identifier_variables[0].dict()],
             "attributeVariables": [
-                self.attribute_variables[0].model_dump(),
-                self.attribute_variables[1].model_dump(),
+                self.attribute_variables[0].dict(),
+                self.attribute_variables[1].dict(),
             ],
             "temporalStatusDates": self.temporal_status_dates,
         }
