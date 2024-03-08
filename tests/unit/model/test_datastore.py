@@ -70,12 +70,12 @@ def test_patch_metadata(requests_mock: RequestsMocker):
         for draft in metadata_all_draft["dataStructures"]
     )
     released_metadata = next(
-        metadata.model_dump()
+        metadata.model_dump(by_alias=True, exclude_none=True)
         for metadata in datastore.metadata_all_latest
         if metadata.name == DATASET_NAME
     )
     draft_metadata = next(
-        metadata.model_dump()
+        metadata.model_dump(by_alias=True, exclude_none=True)
         for metadata in datastore.metadata_all_draft
         if metadata.name == DATASET_NAME
     )

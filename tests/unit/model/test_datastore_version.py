@@ -149,12 +149,15 @@ def test_draft_version_release_pending():
     version = draft_version.version
     updates, update_type = draft_version.release_pending()
     assert update_type == "MINOR"
-    assert [update.model_dump() for update in updates] == [
+    assert [
+        update.model_dump(by_alias=True, exclude_none=True)
+        for update in updates
+    ] == [
         {
             "description": "Første publisering",
             "name": "BRUTTO_INNTEKT",
             "operation": "ADD",
-            "release_status": "PENDING_RELEASE",
+            "releaseStatus": "PENDING_RELEASE",
         }
     ]
     assert release_time != draft_version.release_time

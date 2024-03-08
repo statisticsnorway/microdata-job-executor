@@ -1,5 +1,4 @@
 from typing import List, Optional, Union
-from pydantic import model_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception import PatchingError, MetadataException
@@ -156,13 +155,6 @@ class Variable(CamelModel):
     key_type: Optional[KeyType] = None
     represented_variables: List[RepresentedVariable]
 
-    @model_validator(mode="before")
-    @classmethod
-    def remove_none(cls, values):
-        return {
-            key: value for key, value in values.items() if value is not None
-        }
-
     def get_key_type_name(self):
         return None if self.key_type is None else self.key_type.name
 
@@ -256,7 +248,7 @@ class MeasureVariable(Variable):
                 patched_represented_variables.append(
                     self.represented_variables[idx]
                     .patch(other.represented_variables[idx])
-                    .model_dump()
+                    .model_dump(by_alias=True, exclude_none=True)
                 )
         patched.update(
             {
@@ -271,7 +263,13 @@ class MeasureVariable(Variable):
         if self.format is not None:
             patched.update({"format": self.format})
         if centralized_variable_definition:
-            patched.update({"keyType": self.key_type.model_dump()})
+            patched.update(
+                {
+                    "keyType": self.key_type.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                }
+            )
         return Variable(**patched)
 
 
@@ -323,16 +321,18 @@ class Metadata(CamelModel):
             "sensitivityLevel": self.sensitivity_level,
             "populationDescription": other.population_description,
             "subjectFields": [field for field in other.subject_fields],
-            "temporalCoverage": self.temporal_coverage.model_dump(),
+            "temporalCoverage": self.temporal_coverage.model_dump(
+                by_alias=True, exclude_none=True
+            ),
             "measureVariable": (
-                self.measure_variable.patch(
-                    other.measure_variable
-                ).model_dump()
+                self.measure_variable.patch(other.measure_variable).model_dump(
+                    by_alias=True, exclude_none=True
+                )
             ),
             "identifierVariables": [
                 self.identifier_variables[0]
                 .patch(other.identifier_variables[0])
-                .model_dump()
+                .model_dump(by_alias=True, exclude_none=True)
             ],
             "attributeVariables": self.attribute_variables,
             "temporalStatusDates": self.temporal_status_dates,

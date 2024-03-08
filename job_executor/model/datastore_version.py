@@ -123,12 +123,12 @@ class DraftVersion(DatastoreVersion):
         self, bump_manifesto: "DatastoreVersion"
     ) -> bool:
         pending_operations = [
-            update.model_dump()
+            update.model_dump(by_alias=True, exclude_none=True)
             for update in self.data_structure_updates
             if update.release_status != "DRAFT"
         ]
         other_pending_operations = [
-            update.model_dump()
+            update.model_dump(by_alias=True, exclude_none=True)
             for update in bump_manifesto.data_structure_updates
             if update.release_status != "DRAFT"
         ]
