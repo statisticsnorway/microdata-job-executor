@@ -1,10 +1,8 @@
-from pydantic import Extra
-
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception import ReleaseStatusException
 
 
-class DataStructureUpdate(CamelModel, extra=Extra.forbid):
+class DataStructureUpdate(CamelModel, extra="forbid"):
     name: str
     description: str
     operation: str

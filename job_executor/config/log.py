@@ -3,7 +3,7 @@ import logging
 import logging.handlers
 import sys
 import traceback
-from datetime import datetime
+from datetime import datetime, UTC
 from multiprocessing import Queue
 
 from json_logging import util
@@ -86,7 +86,7 @@ class CustomJSONLog(logging.Formatter):
         )
 
     def format(self, record):
-        utcnow = datetime.utcnow()
+        utcnow = datetime.now(UTC).replace(tzinfo=None)
         base_obj = {
             "written_at": util.iso_time_format(utcnow),
             "written_ts": util.epoch_nano_second(utcnow),

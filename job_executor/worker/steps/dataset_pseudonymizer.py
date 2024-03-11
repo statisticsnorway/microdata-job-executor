@@ -187,6 +187,8 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
         ) from e
 
     except Exception as e:
-        logger.exception("Error stacktrace during pseudonymization", exc_info=e)
+        logger.exception(
+            "Error stacktrace during pseudonymization", exc_info=e
+        )
         logger.error(f"Error during pseudonymization: {str(e)}")
         raise BuilderStepError("Failed to pseudonymize dataset") from e

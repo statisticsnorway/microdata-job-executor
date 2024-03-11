@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, List, Union
 
 from job_executor.exception import BuilderStepError
@@ -15,7 +15,7 @@ def _get_norwegian_text(texts: list) -> str:
 
 
 def _days_since_epoch(date_string: str) -> int:
-    epoch = datetime.utcfromtimestamp(0)
+    epoch = datetime.fromtimestamp(0, UTC).replace(tzinfo=None)
     date_obj = datetime.strptime(date_string, "%Y-%m-%d")
     return (date_obj - epoch).days
 

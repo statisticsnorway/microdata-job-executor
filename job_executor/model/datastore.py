@@ -304,14 +304,18 @@ class Datastore:
     def _generate_new_metadata_all(
         self, new_version: str, new_version_metadata: list[Metadata]
     ):
-        new_metadata_all_dict = self.metadata_all_draft.dict(by_alias=True)
+        new_metadata_all_dict = self.metadata_all_draft.model_dump(
+            by_alias=True, exclude_none=True
+        )
         del new_metadata_all_dict["dataStructures"]
         new_metadata_all_dict["dataStructures"] = [
-            dataset.dict(by_alias=True) for dataset in new_version_metadata
+            dataset.model_dump(by_alias=True, exclude_none=True)
+            for dataset in new_version_metadata
         ]
         new_metadata_all = MetadataAll(**new_metadata_all_dict)
         local_storage.write_metadata_all(
-            new_metadata_all.dict(by_alias=True), new_version
+            new_metadata_all.model_dump(by_alias=True, exclude_none=True),
+            new_version,
         )
         self.metadata_all_latest = MetadataAll(
             **local_storage.get_metadata_all(new_version)
@@ -448,7 +452,10 @@ class Datastore:
         except Exception as e:
             self._log(job_id, "An unexpected error occured", "ERROR")
             self._log(job_id, str(e), "EXC", e)
-            rollback_bump(job_id, bump_manifesto.dict(by_alias=True))
+            rollback_bump(
+                job_id,
+                bump_manifesto.model_dump(by_alias=True, exclude_none=True),
+            )
             job_service.update_job_status(job_id, "failed")
 
     def delete_archived_input(self, job_id: str, dataset_name: str):

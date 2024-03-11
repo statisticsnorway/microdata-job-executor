@@ -1,7 +1,7 @@
 from typing import List, Union
-from datetime import datetime
+from datetime import datetime, UTC
 
-from pydantic import Extra, root_validator
+from pydantic import model_validator
 from job_executor.exception import VersioningException
 
 from job_executor.model.camelcase_model import CamelModel
@@ -10,23 +10,28 @@ from job_executor.model.datastore_version import DatastoreVersion
 from job_executor.adapter import local_storage
 
 
-class DatastoreVersions(CamelModel, extra=Extra.forbid):
+class DatastoreVersions(CamelModel, extra="forbid"):
     name: str
     label: str
     description: str
     versions: List[DatastoreVersion]
 
-    @root_validator(skip_on_failure=True, pre=True)
+    @model_validator(mode="before")
     @classmethod
     def read_file(cls, _):
         return local_storage.get_datastore_versions()
 
     def _write_to_file(self):
-        local_storage.write_datastore_versions(self.dict(by_alias=True))
+        local_storage.write_datastore_versions(
+            self.model_dump(by_alias=True, exclude_none=True)
+        )
 
     def _get_current_epoch_seconds(self):
         return int(
-            (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()
+            (
+                datetime.now(UTC).replace(tzinfo=None)
+                - datetime.fromtimestamp(0, UTC).replace(tzinfo=None)
+            ).total_seconds()
         )
 
     def add_new_release_version(

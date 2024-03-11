@@ -1,5 +1,4 @@
 from typing import List, Optional, Union
-from pydantic import root_validator
 
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception import PatchingError, MetadataException
@@ -17,14 +16,7 @@ DATA_TYPES_SIKT_TO_SSB = {v: k for k, v in DATA_TYPES_MAPPING.items()}
 
 class TimePeriod(CamelModel):
     start: Union[int, None]
-    stop: Optional[Union[int, None]]
-
-    def dict(self, **kwargs) -> dict:
-        return (
-            {"start": self.start, "stop": self.stop}
-            if self.stop is not None
-            else {"start": self.start}
-        )
+    stop: Optional[Union[int, None]] = None
 
     def __eq__(self, other):
         return self.start == other.start and self.stop == other.stop
@@ -55,10 +47,10 @@ class CodeListItem(CamelModel):
 
 
 class ValueDomain(CamelModel):
-    description: Optional[str]
-    unit_of_measure: Optional[str]
-    code_list: Optional[List[CodeListItem]]
-    missing_values: Optional[List[str]]
+    description: Optional[str] = None
+    unit_of_measure: Optional[str] = None
+    code_list: Optional[List[CodeListItem]] = None
+    missing_values: Optional[List[str]] = None
 
     def is_enumerated_value_domain(self):
         return (
@@ -74,26 +66,6 @@ class ValueDomain(CamelModel):
             and self.code_list is None
             and self.missing_values is None
         )
-
-    def dict(self, **kwargs) -> dict:
-        if self.is_described_value_domain():
-            return {
-                key: value
-                for key, value in {
-                    "description": self.description,
-                    "unitOfMeasure": self.unit_of_measure,
-                }.items()
-                if value is not None
-            }
-        elif self.is_enumerated_value_domain():
-            return {
-                "codeList": [code_item.dict() for code_item in self.code_list],
-                "missingValues": [
-                    missing_value for missing_value in self.missing_values
-                ],
-            }
-        else:
-            raise MetadataException("Invalid ValueDomain")
 
     def patch(self, other: "ValueDomain"):
         patched = {}
@@ -127,8 +99,8 @@ class ValueDomain(CamelModel):
             )
             for idx, code_item in enumerate(sorted_code_list):
                 patched["codeList"].append(
-                    code_item.patch(sorted_other_code_list[idx]).dict(
-                        by_alias=True
+                    code_item.patch(sorted_other_code_list[idx]).model_dump(
+                        by_alias=True, exclude_none=True
                     )
                 )
             return ValueDomain(**patched)
@@ -150,10 +122,12 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": other.description,
-                "validPeriod": self.valid_period.dict(by_alias=True),
+                "validPeriod": self.valid_period.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
                 "valueDomain": self.value_domain.patch(
                     other.value_domain
-                ).dict(by_alias=True),
+                ).model_dump(by_alias=True, exclude_none=True),
             }
         )
 
@@ -161,8 +135,12 @@ class RepresentedVariable(CamelModel):
         return RepresentedVariable(
             **{
                 "description": description,
-                "validPeriod": self.valid_period.dict(by_alias=True),
-                "valueDomain": self.value_domain.dict(by_alias=True),
+                "validPeriod": self.valid_period.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
+                "valueDomain": self.value_domain.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
             }
         )
 
@@ -172,38 +150,13 @@ class Variable(CamelModel):
     label: str
     not_pseudonym: bool
     data_type: str
-    format: Optional[str]
+    format: Optional[str] = None
     variable_role: str
-    key_type: Optional[KeyType]
+    key_type: Optional[KeyType] = None
     represented_variables: List[RepresentedVariable]
-
-    @root_validator(pre=True)
-    @classmethod
-    def remove_none(cls, values):
-        return {
-            key: value for key, value in values.items() if value is not None
-        }
 
     def get_key_type_name(self):
         return None if self.key_type is None else self.key_type.name
-
-    def dict(self, **kwargs) -> dict:
-        dict_representation = {
-            "name": self.name,
-            "label": self.label,
-            "notPseudonym": self.not_pseudonym,
-            "dataType": self.data_type,
-            "variableRole": self.variable_role,
-            "representedVariables": [
-                represented_variable.dict(by_alias=True)
-                for represented_variable in self.represented_variables
-            ],
-        }
-        if self.format is not None:
-            dict_representation["format"] = self.format
-        if self.key_type is not None:
-            dict_representation["keyType"] = self.key_type.dict(by_alias=True)
-        return dict_representation
 
     def validate_patching_fields(
         self, other, with_name: bool = False, with_key_type: bool = False
@@ -295,7 +248,7 @@ class MeasureVariable(Variable):
                 patched_represented_variables.append(
                     self.represented_variables[idx]
                     .patch(other.represented_variables[idx])
-                    .dict()
+                    .model_dump(by_alias=True, exclude_none=True)
                 )
         patched.update(
             {
@@ -310,7 +263,13 @@ class MeasureVariable(Variable):
         if self.format is not None:
             patched.update({"format": self.format})
         if centralized_variable_definition:
-            patched.update({"keyType": self.key_type.dict()})
+            patched.update(
+                {
+                    "keyType": self.key_type.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                }
+            )
         return Variable(**patched)
 
 
@@ -329,7 +288,7 @@ class Metadata(CamelModel):
     measure_variable: MeasureVariable
     identifier_variables: List[IdentifierVariable]
     attribute_variables: List[AttributeVariable]
-    temporal_status_dates: Optional[List[int]]
+    temporal_status_dates: Optional[List[int]] = None
 
     def get_identifier_key_type_name(self):
         return self.identifier_variables[0].get_key_type_name()
@@ -362,14 +321,18 @@ class Metadata(CamelModel):
             "sensitivityLevel": self.sensitivity_level,
             "populationDescription": other.population_description,
             "subjectFields": [field for field in other.subject_fields],
-            "temporalCoverage": self.temporal_coverage.dict(),
+            "temporalCoverage": self.temporal_coverage.model_dump(
+                by_alias=True, exclude_none=True
+            ),
             "measureVariable": (
-                self.measure_variable.patch(other.measure_variable).dict()
+                self.measure_variable.patch(other.measure_variable).model_dump(
+                    by_alias=True, exclude_none=True
+                )
             ),
             "identifierVariables": [
                 self.identifier_variables[0]
                 .patch(other.identifier_variables[0])
-                .dict()
+                .model_dump(by_alias=True, exclude_none=True)
             ],
             "attributeVariables": self.attribute_variables,
             "temporalStatusDates": self.temporal_status_dates,
@@ -377,24 +340,3 @@ class Metadata(CamelModel):
         if self.temporal_status_dates is None:
             del metadata_dict["temporalStatusDates"]
         return Metadata(**metadata_dict)
-
-    def dict(self, **kwargs) -> dict:
-        metadata_dict = {
-            "name": self.name,
-            "temporality": self.temporality,
-            "languageCode": self.language_code,
-            "sensitivityLevel": self.sensitivity_level,
-            "populationDescription": self.population_description,
-            "subjectFields": [field for field in self.subject_fields],
-            "temporalCoverage": self.temporal_coverage.dict(),
-            "measureVariable": self.measure_variable.dict(),
-            "identifierVariables": [self.identifier_variables[0].dict()],
-            "attributeVariables": [
-                self.attribute_variables[0].dict(),
-                self.attribute_variables[1].dict(),
-            ],
-            "temporalStatusDates": self.temporal_status_dates,
-        }
-        if self.temporal_status_dates is None:
-            del metadata_dict["temporalStatusDates"]
-        return metadata_dict
