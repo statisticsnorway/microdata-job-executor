@@ -50,8 +50,6 @@ COPY --from=builder /app/requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-#the output is sent straight to terminal without being first buffered
-ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 
 # Change user
