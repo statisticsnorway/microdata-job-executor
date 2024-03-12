@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Dict, Union
 
@@ -375,7 +375,7 @@ def archive_draft_version(version: str):
     archive_dir = Path(f"{DATASTORE_DIR}/archive")
     os.makedirs(archive_dir, exist_ok=True)
 
-    timestamp = datetime.now()
+    timestamp = datetime.now(UTC).replace(tzinfo=None)
 
     archived_draft_version_path = (
         archive_dir / f"draft_version_{version}_{timestamp}.json"
