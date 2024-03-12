@@ -1,27 +1,15 @@
 # Export Poetry Packages
-FROM ubuntu:22.04 as builder
+FROM python:3.12-bookworm as builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
     POETRY_VERSION=1.7.1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv"
+    POETRY_NO_INTERACTION=1
 
 # Prepend poetry and venv to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
-
-# Install python 3.10
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    python3.12 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && ln -s /usr/bin/python3.12 /usr/bin/python
 
 # Install tools
 RUN apt-get update \
@@ -31,6 +19,8 @@ RUN apt-get update \
     build-essential \
     python3-distutils \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade pip
 
 WORKDIR /app
 COPY poetry.lock pyproject.toml /app/
@@ -46,7 +36,7 @@ RUN poetryVersion=$(poetry version -s); buildNumber=${BUILD_NUMBER}; newVersion=
 RUN poetry export > requirements.txt
 
 # Production image
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # Create user
 RUN groupadd --gid 180291 microdata \
@@ -60,8 +50,6 @@ COPY --from=builder /app/requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-#the output is sent straight to terminal without being first buffered
-ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 
 # Change user
