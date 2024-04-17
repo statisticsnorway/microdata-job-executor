@@ -1,7 +1,7 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: job-exectuor
+  name: job-executor
   title: Job Executor
   description: |
     Executes queued jobs in subprocess workers, importing and managing datasets in a microdata datastore
@@ -10,7 +10,7 @@ metadata:
     - pipeline
     - pyarrow
   annotations:
-    github.com/project-slug: statisticsnorway/job-executor
+    github.com/project-slug: statisticsnorway/microdata-job-executor
 spec:
   type: service
   system: microdata
