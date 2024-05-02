@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 
 from requests_mock import Mocker as RequestsMocker
-from tests.unit.test_util import get_file_list_from_dir
+from tests.unit.test_util import get_dir_list_from_dir, get_file_list_from_dir
 
 from job_executor.model import Datastore
 from job_executor.model import DatastoreVersion
@@ -314,6 +314,7 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         "SIVSTAND": "SIVSTAND__1_0.parquet",
     }
     assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
+    assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
 
 
 def test_bump_datastore_major(requests_mock: RequestsMocker):
@@ -380,7 +381,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
         "SIVSTAND": "SIVSTAND__1_0.parquet",
     }
     assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
-
+    assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
 
 def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     requests_mock.put(
@@ -407,7 +408,7 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     ]
 
 
-def test_invalid_bump_manifesto_delete_tmp_dir(requests_mock: RequestsMocker):
+def test_invalid_bump_manifesto_archived_tmp_dir(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
@@ -423,3 +424,4 @@ def test_invalid_bump_manifesto_delete_tmp_dir(requests_mock: RequestsMocker):
     ]
     datastore.bump_version(JOB_ID, bump_manifesto, "description")
     assert not os.path.exists(Path(DATASTORE_DIR) / "tmp")
+    assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 3

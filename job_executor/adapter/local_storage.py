@@ -347,7 +347,7 @@ def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
 
 def archive_temporary_backup() -> Union[None, LocalStorageError]:
     """
-    Deletes the tmp directory within the datastore if the directory
+    Archives the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files
     in the directory.
     """
@@ -368,6 +368,30 @@ def archive_temporary_backup() -> Union[None, LocalStorageError]:
             )
     timestamp = datetime.now(UTC).replace(tzinfo=None)
     shutil.move(DATASTORE_DIR / "tmp", ARCHIVE_DIR / f"tmp_{timestamp}")
+
+
+def delete_temporary_backup() -> Union[None, LocalStorageError]:
+    """
+    Deletes the tmp directory within the datastore if the directory
+    exists. Raises `LocalStorageError` if there are any unrecognized files
+    in the directory.
+    """
+    tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
+
+    if not os.path.isdir(Path(DATASTORE_DIR) / "tmp"):
+        raise LocalStorageError("Could not find a tmp directory to archive.")
+    for content in os.listdir(tmp_dir):
+        if content not in [
+            "datastore_versions.json",
+            "metadata_all__DRAFT.json",
+            "draft_version.json",
+        ]:
+            raise LocalStorageError(
+                "Found unrecognized files and/or directories in the tmp "
+                "directory. Aborting tmp archiving."
+            )
+    shutil.rmtree(DATASTORE_DIR / "tmp")
 
 
 def archive_draft_version(version: str):

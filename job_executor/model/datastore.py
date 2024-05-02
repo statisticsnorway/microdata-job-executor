@@ -100,7 +100,7 @@ class Datastore:
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
             self._log(job_id, "Archiving temporary backup")
-            local_storage.archive_temporary_backup()
+            local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
             local_storage.delete_archived_input(dataset_name)
         except PatchingError as e:
@@ -152,7 +152,7 @@ class Datastore:
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
             self._log(job_id, "Archiving temporary backup")
-            local_storage.archive_temporary_backup()
+            local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
             local_storage.delete_archived_input(dataset_name)
         except Exception as e:
@@ -197,7 +197,7 @@ class Datastore:
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
             self._log(job_id, "Archiving temporary backup")
-            local_storage.archive_temporary_backup()
+            local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
             local_storage.delete_archived_input(dataset_name)
         except Exception as e:
