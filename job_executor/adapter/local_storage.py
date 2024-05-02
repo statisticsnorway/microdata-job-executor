@@ -389,7 +389,7 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
         ]:
             raise LocalStorageError(
                 "Found unrecognized files and/or directories in the tmp "
-                "directory. Aborting tmp archiving."
+                "directory. Aborting tmp deleting."
             )
     shutil.rmtree(DATASTORE_DIR / "tmp")
 
