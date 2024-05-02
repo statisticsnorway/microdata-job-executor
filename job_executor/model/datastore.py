@@ -29,6 +29,9 @@ class Datastore:
     latest_version_number: str
 
     def __init__(self):
+        self.refresh_datastore()
+
+    def refresh_datastore(self):
         self.draft_version = DraftVersion()
         self.datastore_versions = DatastoreVersions()
         self.latest_version_number = (
@@ -375,10 +378,10 @@ class Datastore:
                 self._log(
                     job_id, "Renaming data file and updating data_versions"
                 )
-                new_data_versions[
-                    dataset_name
-                ] = local_storage.rename_parquet_draft_to_release(
-                    dataset_name, new_version
+                new_data_versions[dataset_name] = (
+                    local_storage.rename_parquet_draft_to_release(
+                        dataset_name, new_version
+                    )
                 )
         return new_metadata_datasets, new_data_versions
 
@@ -457,6 +460,7 @@ class Datastore:
                 bump_manifesto.model_dump(by_alias=True, exclude_none=True),
             )
             job_service.update_job_status(job_id, "failed")
+            self.refresh_datastore()
 
     def delete_archived_input(self, job_id: str, dataset_name: str):
         """
