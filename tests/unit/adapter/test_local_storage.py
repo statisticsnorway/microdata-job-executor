@@ -142,22 +142,26 @@ def test_make_temp_directory_already_exists():
     assert "tmp directory already exists" in str(e)
 
 
-def test_delete_temp_directory():
+def test_archive_temp_directory():
     local_storage.save_temporary_backup()
     datastore_content = os.listdir(DATASTORE_DIR)
-    local_storage.delete_temporary_backup()
-    datastore_content_delete = os.listdir(DATASTORE_DIR)
+    local_storage.archive_temporary_backup()
+    datastore_content_archived = os.listdir(DATASTORE_DIR)
+    for dir in ["datastore", "data", "tmp"]:
+        assert dir in datastore_content
+    for dir in ["datastore", "data", "archive"]:
+        assert dir in datastore_content_archived
     assert len(datastore_content) == 3
-    assert len(datastore_content_delete) == 2
+    assert len(datastore_content_archived) == 3
     assert not os.path.isdir(Path(DATASTORE_DIR) / "tmp")
 
 
-def test_delete_temp_directory_unrecognized_files():
+def test_archived_temp_directory_unrecognized_files():
     local_storage.save_temporary_backup()
     tmp_dir = Path(DATASTORE_DIR) / "tmp"
     assert os.path.isdir(tmp_dir)
     (tmp_dir / "newfile.txt").touch()
 
     with pytest.raises(LocalStorageError) as e:
-        local_storage.delete_temporary_backup()
+        local_storage.archive_temporary_backup()
     assert "Found unrecognized files" in str(e)
