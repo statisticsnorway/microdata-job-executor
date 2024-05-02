@@ -165,3 +165,12 @@ def test_archived_temp_directory_unrecognized_files():
     with pytest.raises(LocalStorageError) as e:
         local_storage.archive_temporary_backup()
     assert "Found unrecognized files" in str(e)
+
+
+def test_archive_or_delete_non_existent_tmp_dir():
+    with pytest.raises(LocalStorageError) as e:
+        local_storage.archive_temporary_backup()
+    assert "Could not find a tmp directory to archive." in str(e)
+    with pytest.raises(LocalStorageError) as e:
+        local_storage.delete_temporary_backup()
+    assert "Could not find a tmp directory to delete." in str(e)

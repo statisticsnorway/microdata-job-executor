@@ -380,7 +380,7 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
     if not os.path.isdir(Path(DATASTORE_DIR) / "tmp"):
-        raise LocalStorageError("Could not find a tmp directory to archive.")
+        raise LocalStorageError("Could not find a tmp directory to delete.")
     for content in os.listdir(tmp_dir):
         if content not in [
             "datastore_versions.json",
