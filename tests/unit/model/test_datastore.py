@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+from unittest.mock import MagicMock, Mock
 from pathlib import Path
 
 from requests_mock import Mocker as RequestsMocker
@@ -383,6 +384,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
     assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
     assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2
 
+
 def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
@@ -408,11 +410,12 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     ]
 
 
-def test_invalid_bump_manifesto_archived_tmp_dir(requests_mock: RequestsMocker):
+def test_invalid_bump_manifesto_archived_tmp_dir(
+    requests_mock: RequestsMocker,
+):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-
     datastore.set_draft_release_status(JOB_ID, "INNTEKT", "PENDING_RELEASE")
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
@@ -425,3 +428,17 @@ def test_invalid_bump_manifesto_archived_tmp_dir(requests_mock: RequestsMocker):
     datastore.bump_version(JOB_ID, bump_manifesto, "description")
     assert not os.path.exists(Path(DATASTORE_DIR) / "tmp")
     assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 3
+
+
+def test_failed_bump(
+    requests_mock: RequestsMocker,
+):
+    requests_mock.put(
+        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    datastore.refresh = MagicMock(return_value=None)
+    datastore.latest_version_number = Mock(side_effect=Exception())
+    with open(DRAFT_VERSION, encoding="utf-8") as f:
+        bump_manifesto = DatastoreVersion(**json.load(f))
+    datastore.bump_version(JOB_ID, bump_manifesto, "description")
+    datastore.refresh.assert_called_once()
