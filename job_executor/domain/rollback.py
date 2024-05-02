@@ -107,7 +107,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                             dataset_data_dir / f"{dataset}__DRAFT.parquet",
                         )
         logger.info(f"{job_id}: Deleting temporary backup")
-        local_storage.delete_temporary_backup()
+        local_storage.archive_temporary_backup()
     except LocalStorageError as e:
         logger.error(f"{job_id}: LocalStorageError when rolling back job")
         logger.exception(e)
@@ -181,4 +181,4 @@ def rollback_manager_phase_import_job(
         logger.info(f"{job_id}: Deleting data file/directory")
         local_storage.delete_parquet_draft(dataset_name)
     logger.info(f"{job_id}: Deleting temporary backup")
-    local_storage.delete_temporary_backup()
+    local_storage.archive_temporary_backup()
