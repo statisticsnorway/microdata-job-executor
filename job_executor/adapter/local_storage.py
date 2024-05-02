@@ -18,6 +18,7 @@ INPUT_DIR = Path(environment.get("INPUT_DIR"))
 DATASTORE_VERSIONS_PATH = DATASTORE_DIR / "datastore/datastore_versions.json"
 DRAFT_METADATA_ALL_PATH = DATASTORE_DIR / "datastore/metadata_all__DRAFT.json"
 DRAFT_VERSION_PATH = DATASTORE_DIR / "datastore/draft_version.json"
+ARCHIVE_DIR = DATASTORE_DIR / "archive"
 
 
 def _read_json(file_path: Path) -> dict:
@@ -344,15 +345,17 @@ def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
         raise LocalStorageError("Invalid backup file") from e
 
 
-def delete_temporary_backup() -> Union[None, LocalStorageError]:
+def archive_temporary_backup() -> Union[None, LocalStorageError]:
     """
     Deletes the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files
     in the directory.
     """
     tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
+
     if not os.path.isdir(Path(DATASTORE_DIR) / "tmp"):
-        return None
+        raise LocalStorageError("Could not find a tmp directory to archive.")
     for content in os.listdir(tmp_dir):
         if content not in [
             "datastore_versions.json",
@@ -361,9 +364,10 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
         ]:
             raise LocalStorageError(
                 "Found unrecognized files and/or directories in the tmp "
-                "directory. Aborting tmp deletion."
+                "directory. Aborting tmp archiving."
             )
-    shutil.rmtree(Path(DATASTORE_DIR) / "tmp")
+    timestamp = datetime.now(UTC).replace(tzinfo=None)
+    shutil.move(DATASTORE_DIR / "tmp", ARCHIVE_DIR / f"tmp_{timestamp}")
 
 
 def archive_draft_version(version: str):
@@ -372,13 +376,12 @@ def archive_draft_version(version: str):
     * dataset_name: str - name of dataset draft
     * version: str - version of the archived draft
     """
-    archive_dir = Path(f"{DATASTORE_DIR}/archive")
-    os.makedirs(archive_dir, exist_ok=True)
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
     timestamp = datetime.now(UTC).replace(tzinfo=None)
 
     archived_draft_version_path = (
-        archive_dir / f"draft_version_{version}_{timestamp}.json"
+        ARCHIVE_DIR / f"draft_version_{version}_{timestamp}.json"
     )
     shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
 

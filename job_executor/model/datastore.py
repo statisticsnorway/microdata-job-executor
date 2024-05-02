@@ -99,8 +99,8 @@ class Datastore:
             )
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
-            self._log(job_id, "Deleting temporary backup")
-            local_storage.delete_temporary_backup()
+            self._log(job_id, "Archiving temporary backup")
+            local_storage.archive_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
             local_storage.delete_archived_input(dataset_name)
         except PatchingError as e:
@@ -151,8 +151,8 @@ class Datastore:
             local_storage.move_working_dir_parquet_to_datastore(dataset_name)
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
-            self._log(job_id, "Deleting temporary backup")
-            local_storage.delete_temporary_backup()
+            self._log(job_id, "Archiving temporary backup")
+            local_storage.archive_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
             local_storage.delete_archived_input(dataset_name)
         except Exception as e:
@@ -196,8 +196,8 @@ class Datastore:
             local_storage.move_working_dir_parquet_to_datastore(dataset_name)
             self._log(job_id, "completed")
             job_service.update_job_status(job_id, "completed")
-            self._log(job_id, "Deleting temporary backup")
-            local_storage.delete_temporary_backup()
+            self._log(job_id, "Archiving temporary backup")
+            local_storage.archive_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
             local_storage.delete_archived_input(dataset_name)
         except Exception as e:
@@ -405,8 +405,8 @@ class Datastore:
                 )
                 self._log(job_id, log_message, "ERROR")
                 job_service.update_job_status(job_id, "failed", log_message)
-                self._log(job_id, "Deleting temporary backup")
-                local_storage.delete_temporary_backup()
+                self._log(job_id, "Archiving temporary backup")
+                local_storage.archive_temporary_backup()
                 return
 
             self._log(job_id, "Archiving draft version")
@@ -448,8 +448,8 @@ class Datastore:
 
             self._log(job_id, "completed BUMP")
             job_service.update_job_status(job_id, "completed")
-            self._log(job_id, "Deleting temporary backup")
-            local_storage.delete_temporary_backup()
+            self._log(job_id, "Archiving temporary backup")
+            local_storage.archive_temporary_backup()
         except Exception as e:
             self._log(job_id, "An unexpected error occured", "ERROR")
             self._log(job_id, str(e), "EXC", e)
