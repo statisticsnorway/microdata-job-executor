@@ -78,24 +78,24 @@ class MetadataAllDraft(MetadataAll):
         released_metadata: List[Metadata],
         draft_version: DatastoreVersion,
     ):
-        previous_data_structures = [ds for ds in self.data_structures]
-        self.data_structures = [
-            Metadata(**m.model_dump(by_alias=True, exclude_none=True))
-            for m in released_metadata
-        ]
+        previous_data_structures = {ds.name: ds for ds in self.data_structures}
+        new_data_structures = {
+            ds.name: Metadata(
+                **ds.model_dump(by_alias=True, exclude_none=True)
+            )
+            for ds in released_metadata
+        }
         for draft in draft_version:
-            self.remove(draft.name)
-            if draft.operation != "REMOVE":
-                draft_metadata = next(
-                    ds
-                    for ds in previous_data_structures
-                    if ds.name == draft.name
-                )
+            if draft.operation == "REMOVE":
+                del new_data_structures[draft.name]
+            else:
+                draft_metadata = previous_data_structures.get(draft.name, None)
                 if draft_metadata is None:
                     raise BumpException(
                         "Could not rebuild metadata_all__DRAFT. "
                         f"No metadata for {draft.name} in previous "
                         "metadata_all__DRAFT"
                     )
-                self.add(draft_metadata)
+                new_data_structures[draft.name] = draft_metadata
+        self.data_structures = list(new_data_structures.values())
         self._write_to_file()
