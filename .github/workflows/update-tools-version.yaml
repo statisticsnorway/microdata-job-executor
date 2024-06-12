@@ -1,0 +1,41 @@
+name: Update Microdata Tools Version
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs hourly
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  update-dependency:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Executor
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"  
+
+      - name: Install poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Check for New Version
+        id: check_version
+        run: |
+          CURRENT_VERSION=$(poetry show microdata-tools | grep version | awk '{print $3}')
+          LATEST_VERSION=$(curl -s https://pypi.org/pypi/microdata-tools/json | jq -r .info.version)
+          echo "Current version: $CURRENT_VERSION"
+          echo "Latest version: $LATEST_VERSION"
+
+          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            echo "::set-output name=new_version::$LATEST_VERSION"
+          else
+            echo "Already up-to-date"
+            exit 0
+          fi
+
+     
