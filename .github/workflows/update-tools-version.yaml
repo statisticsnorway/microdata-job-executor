@@ -37,5 +37,25 @@ jobs:
             echo "Already up-to-date"
             exit 0
           fi
+      - name: Update Microdata Tools Dependency
+        if: steps.check_version.outputs.new_version
+        run: |
+          poetry update microdata-tools
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout -b update-microdata-tools-${{ steps.check_version.outputs.new_version }}
+          git add pyproject.toml poetry.lock
+          git commit -m "Update microdata-tools to ${{ steps.check_version.outputs.new_version }}"
+          git push origin update-microdata-tools-${{ steps.check_version.outputs.new_version }}
+
+      - name: Create Pull Request
+        if: steps.check_version.outputs.new_version
+        run: |
+          gh pr create --base master --head update-microdata-tools-${{ steps.check_version.outputs.new_version }} 
+          --title "Update microdata-tools to ${{ steps.check_version.outputs.new_version }}" 
+          --body "This PR updates microdata-tools to version ${{ steps.check_version.outputs.new_version }}."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       
 
      
