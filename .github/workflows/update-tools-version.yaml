@@ -40,7 +40,7 @@ jobs:
       - name: Update Microdata Tools Dependency
         if: steps.check_version.outputs.new_version
         run: |
-          poetry update microdata-tools
+          poetry add microdata-tools@${{ steps.check_version.outputs.new_version }}
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           git checkout -b update-microdata-tools-${{ steps.check_version.outputs.new_version }}
