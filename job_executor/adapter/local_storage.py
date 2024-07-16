@@ -98,7 +98,7 @@ def get_draft_version() -> dict:
     """
     Returns the contents of the draft version json file as dict.
     """
-    return _read_json(DATASTORE_DIR / "datastore/draft_version.json")
+    return _read_json(DRAFT_VERSION_PATH)
 
 
 def write_draft_version(draft_version: dict) -> None:
@@ -107,16 +107,14 @@ def write_draft_version(draft_version: dict) -> None:
 
     * draft_version: dict - draft version dict
     """
-    _write_json(
-        draft_version, DATASTORE_DIR / "datastore/draft_version.json", indent=2
-    )
+    _write_json(draft_version, DRAFT_VERSION_PATH, indent=2)
 
 
 def get_datastore_versions() -> dict:
     """
     Returns the contents of the datastore versions json file as dict.
     """
-    return _read_json(DATASTORE_DIR / "datastore/datastore_versions.json")
+    return _read_json(DATASTORE_VERSIONS_PATH)
 
 
 def write_datastore_versions(datastore_versions: dict) -> None:
@@ -127,7 +125,7 @@ def write_datastore_versions(datastore_versions: dict) -> None:
     """
     _write_json(
         datastore_versions,
-        DATASTORE_DIR / "datastore/datastore_versions.json",
+        DATASTORE_VERSIONS_PATH,
         indent=2,
     )
 
@@ -293,13 +291,9 @@ def save_temporary_backup() -> None:
         f"{DATASTORE_DIR}/datastore/datastore_versions.json", encoding="utf-8"
     ) as f:
         datastore_versions = json.load(f)
-    with open(
-        f"{DATASTORE_DIR}/datastore/draft_version.json", encoding="utf-8"
-    ) as f:
+    with open(DRAFT_VERSION_PATH, encoding="utf-8") as f:
         draft_version = json.load(f)
-    with open(
-        f"{DATASTORE_DIR}/datastore/metadata_all__DRAFT.json", encoding="utf-8"
-    ) as f:
+    with open(DRAFT_METADATA_ALL_PATH, encoding="utf-8") as f:
         metadata_all_draft = json.load(f)
     tmp_dir = Path(DATASTORE_DIR) / "tmp"
     if os.path.isdir(tmp_dir):
