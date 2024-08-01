@@ -1,5 +1,5 @@
 # Export Poetry Packages
-FROM python:3.12-bookworm as builder
+FROM python:3.12-bookworm AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -27,11 +27,11 @@ COPY poetry.lock pyproject.toml /app/
 
 # Install poetry and export dependencies to requirements yaml
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSL https://install.python-poetry.org | python3 - --version $POETRY_VERSION
+RUN curl --proto '=https' --tlsv1.2 -sSL https://install.python-poetry.org | python3 - --version "$POETRY_VERSION"
 
 #Set application version in pyproject.toml, use zero if not set
 ARG BUILD_NUMBER=0
-RUN poetryVersion=$(poetry version -s); buildNumber=${BUILD_NUMBER}; newVersion=$(echo $poetryVersion | sed "s/[[:digit:]]\{1,\}$/$buildNumber/"); poetry version $newVersion
+RUN poetryVersion=$(poetry version -s); buildNumber=${BUILD_NUMBER}; newVersion=$(echo $poetryVersion | sed "s/[[:digit:]]\{1,\}$/$buildNumber/"); poetry version "$newVersion"
 
 RUN poetry export > requirements.txt
 
