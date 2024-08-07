@@ -50,7 +50,7 @@ class WorkerFormatter(logging.Formatter):
         self.job_id = job_id
 
     def format(self, record: logging.LogRecord) -> str:
-        record.msg = f"{self.job_id}: {record.msg}"
+        return f"{self.job_id}: {record.msg}"
 
 
 def logger_thread(logging_queue: Queue):
@@ -58,7 +58,7 @@ def logger_thread(logging_queue: Queue):
     This method will run as a thread in the main process and will receive
     logs from workers via Queue.
     """
-    logger = logging.get_logger()
+    logger = logging.getLogger()
     while True:
         record = logging_queue.get()
         if record is None:
@@ -80,7 +80,7 @@ def setup_logging(log_level: int = logging.INFO) -> None:
 
     formatter = MicrodataJSONFormatter()
 
-    stream_handler = logging.StreamHandler()
+    stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
