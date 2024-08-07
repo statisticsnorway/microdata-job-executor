@@ -27,7 +27,8 @@ class MicrodataJSONFormatter(logging.Formatter):
                 "@timestamp": datetime.datetime.fromtimestamp(
                     record.created,
                     tz=datetime.timezone.utc,
-                ).isoformat(),
+                ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                + "Z",
                 "command": self.command,
                 "error.stack": record.__dict__.get("exc_info"),
                 "host": self.host,
