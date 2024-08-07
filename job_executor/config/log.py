@@ -24,6 +24,12 @@ class MicrodataJSONFormatter(logging.Formatter):
         self.command = json.dumps(sys.argv)
 
     def format(self, record: logging.LogRecord) -> str:
+        # When receiving logs from the queue and passing them to
+        # the log handler the record is wrapped in another record
+        # and placed in the msg field.
+        # When this is the case we log the original record
+        if isinstance(record.msg, logging.LogRecord):
+            record = record.msg
         return json.dumps(
             {
                 "@timestamp": datetime.datetime.fromtimestamp(
@@ -53,7 +59,8 @@ class WorkerFormatter(logging.Formatter):
         self.job_id = job_id
 
     def format(self, record: logging.LogRecord) -> str:
-        return f"{self.job_id}: {record.msg}"
+        record.msg = f"{self.job_id}: {record.msg}"
+        return record
 
 
 def logger_thread(logging_queue: Queue):
@@ -63,7 +70,7 @@ def logger_thread(logging_queue: Queue):
     """
     logger = logging.getLogger()
     while True:
-        record = logging_queue.get()
+        record: logging.LogRecord = logging_queue.get()
         if record is None:
             break
         logger.handle(record)
