@@ -1,27 +1,24 @@
 import logging
 import os
 import sys
-import threading
 import time
 from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Dict, List
 
-import json_logging
 
 from job_executor.adapter import job_service
 from job_executor.config import environment
-from job_executor.config.log import CustomJSONLog
+from job_executor.config.log import setup_logging, initialize_logging_thread
 from job_executor.domain import rollback
 from job_executor.exception import RollbackException, StartupException
 from job_executor.model import Job, Datastore
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
 
-json_logging.init_non_web(custom_formatter=CustomJSONLog, enable_json=True)
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+setup_logging()
+
 NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
@@ -38,18 +35,6 @@ def is_system_paused() -> bool:
             "Exception when getting maintenance status", exc_info=e
         )
         raise
-
-
-def logger_thread(logging_queue: Queue):
-    """
-    This method will run as a thread in the main process and will receive
-    logs from workers via Queue.
-    """
-    while True:
-        record = logging_queue.get()
-        if record is None:
-            break
-        logger.handle(record)
 
 
 def fix_interrupted_jobs():
@@ -214,12 +199,8 @@ def initialize_app():
 
 def main():
     initialize_app()
-
+    logging_queue, log_thread = initialize_logging_thread()
     workers: List[Worker] = []
-    logging_queue = Queue()
-
-    log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))
-    log_thread.start()
 
     try:
         while True:
