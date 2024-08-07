@@ -5,6 +5,8 @@ import logging.handlers
 import datetime
 import tomlkit
 import threading
+
+from typing import Tuple
 from multiprocessing import Queue
 from job_executor.config import environment
 
@@ -67,7 +69,7 @@ def logger_thread(logging_queue: Queue):
         logger.handle(record)
 
 
-def initialize_logging_thread() -> Queue:
+def initialize_logging_thread() -> Tuple[Queue, threading.Thread]:
     logging_queue = Queue()
 
     log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))
