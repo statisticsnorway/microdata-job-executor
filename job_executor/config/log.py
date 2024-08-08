@@ -17,6 +17,9 @@ class MicrodataJSONFormatter(logging.Formatter):
         self.commit_id = environment.get("COMMIT_ID")
 
     def format(self, record: logging.LogRecord) -> str:
+        stack_trace = ""
+        if record.exc_info is not None:
+            stack_trace = self.formatException(record.exc_info)
         return json.dumps(
             {
                 "@timestamp": datetime.datetime.fromtimestamp(
@@ -25,7 +28,7 @@ class MicrodataJSONFormatter(logging.Formatter):
                 ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
                 + "Z",
                 "command": self.command,
-                "error.stack": record.__dict__.get("exc_info"),
+                "error.stack": stack_trace,
                 "host": self.host,
                 "message": record.getMessage(),
                 "level": record.levelno,
