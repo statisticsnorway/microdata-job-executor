@@ -12,6 +12,7 @@ def _initialize_environment() -> dict:
         "NUMBER_OF_WORKERS": int(os.environ["NUMBER_OF_WORKERS"]),
         "SECRETS_FILE": os.environ["SECRETS_FILE"],
         "DOCKER_HOST_NAME": os.environ["DOCKER_HOST_NAME"],
+        "COMMIT_ID": os.environ["COMMIT_ID"],
     }
 
 

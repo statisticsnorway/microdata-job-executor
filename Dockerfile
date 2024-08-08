@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1
 
 # Prepend poetry and venv to path
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+ENV PATH="$POETRY_HOME/bin:$PATH"
 
 # Install tools
 RUN apt-get update \
@@ -29,14 +29,13 @@ COPY poetry.lock pyproject.toml /app/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl --proto '=https' --tlsv1.2 -sSL https://install.python-poetry.org | python3 - --version "$POETRY_VERSION"
 
-#Set application version in pyproject.toml, use zero if not set
-ARG BUILD_NUMBER=0
-RUN poetryVersion=$(poetry version -s); buildNumber=${BUILD_NUMBER}; newVersion=$(echo $poetryVersion | sed "s/[[:digit:]]\{1,\}$/$buildNumber/"); poetry version "$newVersion"
-
 RUN poetry export > requirements.txt
 
 # Production image
 FROM python:3.12-slim
+ARG COMMIT_ID
+ENV COMMIT_ID=$COMMIT_ID
+RUN echo "Commit ID: $COMMIT_ID"
 
 # Create user
 RUN groupadd --gid 180291 microdata \

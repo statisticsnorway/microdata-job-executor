@@ -1,27 +1,20 @@
-import sys
+import datetime
 import json
 import logging
 import logging.handlers
-import datetime
-import tomlkit
+import sys
 import threading
-
-from typing import Tuple
 from multiprocessing import Queue
+from typing import Tuple
+
 from job_executor.config import environment
-
-
-def _get_project_meta():
-    with open("pyproject.toml", encoding="utf-8") as pyproject:
-        file_contents = pyproject.read()
-    return tomlkit.parse(file_contents)["tool"]["poetry"]
 
 
 class MicrodataJSONFormatter(logging.Formatter):
     def __init__(self):
-        self.pkg_meta = _get_project_meta()
         self.host = environment.get("DOCKER_HOST_NAME")
         self.command = json.dumps(sys.argv)
+        self.commit_id = environment.get("COMMIT_ID")
 
     def format(self, record: logging.LogRecord) -> str:
         return json.dumps(
@@ -30,7 +23,7 @@ class MicrodataJSONFormatter(logging.Formatter):
                     record.created,
                     tz=datetime.timezone.utc,
                 ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                + "Z",
+                              + "Z",
                 "command": self.command,
                 "error.stack": record.__dict__.get("exc_info"),
                 "host": self.host,
@@ -40,7 +33,7 @@ class MicrodataJSONFormatter(logging.Formatter):
                 "loggerName": record.name,
                 "schemaVersion": "v3",
                 "serviceName": "job-executor",
-                "serviceVersion": str(self.pkg_meta["version"]),
+                "serviceVersion": self.commit_id,
                 "thread": record.threadName,
             }
         )
