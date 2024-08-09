@@ -48,7 +48,7 @@ class WorkerFilter(logging.Filter):
     def __init__(self, job_id: str):
         self.job_id = job_id
 
-    def filter(self, record: logging.LogRecord) -> str:
+    def filter(self, record: logging.LogRecord):
         record.msg = f"{self.job_id}: {record.msg}"
         return True
 
@@ -90,6 +90,6 @@ def configure_worker_logger(queue: Queue, job_id: str):
     queue_handler.setLevel(logging.INFO)
 
     logger = logging.getLogger()
-    logger.addFilter = WorkerFilter(job_id)
+    logger.addFilter(WorkerFilter(job_id))
     logger.handlers.clear()
     logger.addHandler(queue_handler)
