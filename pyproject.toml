@@ -11,6 +11,7 @@ pydantic = "^2.6.1"
 requests = "^2.32.0"
 pandas = "^2.2.1"
 microdata-tools = "0.18.0"
+urllib3 = "^2.2.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.1"
