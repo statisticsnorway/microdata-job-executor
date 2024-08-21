@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"  
+          python-version: "3.12"
 
       - name: Install Poetry
         run: |
@@ -45,7 +45,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
-          git pull origin master 
+          git pull origin main 
           git checkout -b bump-microdata-tools-${{ steps.check_version.outputs.new_version }}
           poetry add microdata-tools@${{ steps.check_version.outputs.new_version }}
           git add pyproject.toml poetry.lock
@@ -56,7 +56,7 @@ jobs:
         if: steps.check_version.outputs.new_version
         run: |
           gh pr create \
-            --base master \
+            --base main \
             --head bump-microdata-tools-${{ steps.check_version.outputs.new_version }} \
             --title "Update microdata-tools to ${{ steps.check_version.outputs.new_version }}" \
             --body "This PR updates microdata-tools to version ${{ steps.check_version.outputs.new_version }}." 
