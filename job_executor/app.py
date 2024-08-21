@@ -6,7 +6,6 @@ from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Dict, List
 
-
 from job_executor.adapter import job_service
 from job_executor.config import environment
 from job_executor.config.log import setup_logging, initialize_logging_thread
@@ -27,14 +26,8 @@ datastore = None
 
 def is_system_paused() -> bool:
     """Return True if the system is paused, otherwise False."""
-    try:
-        maintenance_status = job_service.get_maintenance_status()
-        return maintenance_status.paused
-    except Exception as e:
-        logger.exception(
-            "Exception when getting maintenance status", exc_info=e
-        )
-        raise
+    maintenance_status = job_service.get_maintenance_status()
+    return maintenance_status.paused
 
 
 def fix_interrupted_jobs():

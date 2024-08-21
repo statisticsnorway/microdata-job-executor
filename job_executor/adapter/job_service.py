@@ -1,8 +1,11 @@
 import logging
 from typing import List
+from urllib.error import HTTPError
 
 import requests
 from requests import RequestException, Response
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 from job_executor.config import environment
 from job_executor.exception import HttpResponseError, HttpRequestError
@@ -32,9 +35,7 @@ def get_jobs(
     if query_fields:
         request_url += f'?{"&".join(query_fields)}'
 
-    response = execute_request("GET", request_url)
-    if response.status_code != 200:
-        raise HttpResponseError(f"{response.text}")
+    response = execute_request("GET", request_url, True)
     return [Job(**job) for job in response.json()]
 
 
@@ -42,37 +43,45 @@ def update_job_status(job_id: str, new_status: JobStatus, log: str = None):
     payload = {"status": new_status}
     if log is not None:
         payload.update({"log": log})
-    response = execute_request(
-        "PUT", f"{JOB_SERVICE_URL}/jobs/{job_id}", json=payload
-    )
-    if response.status_code != 200:
-        raise HttpResponseError(f"{response.text}")
+    execute_request("PUT", f"{JOB_SERVICE_URL}/jobs/{job_id}", json=payload)
 
 
 def update_description(job_id: str, new_description: str):
-    response = execute_request(
+    execute_request(
         "PUT",
         f"{JOB_SERVICE_URL}/jobs/{job_id}",
         json={"description": new_description},
     )
-    if response.status_code != 200:
-        raise HttpResponseError(f"{response.status_code}: {response.text}")
 
 
 def get_maintenance_status() -> MaintenanceStatus:
     request_url = f"{JOB_SERVICE_URL}/maintenance-status"
-    response = execute_request("GET", request_url)
-    if response.status_code != 200:
-        raise HttpResponseError(f"{response.text}")
-
+    response = execute_request("GET", request_url, True)
     return MaintenanceStatus(**response.json())
 
 
-def execute_request(method: str, url: str, **kwargs) -> Response:
+def execute_request(
+    method: str, url: str, retry: bool = False, **kwargs
+) -> Response:
     try:
-        return requests.request(
-            method=method, url=url, timeout=DEFAULT_REQUESTS_TIMEOUT, **kwargs
-        )
-    except RequestException as e:
-        logger.exception(e)
+        if retry:
+            with requests.Session() as s:
+                retries = Retry(
+                    total=6,
+                    backoff_factor=0.5,  # [0.0s, 1.0s, 2.0s, 4.0s, 8.0s, 16.0s] between retries
+                    allowed_methods={"GET"},
+                )
+                s.mount("http://", HTTPAdapter(max_retries=retries))
+                response = s.request(method=method, url=url, **kwargs)
+        else:
+            response = requests.request(
+                method=method,
+                url=url,
+                timeout=DEFAULT_REQUESTS_TIMEOUT,
+                **kwargs,
+            )
+        if response.status_code != 200:
+            raise HttpResponseError(f"{response.status_code}: {response.text}")
+        return response
+    except (RequestException, HTTPError) as e:
         raise HttpRequestError(e) from e
