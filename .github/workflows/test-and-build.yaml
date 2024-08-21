@@ -99,5 +99,5 @@ jobs:
               owner: 'statisticsnorway',
               repo: '${{ secrets.INTEGRATION_TEST_REPO }}',
               workflow_id: '${{ secrets.INTEGRATION_TEST_WORKFLOW }}.yaml',
-              ref: 'master'
+              ref: 'main'
             })
