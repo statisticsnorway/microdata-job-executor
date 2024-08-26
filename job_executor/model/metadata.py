@@ -1,8 +1,7 @@
 from typing import List, Optional, Union
 
-from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception import PatchingError, MetadataException
-
+from job_executor.model.camelcase_model import CamelModel
 
 DATA_TYPES_MAPPING = {
     "STRING": "String",
@@ -277,6 +276,11 @@ class AttributeVariable(Variable):
     ...
 
 
+class TemporalEnd(CamelModel):
+    description: str
+    successors: Optional[List[str]] = None
+
+
 class Metadata(CamelModel):
     name: str
     temporality: str
@@ -289,6 +293,7 @@ class Metadata(CamelModel):
     identifier_variables: List[IdentifierVariable]
     attribute_variables: List[AttributeVariable]
     temporal_status_dates: Optional[List[int]] = None
+    temporal_end: Optional[TemporalEnd] = None
 
     def get_identifier_key_type_name(self):
         return self.identifier_variables[0].get_key_type_name()
@@ -337,6 +342,10 @@ class Metadata(CamelModel):
             "attributeVariables": self.attribute_variables,
             "temporalStatusDates": self.temporal_status_dates,
         }
+        if other.temporal_end is not None:
+            metadata_dict["temporalEnd"] = other.temporal_end.model_dump(
+                by_alias=True, exclude_none=True
+            )
         if self.temporal_status_dates is None:
             del metadata_dict["temporalStatusDates"]
         return Metadata(**metadata_dict)

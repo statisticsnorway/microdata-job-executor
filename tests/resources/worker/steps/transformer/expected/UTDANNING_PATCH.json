@@ -121,5 +121,12 @@
             ]
         }
     ],
-    "temporalStatusDates": null
+    "temporalStatusDates": null,
+    "temporalEnd": {
+        "description": "Variabelen blir ikke lenger oppdatert",
+        "successors": [
+            "UTDANNING_1",
+            "UTDANNING_2"
+        ]
+    }
 }

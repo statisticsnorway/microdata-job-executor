@@ -270,6 +270,18 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
     ]
 
 
+def _transform_temporal_end(temporal_end: dict):
+    temporal_end_result = {
+        "description": _get_norwegian_text(temporal_end["description"])
+    }
+    if (
+        temporal_end.get("successors") is not None
+        and len(temporal_end["successors"]) > 0
+    ):
+        temporal_end_result["successors"] = temporal_end["successors"]
+    return temporal_end_result
+
+
 def _transform_metadata(metadata: Dict) -> Dict:
     logger.info("Transforming metadata")
     # These values are found by going through the data file.
@@ -307,6 +319,10 @@ def _transform_metadata(metadata: Dict) -> Dict:
     if metadata["temporalityType"] == "STATUS":
         transformed["temporalStatusDates"] = _transform_temporal_status_dates(
             metadata["dataRevision"].get("temporalStatusDates", None)
+        )
+    if metadata["dataRevision"].get("temporalEnd") is not None:
+        transformed["temporalEnd"] = _transform_temporal_end(
+            metadata["dataRevision"]["temporalEnd"]
         )
     logger.info("Finished transformation")
     return transformed

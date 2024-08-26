@@ -20,7 +20,12 @@
       "temporalCoverageStart": "2015-01-01",
       "temporalCoverageLatest": "2020-12-31",
       "temporalStatusDates": ["2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01", "2019-01-01"],
-      "temporalEndOfSeries": false
+      "temporalEnd": {
+        "description": [{"languageCode": "no", "value": "Variabelen blir ikke lenger oppdatert"}],
+        "successors": [ 
+            "KREFTREG_DS_1", "KREFTREG_DS_2"
+        ]
+      }
     },
     "measureVariables": [
       {
