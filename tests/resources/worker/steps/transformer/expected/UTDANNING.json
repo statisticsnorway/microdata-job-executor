@@ -128,5 +128,8 @@
         8035,
         8401,
         8766
-    ]
+    ],
+    "temporalEnd": {
+        "description": "Variabelen blir ikke lenger oppdatert"
+    }
 }

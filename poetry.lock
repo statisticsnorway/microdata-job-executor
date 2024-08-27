@@ -351,13 +351,13 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "idna"
-version = "3.7"
+version = "3.8"
 description = "Internationalized Domain Names in Applications (IDNA)"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 files = [
-    {file = "idna-3.7-py3-none-any.whl", hash = "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0"},
-    {file = "idna-3.7.tar.gz", hash = "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc"},
+    {file = "idna-3.8-py3-none-any.whl", hash = "sha256:050b4e5baadcd44d760cedbd2b8e639f2ff89bbc7a5730fcc662954303377aac"},
+    {file = "idna-3.8.tar.gz", hash = "sha256:d838c2c0ed6fced7693d5e8ab8e734d5f8fda53a039c0164afb0b82e771e3603"},
 ]
 
 [[package]]
@@ -373,13 +373,13 @@ files = [
 
 [[package]]
 name = "microdata-tools"
-version = "0.18.0"
+version = "1.0.0"
 description = "Tools for the microdata.no platform"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "microdata_tools-0.18.0-py3-none-any.whl", hash = "sha256:ed211d4c48ba953a6f1576c3c2f4283c39d39a5144223f33829a2dcbd36f795c"},
-    {file = "microdata_tools-0.18.0.tar.gz", hash = "sha256:368c3ca2ae16dbeb98f72b09322c3031270bb7a5897e2a3ab68fd8dca0c7c2a2"},
+    {file = "microdata_tools-1.0.0-py3-none-any.whl", hash = "sha256:3d87a1af4bfed044aa165330b52722b4c77f8d73bf3faf285021260c08d0e5e5"},
+    {file = "microdata_tools-1.0.0.tar.gz", hash = "sha256:9a0f7728b432407aaa1a15b4463c2e461120b698acf999f717ea3fde2b526628"},
 ]
 
 [package.dependencies]
@@ -936,4 +936,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4e6a37e7426ca2c624e8d5d5aa1d74235b6d323fbcc676b453180b9df2da268c"
+content-hash = "fb39ec31bfd160e6f05cd49750c8c735cf3f101fee61a4331d0a8dfd9cf0ee88"

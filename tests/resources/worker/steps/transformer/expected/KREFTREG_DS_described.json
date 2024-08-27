@@ -108,5 +108,8 @@
         17167,
         17532,
         17897
-    ]
+    ],
+    "temporalEnd": {
+        "description": "Variabelen blir ikke lenger oppdatert"
+    }
 }

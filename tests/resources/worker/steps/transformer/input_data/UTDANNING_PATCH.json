@@ -34,7 +34,18 @@
                 "value": "Første publisering."
             }
         ],
-        "temporalEndOfSeries": false
+        "temporalEnd": {
+            "description": [
+                {
+                    "languageCode": "no",
+                    "value": "Variabelen blir ikke lenger oppdatert"
+                }
+            ],
+            "successors": [
+                "UTDANNING_1",
+                "UTDANNING_2"
+            ]
+        }
     },
     "measureVariables": [
         {
