@@ -1,11 +1,11 @@
-from typing import Optional, List
-from enum import StrEnum
 import datetime
+from enum import StrEnum
+from typing import Optional, List
 
 from pydantic import model_validator
 
-from job_executor.model.camelcase_model import CamelModel
 from job_executor.model import DatastoreVersion
+from job_executor.model.camelcase_model import CamelModel
 
 
 class JobStatus(StrEnum):
@@ -17,6 +17,7 @@ class JobStatus(StrEnum):
     PSEUDONYMIZING = "pseudonymizing"
     ENRICHING = "enriching"
     CONVERTING = "converting"
+    PARTITIONING = "partitioning"
     BUILT = "built"
     IMPORTING = "importing"
     COMPLETED = "completed"
