@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   REGISTRY: europe-north1-docker.pkg.dev/${{ secrets.GAR_PROJECT_ID }}/microdata-docker
