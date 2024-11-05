@@ -239,7 +239,7 @@ class Datastore:
                     name=dataset_name,
                     operation="REMOVE",
                     description=description,
-                    releaseStatus="DRAFT",
+                    releaseStatus="PENDING_DELETE",
                 )
             )
             job_service.update_job_status(job_id, "completed")

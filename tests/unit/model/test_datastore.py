@@ -167,28 +167,6 @@ def test_change(requests_mock: RequestsMocker):
     assert draft_version["releaseTime"] > 1_000_000
     assert foedested_metadata in metadata_all_draft["dataStructures"]
 
-
-def test_remove(requests_mock: RequestsMocker):
-    requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
-    )
-    DATASET_NAME = "KJOENN"
-    DESCRIPTION = "Fjernet variabel"
-    datastore.remove(JOB_ID, DATASET_NAME, DESCRIPTION)
-    assert len(requests_mock.request_history) == 2
-
-    with open(DRAFT_VERSION, encoding="utf-8") as f:
-        draft_version = json.load(f)
-
-    assert {
-        "name": DATASET_NAME,
-        "description": DESCRIPTION,
-        "operation": "REMOVE",
-        "releaseStatus": "DRAFT",
-    } in draft_version["dataStructureUpdates"]
-    assert draft_version["releaseTime"] > 1_000_000
-
-
 def test_delete_draft(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
@@ -279,12 +257,6 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
             "operation": "CHANGE",
             "releaseStatus": "DRAFT",
         },
-        {
-            "description": "Fjernet variabel",
-            "name": "KJOENN",
-            "operation": "REMOVE",
-            "releaseStatus": "DRAFT",
-        },
     ]
     with open(
         f"{DATASTORE_DIR}/datastore/metadata_all__2_0_0.json", encoding="utf-8"
@@ -318,6 +290,27 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
     assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 1
 
 
+def test_remove(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    DATASET_NAME = "KJOENN"
+    DESCRIPTION = "Fjernet variabel"
+    datastore.remove(JOB_ID, DATASET_NAME, DESCRIPTION)
+    assert len(requests_mock.request_history) == 2
+
+    with open(DRAFT_VERSION, encoding="utf-8") as f:
+        draft_version = json.load(f)
+
+    assert {
+        "name": DATASET_NAME,
+        "description": DESCRIPTION,
+        "operation": "REMOVE",
+        "releaseStatus": "PENDING_DELETE",
+    } in draft_version["dataStructureUpdates"]
+    assert draft_version["releaseTime"] > 1_000_000
+
+
 def test_bump_datastore_major(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
@@ -347,12 +340,6 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
             "operation": "ADD",
             "releaseStatus": "DRAFT",
         },
-        {
-            "description": "Fjernet variabel",
-            "name": "KJOENN",
-            "operation": "REMOVE",
-            "releaseStatus": "DRAFT",
-        },
     ]
     with open(
         f"{DATASTORE_DIR}/datastore/metadata_all__2_1_0.json", encoding="utf-8"
@@ -369,7 +356,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
     assert datastore_versions_json["versions"][0]["version"] == "3.0.0.0"
     assert len(released_metadata_all["dataStructures"]) == len(
         previous_metadata_all["dataStructures"]
-    )
+        )-1 #Removed KJOENN in latest metadata_all
     with open(
         f"{DATASTORE_DIR}/datastore/data_versions__3_0.json", encoding="utf-8"
     ) as f:
@@ -378,7 +365,6 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
         "BRUTTO_INNTEKT": "BRUTTO_INNTEKT__2_1",
         "FOEDESTED": "FOEDESTED__2_1.parquet",
         "FOEDSELSVEKT": "FOEDSELSVEKT__3_0.parquet",
-        "KJOENN": "KJOENN__1_0.parquet",
         "SIVSTAND": "SIVSTAND__1_0.parquet",
     }
     assert len(get_file_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 2

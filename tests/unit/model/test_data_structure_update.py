@@ -15,7 +15,7 @@ DATA_STRUCTURE_REMOVE_UPDATE = {
     "name": "KJOENN",
     "description": "Fjernet variabel",
     "operation": "REMOVE",
-    "releaseStatus": "DRAFT",
+    "releaseStatus": "PENDING_DELETE",
 }
 DATA_STRUCTURE_UPDATE_MISSING_FIELD = {
     "name": "KJOENN",
