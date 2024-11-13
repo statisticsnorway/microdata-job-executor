@@ -79,7 +79,7 @@ def fix_interrupted_job(job):
                 "failed",
                 "Job was failed due to an unexpected interruption",
             )
-    elif job_operation in ["SET_STATUS", "DELETE_DRAFT", "REMOVE"]:
+    elif job_operation in ["SET_STATUS", "DELETE_DRAFT", "REMOVE", "ROLLBACK_REMOVE"]:
         logger.info(
             'Setting status to "queued" for '
             f"interrupted job with id {job.job_id}"
@@ -149,6 +149,7 @@ def query_for_jobs() -> Dict[str, List[Job]]:
                 "BUMP",
                 "DELETE_DRAFT",
                 "REMOVE",
+                "ROLLBACK_REMOVE",
                 "DELETE_ARCHIVE",
             ],
         },
@@ -332,6 +333,8 @@ def _handle_manager_job(job: Job):
         datastore.remove(
             job_id, job.parameters.target, job.parameters.description
         )
+    elif operation == "ROLLBACK_REMOVE":
+        datastore.delete_draft(job_id, job.parameters.target)
     elif operation == "DELETE_DRAFT":
         datastore.delete_draft(job_id, job.parameters.target)
     elif operation == "DELETE_ARCHIVE":
