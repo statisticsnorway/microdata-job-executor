@@ -355,9 +355,10 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
     ) as f:
         datastore_versions_json = json.load(f)
     assert datastore_versions_json["versions"][0]["version"] == "3.0.0.0"
-    assert len(released_metadata_all["dataStructures"]) == len(
-        previous_metadata_all["dataStructures"]
-        )-1  # Removed KJOENN in latest metadata_all
+    assert (
+        len(released_metadata_all["dataStructures"])
+        == len(previous_metadata_all["dataStructures"]) - 1
+    )  # Removed KJOENN in latest metadata_all
     with open(
         f"{DATASTORE_DIR}/datastore/data_versions__3_0.json", encoding="utf-8"
     ) as f:
@@ -448,4 +449,25 @@ def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
         for update in draft_version["dataStructureUpdates"]
         if update["name"] == DATASET_NAME
     ]
+    assert draft_version["releaseTime"] > 1_000_000
+
+
+def test_no_rollback(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    DATASET_NAME = "FOEDSELSVEKT"
+    DESCRIPTION = "Setter til remove"
+
+    datastore.remove(JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastore.delete_draft(JOB_ID, DATASET_NAME, rollback_remove=False)
+    assert len(requests_mock.request_history) == 4
+    with open(DRAFT_VERSION, encoding="utf-8") as f:
+        draft_version = json.load(f)
+    assert {
+        "name": DATASET_NAME,
+        "description": DESCRIPTION,
+        "operation": "REMOVE",
+        "releaseStatus": "PENDING_DELETE",
+    } in draft_version["dataStructureUpdates"]
     assert draft_version["releaseTime"] > 1_000_000
