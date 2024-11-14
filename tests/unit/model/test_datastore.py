@@ -167,6 +167,7 @@ def test_change(requests_mock: RequestsMocker):
     assert draft_version["releaseTime"] > 1_000_000
     assert foedested_metadata in metadata_all_draft["dataStructures"]
 
+
 def test_delete_draft(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
@@ -428,3 +429,25 @@ def test_failed_bump(
         bump_manifesto = DatastoreVersion(**json.load(f))
     datastore.bump_version(JOB_ID, bump_manifesto, "description")
     datastore.refresh.assert_called_once()
+
+
+def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
+    requests_mock.put(
+        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    DATASET_NAME = "FOEDSELSVEKT"
+    DESCRIPTION = "Setter til remove"
+
+    datastore.remove(JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastore.delete_draft(JOB_ID, DATASET_NAME, rollback_remove=True)
+    assert len(requests_mock.request_history) == 4
+    with open(DRAFT_VERSION, encoding="utf-8") as f:
+        draft_version = json.load(f)
+    assert not os.path.exists(draft_data_path(DATASET_NAME))
+    assert not os.path.exists(partitioned_draft_data_path(DATASET_NAME))
+    assert not [
+        update
+        for update in draft_version["dataStructureUpdates"]
+        if update["name"] == DATASET_NAME
+    ]
+    assert draft_version["releaseTime"] > 1_000_000
