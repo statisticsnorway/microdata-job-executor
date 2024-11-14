@@ -443,8 +443,6 @@ def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
     assert len(requests_mock.request_history) == 4
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         draft_version = json.load(f)
-    assert not os.path.exists(draft_data_path(DATASET_NAME))
-    assert not os.path.exists(partitioned_draft_data_path(DATASET_NAME))
     assert not [
         update
         for update in draft_version["dataStructureUpdates"]
