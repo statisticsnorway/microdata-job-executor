@@ -56,8 +56,9 @@ def test_set_release_status():
     data_structure_update.set_release_status("PENDING_DELETE")
     assert data_structure_update.release_status == "PENDING_DELETE"
 
-    data_structure_update.set_release_status("DRAFT")
-    assert data_structure_update.release_status == "DRAFT"
+    with pytest.raises(ReleaseStatusException) as e:
+        data_structure_update.set_release_status("DRAFT")
+    assert "Can't set release status: DRAFT" in str(e)
 
     with pytest.raises(ReleaseStatusException) as e:
         data_structure_update.set_release_status("PENDING_RELEASE")
