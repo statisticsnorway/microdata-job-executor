@@ -245,20 +245,26 @@ class Datastore:
             job_service.update_job_status(job_id, "completed")
             self._log(job_id, "completed")
 
-    def delete_draft(self, job_id: str, dataset_name: str):
+    def delete_draft(self, job_id: str, dataset_name: str, rollback_remove: bool):
         """
         Delete a dataset from the draft version of the datastore.
         """
         self._log(job_id, "initiated")
         job_service.update_job_status(job_id, "initiated")
         dataset_is_draft = self.draft_version.contains(dataset_name)
-        dataset_operation = self.draft_version.get_dataset_operation(
-            dataset_name
-        )
-        if not dataset_is_draft:
+        dataset_operation = self.draft_version.get_dataset_operation(dataset_name)
+        if dataset_operation != "REMOVE" and rollback_remove:
+            log_message = f"{dataset_name} is not scheduled for removal"
+            self._log(job_id, log_message, level="ERROR")
+            job_service.update_job_status(job_id, "failed", log_message)
+            return
+        if (not dataset_is_draft) or (
+            dataset_operation == "REMOVE" and not rollback_remove
+        ):
             log_message = f'Draft not found for dataset name: "{dataset_name}"'
             self._log(job_id, log_message, level="ERROR")
             job_service.update_job_status(job_id, "failed", log_message)
+            return
         else:
             # If dataset has previously released data/metadata that needs to
             # be restored

@@ -172,7 +172,7 @@ def test_delete_draft(requests_mock: RequestsMocker):
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "UTDANNING"
-    datastore.delete_draft(JOB_ID, DATASET_NAME)
+    datastore.delete_draft(JOB_ID, DATASET_NAME, rollback_remove=False)
     assert len(requests_mock.request_history) == 2
 
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -382,7 +382,7 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
         for draft in datastore.metadata_all_draft.data_structures
         if draft.name != DATASET_NAME
     ]
-    datastore.delete_draft(JOB_ID, DATASET_NAME)
+    datastore.delete_draft(JOB_ID, DATASET_NAME, rollback_remove=False)
     assert len(requests_mock.request_history) == 2
     assert requests_mock.request_history[1].json() == {"status": "completed"}
     with open(DRAFT_VERSION, encoding="utf-8") as f:

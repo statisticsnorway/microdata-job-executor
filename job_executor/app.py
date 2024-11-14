@@ -334,9 +334,9 @@ def _handle_manager_job(job: Job):
             job_id, job.parameters.target, job.parameters.description
         )
     elif operation == "ROLLBACK_REMOVE":
-        datastore.delete_draft(job_id, job.parameters.target)
+        datastore.delete_draft(job_id, job.parameters.target, rollback_remove=True)
     elif operation == "DELETE_DRAFT":
-        datastore.delete_draft(job_id, job.parameters.target)
+        datastore.delete_draft(job_id, job.parameters.target, rollback_remove=False)
     elif operation == "DELETE_ARCHIVE":
         datastore.delete_archived_input(job_id, job.parameters.target)
     else:
