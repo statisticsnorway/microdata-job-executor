@@ -356,7 +356,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
     assert datastore_versions_json["versions"][0]["version"] == "3.0.0.0"
     assert len(released_metadata_all["dataStructures"]) == len(
         previous_metadata_all["dataStructures"]
-        )-1 #Removed KJOENN in latest metadata_all
+        )-1  # Removed KJOENN in latest metadata_all
     with open(
         f"{DATASTORE_DIR}/datastore/data_versions__3_0.json", encoding="utf-8"
     ) as f:
