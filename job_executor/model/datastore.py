@@ -239,13 +239,15 @@ class Datastore:
                     name=dataset_name,
                     operation="REMOVE",
                     description=description,
-                    releaseStatus="DRAFT",
+                    releaseStatus="PENDING_DELETE",
                 )
             )
             job_service.update_job_status(job_id, "completed")
             self._log(job_id, "completed")
 
-    def delete_draft(self, job_id: str, dataset_name: str):
+    def delete_draft(
+        self, job_id: str, dataset_name: str, rollback_remove: bool
+    ):
         """
         Delete a dataset from the draft version of the datastore.
         """
@@ -255,30 +257,37 @@ class Datastore:
         dataset_operation = self.draft_version.get_dataset_operation(
             dataset_name
         )
-        if not dataset_is_draft:
+        if dataset_operation != "REMOVE" and rollback_remove:
+            log_message = f"{dataset_name} is not scheduled for removal"
+            self._log(job_id, log_message, level="ERROR")
+            job_service.update_job_status(job_id, "failed", log_message)
+            return
+        if (not dataset_is_draft) or (
+            dataset_operation == "REMOVE" and not rollback_remove
+        ):
             log_message = f'Draft not found for dataset name: "{dataset_name}"'
             self._log(job_id, log_message, level="ERROR")
             job_service.update_job_status(job_id, "failed", log_message)
-        else:
-            # If dataset has previously released data/metadata that needs to
-            # be restored
-            if dataset_operation in ["CHANGE", "PATCH_METADATA", "REMOVE"]:
-                released_metadata = self.metadata_all_latest.get(dataset_name)
-                if released_metadata is None:
-                    log_message = (
-                        f"Can't find released metadata for {dataset_name} "
-                        "when attempting to delete draft."
-                    )
-                    self._log(job_id, log_message, level="ERROR")
-                    raise VersioningException(log_message)
-                self.metadata_all_draft.remove(dataset_name)
-                self.metadata_all_draft.add(released_metadata)
-            if dataset_operation == "ADD":
-                self.metadata_all_draft.remove(dataset_name)
-            if dataset_operation in ["ADD", "CHANGE"]:
-                local_storage.delete_parquet_draft(dataset_name)
-            self.draft_version.delete_draft(dataset_name)
-            job_service.update_job_status(job_id, "completed")
+            return
+        # If dataset has previously released data/metadata that needs to
+        # be restored
+        if dataset_operation in ["CHANGE", "PATCH_METADATA", "REMOVE"]:
+            released_metadata = self.metadata_all_latest.get(dataset_name)
+            if released_metadata is None:
+                log_message = (
+                    f"Can't find released metadata for {dataset_name} "
+                    "when attempting to delete draft."
+                )
+                self._log(job_id, log_message, level="ERROR")
+                raise VersioningException(log_message)
+            self.metadata_all_draft.remove(dataset_name)
+            self.metadata_all_draft.add(released_metadata)
+        if dataset_operation == "ADD":
+            self.metadata_all_draft.remove(dataset_name)
+        if dataset_operation in ["ADD", "CHANGE"]:
+            local_storage.delete_parquet_draft(dataset_name)
+        self.draft_version.delete_draft(dataset_name)
+        job_service.update_job_status(job_id, "completed")
 
     def set_draft_release_status(
         self, job_id: str, dataset_name: str, new_status: str
@@ -376,10 +385,10 @@ class Datastore:
                 self._log(
                     job_id, "Renaming data file and updating data_versions"
                 )
-                new_data_versions[dataset_name] = (
-                    local_storage.rename_parquet_draft_to_release(
-                        dataset_name, new_version
-                    )
+                new_data_versions[
+                    dataset_name
+                ] = local_storage.rename_parquet_draft_to_release(
+                    dataset_name, new_version
                 )
         return new_metadata_datasets, new_data_versions
 

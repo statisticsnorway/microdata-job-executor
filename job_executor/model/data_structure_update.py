@@ -21,6 +21,12 @@ class DataStructureUpdate(CamelModel, extra="forbid"):
                     f"Can't set release status: {new_status} "
                     f"for dataset with operation: {self.operation}"
                 )
+        elif new_status == "DRAFT":
+            if self.operation == "REMOVE":
+                raise ReleaseStatusException(
+                    f"Can't set release status: {new_status} "
+                    f"for dataset with operation: {self.operation}"
+                )
         elif new_status != "DRAFT":
             raise ReleaseStatusException(
                 f"Invalid release status: {new_status}"

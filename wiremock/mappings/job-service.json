@@ -14,7 +14,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/jobs?status=queued&operation=SET_STATUS,BUMP,DELETE_DRAFT,REMOVE,DELETE_ARCHIVE"
+        "url": "/jobs?status=queued&operation=SET_STATUS,BUMP,DELETE_DRAFT,REMOVE,ROLLBACK_REMOVE,DELETE_ARCHIVE"
       },
       "response": {
         "status": 200,
