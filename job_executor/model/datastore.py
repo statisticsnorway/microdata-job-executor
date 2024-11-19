@@ -269,26 +269,25 @@ class Datastore:
             self._log(job_id, log_message, level="ERROR")
             job_service.update_job_status(job_id, "failed", log_message)
             return
-        else:
-            # If dataset has previously released data/metadata that needs to
-            # be restored
-            if dataset_operation in ["CHANGE", "PATCH_METADATA", "REMOVE"]:
-                released_metadata = self.metadata_all_latest.get(dataset_name)
-                if released_metadata is None:
-                    log_message = (
-                        f"Can't find released metadata for {dataset_name} "
-                        "when attempting to delete draft."
-                    )
-                    self._log(job_id, log_message, level="ERROR")
-                    raise VersioningException(log_message)
-                self.metadata_all_draft.remove(dataset_name)
-                self.metadata_all_draft.add(released_metadata)
-            if dataset_operation == "ADD":
-                self.metadata_all_draft.remove(dataset_name)
-            if dataset_operation in ["ADD", "CHANGE"]:
-                local_storage.delete_parquet_draft(dataset_name)
-            self.draft_version.delete_draft(dataset_name)
-            job_service.update_job_status(job_id, "completed")
+        # If dataset has previously released data/metadata that needs to
+        # be restored
+        if dataset_operation in ["CHANGE", "PATCH_METADATA", "REMOVE"]:
+            released_metadata = self.metadata_all_latest.get(dataset_name)
+            if released_metadata is None:
+                log_message = (
+                    f"Can't find released metadata for {dataset_name} "
+                    "when attempting to delete draft."
+                )
+                self._log(job_id, log_message, level="ERROR")
+                raise VersioningException(log_message)
+            self.metadata_all_draft.remove(dataset_name)
+            self.metadata_all_draft.add(released_metadata)
+        if dataset_operation == "ADD":
+            self.metadata_all_draft.remove(dataset_name)
+        if dataset_operation in ["ADD", "CHANGE"]:
+            local_storage.delete_parquet_draft(dataset_name)
+        self.draft_version.delete_draft(dataset_name)
+        job_service.update_job_status(job_id, "completed")
 
     def set_draft_release_status(
         self, job_id: str, dataset_name: str, new_status: str
