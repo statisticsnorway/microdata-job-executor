@@ -7,7 +7,6 @@ metadata:
     Executes queued jobs in subprocess workers, importing and managing datasets in a microdata datastore
   tags:
     - python
-    - pipeline
     - pyarrow
   annotations:
     github.com/project-slug: statisticsnorway/microdata-job-executor
