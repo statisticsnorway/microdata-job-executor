@@ -13,15 +13,30 @@ from job_executor.domain import rollback
 from job_executor.exception import RollbackException, StartupException
 from job_executor.model import Job, Datastore
 from job_executor.model.worker import Worker
-from job_executor.worker import build_dataset_worker, build_metadata_worker
+from job_executor.worker import (
+    build_dataset_worker,
+    build_metadata_worker,
+    manager_state as ManagerState,
+)
+
 
 logger = logging.getLogger()
 setup_logging()
 
 NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
+DYNAMIC_WORKER_THRESHOLD = int(environment.get("DYNAMIC_WORKER_THRESHOLD"))
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
+INPUT_DIR = Path(environment.get("INPUT_DIR"))
 
 datastore = None
+
+
+def get_size_in_bytes(dataset_name: str) -> int:
+    tar_path = INPUT_DIR / f"{dataset_name}.tar"
+    if not tar_path.exists():
+        logger.warning(f"Tar file not found: {tar_path}")
+        return 0  # or maybe rais exception
+    return os.path.getsize(tar_path)
 
 
 def is_system_paused() -> bool:
@@ -200,6 +215,10 @@ def main():
     initialize_app()
     logging_queue, log_thread = initialize_logging_thread()
     workers: List[Worker] = []
+    manager_state = ManagerState(
+        default_max_workers=NUMBER_OF_WORKERS,
+        dynamic_worker_threshold=DYNAMIC_WORKER_THRESHOLD,
+    )
 
     try:
         while True:
@@ -213,7 +232,7 @@ def main():
             dead_workers = [
                 worker for worker in workers if not worker.is_alive()
             ]
-            clean_up_after_dead_workers(dead_workers)
+            clean_up_after_dead_workers(dead_workers, manager_state)
 
             workers = [worker for worker in workers if worker.is_alive()]
 
@@ -229,11 +248,15 @@ def main():
                     f" (worker, built, queued manager jobs)"
                 )
             for job in queued_worker_jobs:
-                if len(workers) < NUMBER_OF_WORKERS:
+                job_size = get_size_in_bytes(job.dataset_name)
+
+                if manager_state.can_spawn_new_worker(job_size):
                     _handle_worker_job(job, workers, logging_queue)
+                    manager_state.register_job(job.job_id, job_size)
 
             for job in built_jobs + queued_manager_jobs:
                 try:
+                    manager_state.unregister_job(job.job_id)
                     _handle_manager_job(job)
                 except Exception as exc:
                     # All exceptions that occur during the handling of a job
@@ -253,7 +276,9 @@ def main():
         log_thread.join()
 
 
-def clean_up_after_dead_workers(dead_workers: List[Worker]) -> None:
+def clean_up_after_dead_workers(
+    dead_workers: List[Worker], manager_state
+) -> None:
     if len(dead_workers) > 0:
         in_progress_jobs = job_service.get_jobs(ignore_completed=True)
         for dead_worker in dead_workers:
@@ -268,6 +293,7 @@ def clean_up_after_dead_workers(dead_workers: List[Worker]) -> None:
             if job and job.status not in ["queued", "built"]:
                 logger.info(f"Worker died and did not finish job {job.job_id}")
                 fix_interrupted_job(job)
+            manager_state.unregister_job(job.job_id)
 
 
 def _handle_worker_job(job: Job, workers: List[Worker], logging_queue: Queue):
