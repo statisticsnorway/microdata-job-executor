@@ -423,3 +423,13 @@ def delete_archived_input(dataset_name: str):
     archived_file: Path = INPUT_DIR / f"archive/{dataset_name}.tar"
     if archived_file.is_file():
         os.remove(archived_file)
+
+
+def get_size_in_bytes(dataset_name: str) -> int:
+    """
+    Returns the size of the .tar file
+    """
+    tar_path = INPUT_DIR / f"{dataset_name}.tar"
+    if not tar_path.exists():
+        return 0
+    return os.path.getsize(tar_path)

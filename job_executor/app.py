@@ -6,11 +6,15 @@ from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Dict, List
 
-from job_executor.adapter import job_service
+from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import setup_logging, initialize_logging_thread
 from job_executor.domain import rollback
-from job_executor.exception import RollbackException, StartupException
+from job_executor.exception import (
+    RollbackException,
+    StartupException,
+    LocalStorageError,
+)
 from job_executor.model import Job, Datastore
 from job_executor.model.worker import Worker
 from job_executor.worker import (
@@ -26,17 +30,8 @@ setup_logging()
 NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
 DYNAMIC_WORKER_THRESHOLD = int(environment.get("DYNAMIC_WORKER_THRESHOLD"))
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
-INPUT_DIR = Path(environment.get("INPUT_DIR"))
 
 datastore = None
-
-
-def get_size_in_bytes(dataset_name: str) -> int:
-    tar_path = INPUT_DIR / f"{dataset_name}.tar"
-    if not tar_path.exists():
-        logger.warning(f"Tar file not found: {tar_path}")
-        return 0  # or maybe rais exception
-    return os.path.getsize(tar_path)
 
 
 def is_system_paused() -> bool:
@@ -248,7 +243,14 @@ def main():
                     f" (worker, built, queued manager jobs)"
                 )
             for job in queued_worker_jobs:
-                job_size = get_size_in_bytes(job.dataset_name)
+                job_size = local_storage.get_size_in_bytes(job.dataset_name)
+                if job_size == 0:
+                    logger.info(
+                        f"{job.job_id} Failed to get the size of the dataset."
+                    )
+                    raise LocalStorageError(
+                        "Failed to get size of the dataset"
+                    )
 
                 if manager_state.can_spawn_new_worker(job_size):
                     _handle_worker_job(job, workers, logging_queue)
