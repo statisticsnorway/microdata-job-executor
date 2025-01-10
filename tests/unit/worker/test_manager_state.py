@@ -27,7 +27,7 @@ def test_can_not_spawn_worker_to_many_workers():
 
 
 def test_can_not_spawn_worker_size_limit_reached():
-    manager_state = ManagerState(dynamic_worker_threshold=20 * 1024**3)  # 20GB
+    manager_state = ManagerState(max_gb_all_workers=20)
 
     # register large job
     manager_state.register_job("job_1", 20 * 1024**3)  # 20 GB

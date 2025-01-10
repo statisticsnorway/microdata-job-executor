@@ -13,7 +13,6 @@ from job_executor.domain import rollback
 from job_executor.exception import (
     RollbackException,
     StartupException,
-    LocalStorageError,
 )
 from job_executor.model import Job, Datastore
 from job_executor.model.worker import Worker
@@ -28,7 +27,7 @@ logger = logging.getLogger()
 setup_logging()
 
 NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
-DYNAMIC_WORKER_THRESHOLD = int(environment.get("DYNAMIC_WORKER_THRESHOLD"))
+MAX_GB_ALL_WORKERS = int(environment.get("MAX_GB_ALL_WORKERS"))
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
 datastore = None
@@ -212,7 +211,7 @@ def main():
     workers: List[Worker] = []
     manager_state = ManagerState(
         default_max_workers=NUMBER_OF_WORKERS,
-        dynamic_worker_threshold=DYNAMIC_WORKER_THRESHOLD,
+        max_gb_all_workers=MAX_GB_ALL_WORKERS,
     )
 
     try:
@@ -243,13 +242,17 @@ def main():
                     f" (worker, built, queued manager jobs)"
                 )
             for job in queued_worker_jobs:
-                job_size = local_storage.get_size_in_bytes(job.dataset_name)
+                job_size = local_storage.get_input_tar_size_in_bytes(
+                    job.dataset_name
+                )
                 if job_size == 0:
                     logger.info(
                         f"{job.job_id} Failed to get the size of the dataset."
                     )
-                    raise LocalStorageError(
-                        "Failed to get size of the dataset"
+                    job_service.update_job_status(
+                        job.job_id,
+                        "failed",
+                        log="No such dataset available for import",
                     )
 
                 if manager_state.can_spawn_new_worker(job_size):
@@ -295,7 +298,7 @@ def clean_up_after_dead_workers(
             if job and job.status not in ["queued", "built"]:
                 logger.info(f"Worker died and did not finish job {job.job_id}")
                 fix_interrupted_job(job)
-            manager_state.unregister_job(job.job_id)
+            manager_state.unregister_job(dead_worker.job_id)
 
 
 def _handle_worker_job(job: Job, workers: List[Worker], logging_queue: Queue):

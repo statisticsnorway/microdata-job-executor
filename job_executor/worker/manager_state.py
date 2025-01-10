@@ -1,16 +1,15 @@
 class ManagerState:
-    def __init__(
-        self,
-        default_max_workers=4,
-        dynamic_worker_threshold=50 * 1024**3,
-    ):
+    def __init__(self, default_max_workers=4, max_gb_all_workers=50):
         """
         :param default_max_workers: The maximum number of workers
-        :param dynamic_worker_threshold: Threshold when the number of workers are reduced (50GB - 50 * 1024**3)
+        :param max_gb_all_workers: Threshold in GB (50) for when the number
+        of workers are reduced
         """
         self.default_max_workers = default_max_workers
         self.current_max_workers = default_max_workers
-        self.dynamic_worker_threshold = dynamic_worker_threshold
+        self.max_bytes_all_workers = (
+            max_gb_all_workers * 1024**3  # Threshold in bytes
+        )
 
         # Maps job_id -> dataset size = {jobid1: size_in_bytes, jobid2: size_in_bytes, ...}
         self.datasets = {}
@@ -21,14 +20,16 @@ class ManagerState:
 
     def can_spawn_new_worker(self, new_job_size):
         """
-        Called to check if a new worker can be spawned. If the current total size of data being processed
+        Called to check if a new worker can be spawned. If the current total
+        size of data being processed
         is larger than the threshold the number of workers are reduced to 2.
 
-        When a job is finished and unregister the number of workers will reset to default_max_workers
+        When a job is finished and unregister the number of workers will reset
+        to default_max_workers
         """
 
         # Could tweak this to be more gradual if we want
-        if self.current_total_size >= self.dynamic_worker_threshold:
+        if self.current_total_size >= self.max_bytes_all_workers:
             self.current_max_workers = 2
         else:
             self.current_max_workers = self.default_max_workers
