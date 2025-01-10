@@ -13,6 +13,7 @@ def _initialize_environment() -> dict:
         "SECRETS_FILE": os.environ["SECRETS_FILE"],
         "DOCKER_HOST_NAME": os.environ["DOCKER_HOST_NAME"],
         "COMMIT_ID": os.environ["COMMIT_ID"],
+        "MAX_GB_ALL_WORKERS": os.environ["MAX_GB_ALL_WORKERS"],
     }
 
 
