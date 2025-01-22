@@ -15,7 +15,7 @@ def test_can_spawn_worker():
     assert can_spawn is True
 
 
-def test_can_not_spawn_worker_to_many_workers():
+def test_cannot_spawn_worker_too_many_workers():
     manager_state = ManagerState(default_max_workers=4)
 
     # Register 4 jobs
@@ -26,20 +26,39 @@ def test_can_not_spawn_worker_to_many_workers():
     assert can_spawn is False
 
 
-def test_can_not_spawn_worker_size_limit_reached():
+def test_cannot_spawn_worker_size_limit_reached():
+    TWENTY_GB = 20 * 1024**3
     manager_state = ManagerState(max_gb_all_workers=20)
 
     # register large job
-    manager_state.register_job("job_1", 20 * 1024**3)  # 20 GB
+    manager_state.register_job("job_1", TWENTY_GB)  # 20 GB
 
     # Max worker should now be 2, We can still spawn a second job
-    can_spawn = manager_state.can_spawn_new_worker(new_job_size=10 * 1024**3)
+    can_spawn = manager_state.can_spawn_new_worker(new_job_size=TWENTY_GB)
     assert can_spawn is True
 
-    manager_state.register_job("job_2", 10 * 1024**3)
+    manager_state.register_job("job_2", TWENTY_GB)
 
     # We should not be able to spawn a third job
-    can_spawn = manager_state.can_spawn_new_worker(new_job_size=10 * 1024**3)
+    can_spawn = manager_state.can_spawn_new_worker(new_job_size=TWENTY_GB)
+    assert can_spawn is False
+
+
+def test_oversized_jobs():
+    # we can run jobs which exceeds the limit for the threshold,
+    # but only two of them
+    FIFTY_GB = 50 * 1024**3
+    manager_state = ManagerState(max_gb_all_workers=10)
+
+    can_spawn = manager_state.can_spawn_new_worker(new_job_size=FIFTY_GB)
+    manager_state.register_job("job_1", FIFTY_GB)
+    assert can_spawn is True
+
+    can_spawn = manager_state.can_spawn_new_worker(new_job_size=FIFTY_GB)
+    manager_state.register_job("job_2", FIFTY_GB)
+    assert can_spawn is True
+
+    can_spawn = manager_state.can_spawn_new_worker(new_job_size=FIFTY_GB)
     assert can_spawn is False
 
 

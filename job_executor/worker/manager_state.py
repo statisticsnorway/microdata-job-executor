@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger()
+
+
 class ManagerState:
     def __init__(self, default_max_workers=4, max_gb_all_workers=50):
         """
@@ -27,18 +32,32 @@ class ManagerState:
         When a job is finished and unregister the number of workers will reset
         to default_max_workers
         """
-
-        # Could tweak this to be more gradual if we want
-        if self.current_total_size >= self.max_bytes_all_workers:
-            self.current_max_workers = 2
-        else:
-            self.current_max_workers = self.default_max_workers
+        can_spawn = True
+        self.update_worker_limit(new_job_size)
 
         active_workers = len(self.datasets)
         if active_workers >= self.current_max_workers:
-            return False
+            can_spawn = False
 
-        return True
+        logger.info(
+            f"Checking can_spawn_new_worker({new_job_size}): "
+            f"active={active_workers}, dynamic_limit={self.current_max_workers}, "
+            f"current_total_size={self.current_total_size}, can_spawn={can_spawn}"
+        )
+
+        return can_spawn
+
+    def update_worker_limit(self, new_job_size):
+        """
+        Check the current size beeing procces in the pipeline.
+        And changes the number of workers as needed.
+        """
+        if (
+            self.current_total_size + new_job_size
+        ) >= self.max_bytes_all_workers:
+            self.current_max_workers = 2
+        else:
+            self.current_max_workers = self.default_max_workers
 
     def register_job(self, job_id, job_size):
         """
