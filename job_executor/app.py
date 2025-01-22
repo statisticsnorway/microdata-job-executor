@@ -254,6 +254,7 @@ def main():
                         "failed",
                         log="No such dataset available for import",
                     )
+                    continue  # skip futher processing of this job
 
                 if manager_state.can_spawn_new_worker(job_size):
                     _handle_worker_job(job, workers, logging_queue)
