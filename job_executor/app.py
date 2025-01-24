@@ -252,7 +252,9 @@ def main():
                     continue  # skip futher processing of this job
 
                 if manager_state.can_spawn_new_worker(job_size):
-                    _handle_worker_job(job, manager_state, logging_queue)
+                    _handle_worker_job(
+                        job, manager_state, job_size, logging_queue
+                    )
 
             for job in built_jobs + queued_manager_jobs:
                 try:
