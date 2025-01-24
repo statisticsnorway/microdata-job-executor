@@ -25,15 +25,9 @@ class ManagerState:
 
     def can_spawn_new_worker(self, new_job_size):
         """
-        Called to check if a new worker can be spawned. If the current total
-        size of data being processed
-        is larger than the threshold the number of workers are reduced to 2.
-
-        When a job is finished and unregister the number of workers will reset
-        to default_max_workers
+        Called to check if a new worker can be spawned.
         """
         can_spawn = True
-        self.update_worker_limit(new_job_size)
 
         active_workers = len(self.datasets)
         if active_workers >= self.current_max_workers:
@@ -62,8 +56,10 @@ class ManagerState:
     def register_job(self, job_id, job_size):
         """
         Called when a worker picks up a job.
+        When a job is register the current_max_workers are updated.
         """
         self.datasets[job_id] = job_size
+        self.update_worker_limit(job_size)
 
     def unregister_job(self, job_id):
         """
