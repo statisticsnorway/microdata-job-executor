@@ -1,6 +1,11 @@
 import logging
+from job_executor.model.worker import Worker
+
+from typing import List
 
 logger = logging.getLogger()
+
+REDUCED_WORKER_NUMBER = 2
 
 
 class ManagerState:
@@ -16,20 +21,35 @@ class ManagerState:
             max_gb_all_workers * 1024**3  # Threshold in bytes
         )
 
-        # Maps job_id -> dataset size = {jobid1: size_in_bytes, jobid2: size_in_bytes, ...}
-        self.datasets = {}
+        self.workers: List[Worker] = []
 
     @property
-    def current_total_size(self):
-        return sum(self.datasets.values())
+    def dead_workers(self) -> List[Worker]:
+        """
+        Return a list of dead workers
+        """
+        return [worker for worker in self.workers if not worker.is_alive()]
 
-    def can_spawn_new_worker(self, new_job_size):
+    @property
+    def alive_workers(self) -> List[Worker]:
+        """
+        Return a list of alive workers
+        """
+        return [worker for worker in self.workers if worker.is_alive()]
+
+    @property
+    def current_total_size(self) -> int:
+        return sum(
+            worker.job_size for worker in self.workers if worker.is_alive()
+        )
+
+    def can_spawn_new_worker(self, new_job_size: int) -> bool:
         """
         Called to check if a new worker can be spawned.
         """
         can_spawn = True
 
-        active_workers = len(self.datasets)
+        active_workers = len(self.alive_workers)
         if active_workers >= self.current_max_workers:
             can_spawn = False
 
@@ -41,33 +61,29 @@ class ManagerState:
 
         return can_spawn
 
-    def update_worker_limit(self, new_job_size):
+    def update_worker_limit(self, new_job_size: int):
         """
         Check the current size beeing procces in the pipeline.
         And changes the number of workers as needed.
         """
-        if (
-            self.current_total_size + new_job_size
-        ) >= self.max_bytes_all_workers:
-            self.current_max_workers = 2
+        new_total = self.current_total_size + new_job_size
+        if new_total >= self.max_bytes_all_workers:
+            self.current_max_workers = REDUCED_WORKER_NUMBER
         else:
             self.current_max_workers = self.default_max_workers
 
-    def register_job(self, job_id, job_size):
+    def register_job(self, worker: Worker):
         """
         Called when a worker picks up a job.
         When a job is register the current_max_workers are updated.
         """
-        self.datasets[job_id] = job_size
-        self.update_worker_limit(job_size)
+        self.workers.append(worker)
+        self.update_worker_limit(worker.job_size)
 
     def unregister_job(self, job_id):
         """
         Called when a job finishes or fails.
         """
-        if job_id in self.datasets:
-            del self.datasets[job_id]
-
-    def reset(self):
-        self.current_max_workers = self.default_max_workers
-        self.datasets.clear()
+        self.workers = [
+            worker for worker in self.workers if worker.job_id != job_id
+        ]
