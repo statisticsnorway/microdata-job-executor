@@ -279,7 +279,7 @@ def main():
 
 
 def clean_up_after_dead_workers(manager_state) -> None:
-    dead_workers = manager_state.get_dead_workers
+    dead_workers = manager_state.dead_workers
     if len(dead_workers) > 0:
         in_progress_jobs = job_service.get_jobs(ignore_completed=True)
         for dead_worker in dead_workers:
