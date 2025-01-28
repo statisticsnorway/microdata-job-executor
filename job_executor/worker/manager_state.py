@@ -1,9 +1,7 @@
-import logging
 from job_executor.model.worker import Worker
 
 from typing import List
 
-logger = logging.getLogger()
 
 REDUCED_WORKER_NUMBER = 2
 
@@ -53,12 +51,6 @@ class ManagerState:
         if active_workers >= self.current_max_workers:
             can_spawn = False
 
-        logger.info(
-            f"Checking can_spawn_new_worker({new_job_size}): "
-            f"active={active_workers}, dynamic_limit={self.current_max_workers}, "
-            f"current_total_size={self.current_total_size}, can_spawn={can_spawn}"
-        )
-
         return can_spawn
 
     def update_worker_limit(self, new_job_size: int):
@@ -69,6 +61,7 @@ class ManagerState:
         new_total = self.current_total_size + new_job_size
         if new_total >= self.max_bytes_all_workers:
             self.current_max_workers = REDUCED_WORKER_NUMBER
+
         else:
             self.current_max_workers = self.default_max_workers
 
