@@ -45,13 +45,11 @@ class ManagerState:
         """
         Called to check if a new worker can be spawned.
         """
-        can_spawn = True
-
-        active_workers = len(self.alive_workers)
-        if active_workers >= self.current_max_workers:
-            can_spawn = False
-
-        return can_spawn
+        if len(self.alive_workers) >= self.current_max_workers:
+            return False
+        if self.current_total_size + new_job_size >= self.max_bytes_all_workers:
+            return False
+        return True
 
     def update_worker_limit(self, new_job_size: int):
         """
