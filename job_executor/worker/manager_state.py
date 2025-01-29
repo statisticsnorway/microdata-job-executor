@@ -61,7 +61,6 @@ class ManagerState:
         new_total = self.current_total_size + new_job_size
         if new_total >= self.max_bytes_all_workers:
             self.current_max_workers = REDUCED_WORKER_NUMBER
-
         else:
             self.current_max_workers = self.default_max_workers
 
