@@ -3,9 +3,6 @@ from job_executor.model.worker import Worker
 from typing import List
 
 
-REDUCED_WORKER_NUMBER = 2
-
-
 class ManagerState:
     def __init__(self, default_max_workers=4, max_gb_all_workers=50):
         """
@@ -14,7 +11,6 @@ class ManagerState:
         of workers are reduced
         """
         self.default_max_workers = default_max_workers
-        self.current_max_workers = default_max_workers
         self.max_bytes_all_workers = (
             max_gb_all_workers * 1024**3  # Threshold in bytes
         )
@@ -45,30 +41,20 @@ class ManagerState:
         """
         Called to check if a new worker can be spawned.
         """
-        if len(self.alive_workers) >= self.current_max_workers:
+        if len(self.alive_workers) >= self.default_max_workers:
             return False
-        if self.current_total_size + new_job_size >= self.max_bytes_all_workers:
+        if (
+            self.current_total_size + new_job_size
+            >= self.max_bytes_all_workers
+        ):
             return False
         return True
-
-    def update_worker_limit(self, new_job_size: int):
-        """
-        Check the current size beeing procces in the pipeline.
-        And changes the number of workers as needed.
-        """
-        new_total = self.current_total_size + new_job_size
-        if new_total >= self.max_bytes_all_workers:
-            self.current_max_workers = REDUCED_WORKER_NUMBER
-        else:
-            self.current_max_workers = self.default_max_workers
 
     def register_job(self, worker: Worker):
         """
         Called when a worker picks up a job.
-        When a job is register the current_max_workers are updated.
         """
         self.workers.append(worker)
-        self.update_worker_limit(worker.job_size)
 
     def unregister_job(self, job_id):
         """
