@@ -6,19 +6,28 @@ from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Dict, List
 
-from job_executor.adapter import job_service
+from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import setup_logging, initialize_logging_thread
 from job_executor.domain import rollback
-from job_executor.exception import RollbackException, StartupException
+from job_executor.exception import (
+    RollbackException,
+    StartupException,
+)
 from job_executor.model import Job, Datastore
 from job_executor.model.worker import Worker
-from job_executor.worker import build_dataset_worker, build_metadata_worker
+from job_executor.worker import (
+    build_dataset_worker,
+    build_metadata_worker,
+    manager_state as ManagerState,
+)
+
 
 logger = logging.getLogger()
 setup_logging()
 
 NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
+MAX_GB_ALL_WORKERS = int(environment.get("MAX_GB_ALL_WORKERS"))
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
 datastore = None
@@ -199,7 +208,11 @@ def initialize_app():
 def main():
     initialize_app()
     logging_queue, log_thread = initialize_logging_thread()
-    workers: List[Worker] = []
+
+    manager_state = ManagerState(
+        default_max_workers=NUMBER_OF_WORKERS,
+        max_gb_all_workers=MAX_GB_ALL_WORKERS,
+    )
 
     try:
         while True:
@@ -210,12 +223,7 @@ def main():
             built_jobs = job_dict["built_jobs"]
             queued_manager_jobs = job_dict["queued_manager_jobs"]
 
-            dead_workers = [
-                worker for worker in workers if not worker.is_alive()
-            ]
-            clean_up_after_dead_workers(dead_workers)
-
-            workers = [worker for worker in workers if worker.is_alive()]
+            clean_up_after_dead_workers(manager_state)
 
             available_jobs = (
                 len(queued_worker_jobs)
@@ -229,11 +237,28 @@ def main():
                     f" (worker, built, queued manager jobs)"
                 )
             for job in queued_worker_jobs:
-                if len(workers) < NUMBER_OF_WORKERS:
-                    _handle_worker_job(job, workers, logging_queue)
+                job_size = local_storage.get_input_tar_size_in_bytes(
+                    job.dataset_name
+                )
+                if job_size == 0:
+                    logger.info(
+                        f"{job.job_id} Failed to get the size of the dataset."
+                    )
+                    job_service.update_job_status(
+                        job.job_id,
+                        "failed",
+                        log="No such dataset available for import",
+                    )
+                    continue  # skip futher processing of this job
+
+                if manager_state.can_spawn_new_worker(job_size):
+                    _handle_worker_job(
+                        job, manager_state, job_size, logging_queue
+                    )
 
             for job in built_jobs + queued_manager_jobs:
                 try:
+                    manager_state.unregister_job(job.job_id)
                     _handle_manager_job(job)
                 except Exception as exc:
                     # All exceptions that occur during the handling of a job
@@ -253,7 +278,8 @@ def main():
         log_thread.join()
 
 
-def clean_up_after_dead_workers(dead_workers: List[Worker]) -> None:
+def clean_up_after_dead_workers(manager_state) -> None:
+    dead_workers = manager_state.dead_workers
     if len(dead_workers) > 0:
         in_progress_jobs = job_service.get_jobs(ignore_completed=True)
         for dead_worker in dead_workers:
@@ -268,9 +294,12 @@ def clean_up_after_dead_workers(dead_workers: List[Worker]) -> None:
             if job and job.status not in ["queued", "built"]:
                 logger.info(f"Worker died and did not finish job {job.job_id}")
                 fix_interrupted_job(job)
+            manager_state.unregister_job(dead_worker.job_id)
 
 
-def _handle_worker_job(job: Job, workers: List[Worker], logging_queue: Queue):
+def _handle_worker_job(
+    job: Job, manager_state: ManagerState, job_size: int, logging_queue: Queue
+):
     dataset_name = job.parameters.target
     job_id = job.job_id
     operation = job.parameters.operation
@@ -285,8 +314,9 @@ def _handle_worker_job(job: Job, workers: List[Worker], logging_queue: Queue):
                 ),
             ),
             job_id=job_id,
+            job_size=job_size,
         )
-        workers.append(worker)
+        manager_state.register_job(worker, job_id, job_size)
         job_service.update_job_status(job_id, "initiated")
         worker.start()
     elif operation == "PATCH_METADATA":
@@ -301,7 +331,7 @@ def _handle_worker_job(job: Job, workers: List[Worker], logging_queue: Queue):
             ),
             job_id=job_id,
         )
-        workers.append(worker)
+        manager_state.register_job(worker)
         job_service.update_job_status(job_id, "initiated")
         worker.start()
     else:
