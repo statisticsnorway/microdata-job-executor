@@ -19,8 +19,8 @@ from job_executor.model.worker import Worker
 from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker,
-    manager_state as ManagerState,
 )
+from job_executor.worker.manager import ManagerState
 
 
 logger = logging.getLogger()
