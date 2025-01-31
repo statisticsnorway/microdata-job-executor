@@ -238,7 +238,7 @@ def main():
                 )
             for job in queued_worker_jobs:
                 job_size = local_storage.get_input_tar_size_in_bytes(
-                    job.dataset_name
+                    job.parameters.target
                 )
                 if job_size == 0:
                     logger.info(
@@ -316,7 +316,7 @@ def _handle_worker_job(
             job_id=job_id,
             job_size=job_size,
         )
-        manager_state.register_job(worker, job_id, job_size)
+        manager_state.register_job(worker)
         job_service.update_job_status(job_id, "initiated")
         worker.start()
     elif operation == "PATCH_METADATA":
@@ -330,6 +330,7 @@ def _handle_worker_job(
                 ),
             ),
             job_id=job_id,
+            job_size=job_size,
         )
         manager_state.register_job(worker)
         job_service.update_job_status(job_id, "initiated")
