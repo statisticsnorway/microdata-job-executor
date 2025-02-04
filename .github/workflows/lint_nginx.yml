@@ -1,0 +1,29 @@
+name: Nginx Config Linter
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  nginx-lint:
+    name: Validate Nginx Config
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nginx
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nginx
+
+      - name: Find and Test Nginx Config Files
+        run: |
+          set -e  # Exit on error
+          find . -name "reverse-proxy.conf" -print0 | while IFS= read -r -d '' file; do
+            echo "Checking $file..."
+            sudo nginx -t -c "$(realpath "$file")"
+          done
