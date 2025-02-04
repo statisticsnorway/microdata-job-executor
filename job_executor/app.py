@@ -241,7 +241,7 @@ def main():
                     job.parameters.target
                 )
                 if job_size == 0:
-                    logger.info(
+                    logger.warning(
                         f"{job.job_id} Failed to get the size of the dataset."
                     )
                     job_service.update_job_status(
@@ -250,7 +250,16 @@ def main():
                         log="No such dataset available for import",
                     )
                     continue  # skip futher processing of this job
-
+                if job_size > MAX_GB_ALL_WORKERS:
+                    logger.warning(
+                        f"{job.job_id} Exceeded the maximum size for all workers."
+                    )
+                    job_service.update_job_status(
+                        job.job_id,
+                        "failed",
+                        log="Dataset too large for import",
+                    )
+                    continue  # skip futher processing of this job
                 if manager_state.can_spawn_new_worker(job_size):
                     _handle_worker_job(
                         job, manager_state, job_size, logging_queue
