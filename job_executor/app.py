@@ -27,7 +27,9 @@ logger = logging.getLogger()
 setup_logging()
 
 NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
-MAX_GB_ALL_WORKERS = int(environment.get("MAX_GB_ALL_WORKERS"))
+MAX_BYTES_ALL_WORKERS = (
+    int(environment.get("MAX_GB_ALL_WORKERS")) * 1024**3
+)  # Threshold in bytes
 DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
 datastore = None
@@ -210,8 +212,8 @@ def main():
     logging_queue, log_thread = initialize_logging_thread()
 
     manager_state = ManagerState(
-        default_max_workers=NUMBER_OF_WORKERS,
-        max_gb_all_workers=MAX_GB_ALL_WORKERS,
+        max_workers=NUMBER_OF_WORKERS,
+        max_bytes_all_workers=MAX_BYTES_ALL_WORKERS,
     )
 
     try:
@@ -250,7 +252,7 @@ def main():
                         log="No such dataset available for import",
                     )
                     continue  # skip futher processing of this job
-                if job_size > MAX_GB_ALL_WORKERS:
+                if job_size > MAX_BYTES_ALL_WORKERS:
                     logger.warning(
                         f"{job.job_id} Exceeded the maximum size for all workers."
                     )

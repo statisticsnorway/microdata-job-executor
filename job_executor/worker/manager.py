@@ -4,16 +4,14 @@ from typing import List
 
 
 class ManagerState:
-    def __init__(self, default_max_workers=4, max_gb_all_workers=50):
+    def __init__(self, max_workers, max_bytes_all_workers):
         """
         :param default_max_workers: The maximum number of workers
         :param max_gb_all_workers: Threshold in GB (50) for when the number
         of workers are reduced
         """
-        self.default_max_workers = default_max_workers
-        self.max_bytes_all_workers = (
-            max_gb_all_workers * 1024**3  # Threshold in bytes
-        )
+        self.max_workers = default_max_workers
+        self.max_bytes_all_workers = max_bytes_all_workers
 
         self.workers: List[Worker] = []
 
@@ -41,7 +39,7 @@ class ManagerState:
         """
         Called to check if a new worker can be spawned.
         """
-        if len(self.alive_workers) >= self.default_max_workers:
+        if len(self.alive_workers) >= self.max_workers:
             return False
         if (
             self.current_total_size + new_job_size
