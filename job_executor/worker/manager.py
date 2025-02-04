@@ -10,7 +10,7 @@ class ManagerState:
         :param max_gb_all_workers: Threshold in GB (50) for when the number
         of workers are reduced
         """
-        self.max_workers = default_max_workers
+        self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
 
         self.workers: List[Worker] = []
