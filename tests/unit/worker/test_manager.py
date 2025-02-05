@@ -10,21 +10,27 @@ def dummy():
 
 
 def test_initial_state():
-    manager_state = ManagerState()
+    manager_state = ManagerState(
+        max_workers=4, max_bytes_all_workers=50 * 1024**3
+    )
 
     assert manager_state.current_total_size == 0
     assert len(manager_state.workers) == 0
 
 
 def test_can_spawn_worker():
-    manager_state = ManagerState()
+    manager_state = ManagerState(
+        max_workers=4, max_bytes_all_workers=50 * 1024**3
+    )
 
     can_spawn = manager_state.can_spawn_new_worker(new_job_size=1)
     assert can_spawn is True
 
 
 def test_cannot_spawn_worker_too_many_workers():
-    manager_state = ManagerState(default_max_workers=4)
+    manager_state = ManagerState(
+        max_workers=4, max_bytes_all_workers=50 * 1024**3
+    )
 
     # Register 4 jobs
     for i in range(4):
@@ -42,7 +48,9 @@ def test_cannot_spawn_worker_too_many_workers():
 
 def test_cannot_spawn_worker_size_limit_reached():
     TWENTY_GB = 20 * 1024**3
-    manager_state = ManagerState(max_gb_all_workers=20)
+    manager_state = ManagerState(
+        max_workers=20, max_bytes_all_workers=TWENTY_GB
+    )
 
     large_job = Worker(
         process=Process(target=dummy),
@@ -60,7 +68,9 @@ def test_cannot_spawn_worker_size_limit_reached():
 def test_oversized_jobs():
     FIFTY_GB = 50 * 1024**3
     TEN_GB = 10 * 1024**3
-    manager_state = ManagerState(max_gb_all_workers=20)
+    manager_state = ManagerState(
+        max_workers=4, max_bytes_all_workers=20 * 1024**3
+    )
 
     # This job will never be processed
     can_spawn = manager_state.can_spawn_new_worker(new_job_size=FIFTY_GB)
@@ -80,7 +90,9 @@ def test_oversized_jobs():
 
 
 def test_unregister_job():
-    manager_state = ManagerState(default_max_workers=4)
+    manager_state = ManagerState(
+        max_workers=4, max_bytes_all_workers=50 * 1024**3
+    )
 
     # Register 4 jobs
     for i in range(4):
