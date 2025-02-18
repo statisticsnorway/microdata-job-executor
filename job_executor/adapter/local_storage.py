@@ -428,9 +428,13 @@ def delete_archived_input(dataset_name: str):
 def get_input_tar_size_in_bytes(dataset_name: str) -> int:
     """
     Checks the size in bytes of the dataset.tar file.
-    returns size in bytes
+    Returns size in bytes or 0 if the file does not exist.
     """
     tar_path = INPUT_DIR / f"{dataset_name}.tar"
+
     if not tar_path.exists():
-        return 0
-    return os.path.getsize(tar_path)
+        tar_path = INPUT_DIR / "archive" / f"{dataset_name}.tar"
+
+    if tar_path.exists():
+        return os.path.getsize(tar_path)
+    return 0
