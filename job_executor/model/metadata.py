@@ -179,8 +179,7 @@ class Variable(CamelModel):
             message += f"shortName: {self.name} to {other.name}\n"
         if with_key_type and self.key_type.name != other.key_type.name:
             message += (
-                f"unitType.name: {self.key_type.name} "
-                f"to {other.key_type.name}"
+                f"unitType.name: {self.key_type.name} to {other.key_type.name}"
             )
 
         if message:
@@ -272,8 +271,7 @@ class MeasureVariable(Variable):
         return Variable(**patched)
 
 
-class AttributeVariable(Variable):
-    ...
+class AttributeVariable(Variable): ...
 
 
 class TemporalEnd(CamelModel):

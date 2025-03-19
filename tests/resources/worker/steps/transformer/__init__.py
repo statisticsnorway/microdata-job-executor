@@ -54,9 +54,7 @@ UTDANNING["attributeVariables"] = [
 DESCRIBED_EXPECTED = json.load(
     open(EXPECTED_DATA_PATH / "KREFTREG_DS_described.json")
 )
-STATUS_EXPECTED = json.load(
-    open(EXPECTED_DATA_PATH / "UTDANNING.json")
-)
+STATUS_EXPECTED = json.load(open(EXPECTED_DATA_PATH / "UTDANNING.json"))
 STATUS_PATCH_EXPECTED = json.load(
     open(EXPECTED_DATA_PATH / "UTDANNING_PATCH.json")
 )
@@ -172,4 +170,3 @@ TRANSFORMED_CODELIST_WITH_MISSING_VALUES = [
     }
     for represented in TRANSFORMED_CODELIST
 ]
-

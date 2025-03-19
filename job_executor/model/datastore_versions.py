@@ -91,7 +91,7 @@ def dotted_to_underscored_version(version: str) -> str:
 
 
 def underscored_to_dotted_version(version: str) -> str:
-    return f'{version.replace("_", ".")}.0'
+    return f"{version.replace('_', '.')}.0"
 
 
 def bump_dotted_version_number(version: str, update_type: str) -> str:

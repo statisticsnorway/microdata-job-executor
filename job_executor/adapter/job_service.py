@@ -27,13 +27,13 @@ def get_jobs(
     if job_status is not None:
         query_fields.append(f"status={job_status}")
     if operations is not None:
-        query_fields.append(f'operation={",".join(operations)}')
+        query_fields.append(f"operation={','.join(operations)}")
     if ignore_completed is not None:
         query_fields.append(f"ignoreCompleted={str(ignore_completed).lower()}")
 
     request_url = f"{JOB_SERVICE_URL}/jobs"
     if query_fields:
-        request_url += f'?{"&".join(query_fields)}'
+        request_url += f"?{'&'.join(query_fields)}"
 
     response = execute_request("GET", request_url, True)
     return [Job(**job) for job in response.json()]

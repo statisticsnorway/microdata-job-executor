@@ -27,7 +27,7 @@ DRAFT_VERSION_ADDED_PENDING = load_json(
     f"{TEST_DIR}/draft_version_added_pending.json"
 )
 
-DATASTORE_DIR = f'{os.environ["DATASTORE_DIR"]}/datastore'
+DATASTORE_DIR = f"{os.environ['DATASTORE_DIR']}/datastore"
 DRAFT_VERSION_PATH = f"{DATASTORE_DIR}/draft_version.json"
 DATASTORE_VERSION = {
     "version": "0.1.0.1635299291",
