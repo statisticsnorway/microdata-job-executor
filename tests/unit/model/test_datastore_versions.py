@@ -9,7 +9,7 @@ def load_json(file_path):
     return json.load(open(file_path, encoding="utf"))
 
 
-DATASTORE_DIR = f'{os.environ["DATASTORE_DIR"]}/datastore'
+DATASTORE_DIR = f"{os.environ['DATASTORE_DIR']}/datastore"
 DATASTORE_VERSIONS_PATH = f"{DATASTORE_DIR}/datastore_versions.json"
 
 

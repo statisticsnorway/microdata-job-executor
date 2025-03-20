@@ -59,7 +59,7 @@ def fix_interrupted_jobs():
 def fix_interrupted_job(job):
     job_operation = job.parameters.operation
     logger.info(
-        f"{job.job_id}: Rolling back job with operation " f'"{job_operation}"'
+        f'{job.job_id}: Rolling back job with operation "{job_operation}"'
     )
     if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
         if job.status == "importing":
@@ -74,16 +74,14 @@ def fix_interrupted_job(job):
             job_service.update_job_status(
                 job.job_id,
                 "built",
-                "Reset to built status will be due to "
-                "unexpected interruption",
+                "Reset to built status will be due to unexpected interruption",
             )
         else:
             rollback.rollback_worker_phase_import_job(
                 job.job_id, job_operation, job.parameters.target
             )
             logger.info(
-                f'{job.job_id}: Setting status to "failed" for '
-                f"interrupted job"
+                f'{job.job_id}: Setting status to "failed" for interrupted job'
             )
             job_service.update_job_status(
                 job.job_id,
@@ -123,8 +121,7 @@ def fix_interrupted_job(job):
         )
     else:
         log_message = (
-            f"Unrecognized job operation {job_operation}"
-            f"for job {job.job_id}"
+            f"Unrecognized job operation {job_operation}for job {job.job_id}"
         )
         logger.error(log_message)
         raise RollbackException(log_message)
