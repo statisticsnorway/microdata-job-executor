@@ -2,13 +2,12 @@ import os
 import shutil
 from pathlib import Path
 
-import pytest
 import pyarrow
+import pytest
 from pyarrow import parquet
 
-from job_executor.worker.steps import dataset_partitioner
 from job_executor.exception import BuilderStepError
-
+from job_executor.worker.steps import dataset_partitioner
 
 WORKING_DIR = Path("tests/resources/worker/steps/partitioner")
 JOB_ID_PARTITIONER = "321-321-321-321"
@@ -69,16 +68,26 @@ def test_partitioner(mocker):
         files = list(partition_path.iterdir())
         assert len(files) == 1
 
-        # 3. Load the parquet file and check its length
+        # 3. column names are the same except for the partition column
+        table_whole_year = pyarrow.parquet.read_table(partition_path)
+        assert table_whole_year.column_names == [
+            "unit_id",
+            "value",
+            "start_epoch_days",
+            "stop_epoch_days",
+        ]
+
+        # 4. Load the parquet file and check its length
         table_from_partition = pyarrow.parquet.read_table(files[0])
         assert len(table_from_partition) == 1000  # Each year has 1000 records
 
-        # 4. column names are the same except for the partition column
+        # 5. all column names are present (note: reading the .parquet file here)
         assert table_from_partition.column_names == [
             "unit_id",
             "value",
             "start_epoch_days",
             "stop_epoch_days",
+            "start_year",
         ]
 
         # 5. Check if start_epoch_days is within the correct start_year
