@@ -409,10 +409,11 @@ def archive_input_files(dataset_name: str):
     Archives the input .tar files if not already archived
     """
     archive_dir = INPUT_DIR / "archive"
-    tar_file = INPUT_DIR / f"{dataset_name}.tar"
+    archived_tar_file = INPUT_DIR / f"archive/{dataset_name}.tar"
+    tar_file = INPUT_DIR / f"{dataset_name}.tar" 
     if not archive_dir.exists():
         os.makedirs(archive_dir, exist_ok=True)
-    if tar_file.exists():
+    if tar_file.exists() and not os.path.isfile(archived_tar_file):
         shutil.move(str(tar_file), str(archive_dir))
 
 
