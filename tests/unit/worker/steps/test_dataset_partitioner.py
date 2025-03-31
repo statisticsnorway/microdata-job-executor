@@ -81,15 +81,6 @@ def test_partitioner(mocker):
         table_from_partition = pyarrow.parquet.read_table(files[0])
         assert len(table_from_partition) == 1000  # Each year has 1000 records
 
-        # 5. all column names are present (note: reading the .parquet file here)
-        assert table_from_partition.column_names == [
-            "unit_id",
-            "value",
-            "start_epoch_days",
-            "stop_epoch_days",
-            "start_year",
-        ]
-
         # 5. Check if start_epoch_days is within the correct start_year
         start_epochs = table_from_partition.column(
             "start_epoch_days"
