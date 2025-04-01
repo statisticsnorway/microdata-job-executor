@@ -87,7 +87,6 @@ def test_partitioner(mocker):
             "value",
             "start_epoch_days",
             "stop_epoch_days",
-            "start_year",
         ]
 
         # 5. Check if start_epoch_days is within the correct start_year
