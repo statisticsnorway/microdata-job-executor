@@ -27,3 +27,9 @@ jobs:
 
     - name: Run tests
       run: poetry run pytest --cov=job_executor
+
+    - name: Run Ruff check
+      run: poetry run ruff check --output-format=github
+
+    - name: Run Ruff format
+      run: poetry run ruff format --diff
