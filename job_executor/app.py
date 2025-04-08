@@ -8,20 +8,19 @@ from typing import Dict, List
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
-from job_executor.config.log import setup_logging, initialize_logging_thread
+from job_executor.config.log import initialize_logging_thread, setup_logging
 from job_executor.domain import rollback
 from job_executor.exception import (
     RollbackException,
     StartupException,
 )
-from job_executor.model import Job, Datastore
+from job_executor.model import Datastore, Job
 from job_executor.model.worker import Worker
 from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker,
 )
 from job_executor.worker.manager import ManagerState
-
 
 logger = logging.getLogger()
 setup_logging()
@@ -58,7 +57,7 @@ def fix_interrupted_jobs():
 
 def fix_interrupted_job(job):
     job_operation = job.parameters.operation
-    logger.info(
+    logger.warning(
         f'{job.job_id}: Rolling back job with operation "{job_operation}"'
     )
     if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
@@ -121,7 +120,7 @@ def fix_interrupted_job(job):
         )
     else:
         log_message = (
-            f"Unrecognized job operation {job_operation}for job {job.job_id}"
+            f"Unrecognized job operation {job_operation} for job {job.job_id}"
         )
         logger.error(log_message)
         raise RollbackException(log_message)
@@ -240,7 +239,7 @@ def main():
                     job.parameters.target
                 )
                 if job_size == 0:
-                    logger.warning(
+                    logger.error(
                         f"{job.job_id} Failed to get the size of the dataset."
                     )
                     job_service.update_job_status(
@@ -300,7 +299,9 @@ def clean_up_after_dead_workers(manager_state) -> None:
                 None,  # not found in in_progress => completed or failed
             )
             if job and job.status not in ["queued", "built"]:
-                logger.info(f"Worker died and did not finish job {job.job_id}")
+                logger.warning(
+                    f"Worker died and did not finish job {job.job_id}"
+                )
                 fix_interrupted_job(job)
             manager_state.unregister_job(dead_worker.job_id)
 

@@ -7,9 +7,9 @@ from job_executor.adapter import local_storage
 from job_executor.adapter.local_storage import WORKING_DIR
 from job_executor.exception import LocalStorageError
 from job_executor.model.datastore_versions import (
-    underscored_to_dotted_version,
     bump_dotted_version_number,
     dotted_to_underscored_version,
+    underscored_to_dotted_version,
 )
 
 WORKING_DIR_PATH = Path(WORKING_DIR)
@@ -29,7 +29,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                 update_type,
             )
         )
-        logger.info(
+        logger.warning(
             f"{job_id}: Rolling back to {restored_version_number} "
             f"from bump to {bumped_version_number}"
         )
@@ -120,7 +120,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
 def rollback_worker_phase_import_job(
     job_id: str, operation: str, dataset_name: str
 ):
-    logger.info(
+    logger.warning(
         f"{job_id}: Rolling back worker job "
         f'with target: "{dataset_name}" and operation "{operation}"'
     )
@@ -170,7 +170,7 @@ def rollback_manager_phase_import_job(
     Exceptions are not handled here on purpose. It is a catastrophic thing
     if a rollback fails.
     """
-    logger.info(
+    logger.warning(
         f"{job_id}: Rolling back import job "
         f'with target: "{dataset_name}" and operation "{operation}"'
     )
