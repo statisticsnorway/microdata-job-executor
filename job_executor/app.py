@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 import time
 from multiprocessing import Process, Queue
@@ -21,15 +20,10 @@ from job_executor.worker import (
 )
 from job_executor.worker.manager import ManagerState
 
-logger = logging.getLogger()
-setup_logging()
-
-NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
-MAX_BYTES_ALL_WORKERS = (
-    int(environment.get("MAX_GB_ALL_WORKERS")) * 1024**3
-)  # Threshold in bytes
 
 datastore = None
+logger = logging.getLogger()
+setup_logging()
 
 
 def is_system_paused() -> bool:
@@ -199,10 +193,12 @@ def initialize_app():
 def main():
     initialize_app()
     logging_queue, log_thread = initialize_logging_thread()
-
     manager_state = ManagerState(
-        max_workers=NUMBER_OF_WORKERS,
-        max_bytes_all_workers=MAX_BYTES_ALL_WORKERS,
+        max_workers=int(environment.get("NUMBER_OF_WORKERS")),
+        max_bytes_all_workers=(
+            int(environment.get("MAX_GB_ALL_WORKERS"))
+            * 1024**3  # Covert from GB to bytes
+        ),
     )
 
     try:
