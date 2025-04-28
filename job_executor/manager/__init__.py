@@ -5,15 +5,17 @@ from typing import List
 
 
 class Manager:
-    def __init__(self, max_workers, max_bytes_all_workers):
+    def __init__(self, max_workers, max_bytes_all_workers, datastore):
         """
         :param default_max_workers: The maximum number of workers
         :param max_gb_all_workers: Threshold in GB (50) for when the number
         of workers are reduced
+        :param datastore: Datastore singleton for updating the state of the
+        datastore
         """
         self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
-
+        self.datastore = datastore
         self.workers: List[Worker] = []
 
     @property

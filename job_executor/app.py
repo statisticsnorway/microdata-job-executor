@@ -1,8 +1,7 @@
-import logging
 import sys
 import time
+import logging
 from multiprocessing import Process, Queue
-from typing import Dict, List
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
@@ -19,18 +18,15 @@ from job_executor.worker import (
 from job_executor.manager import Manager
 
 
-datastore = None
 logger = logging.getLogger()
 setup_logging()
 
 
 def initialize_app():
-    global datastore
     try:
         rollback.fix_interrupted_jobs()
         if local_storage.temporary_backup_exists:
             raise StartupException("tmp directory exists")
-        datastore = Datastore()
     except Exception as e:
         logger.exception("Exception when initializing", exc_info=e)
         sys.exit("Exception when initializing")
@@ -45,6 +41,7 @@ def main():
             int(environment.get("MAX_GB_ALL_WORKERS"))
             * 1024**3  # Covert from GB to bytes
         ),
+        datastore=Datastore(),
     )
 
     try:
@@ -99,7 +96,7 @@ def main():
             for job in built_jobs + queued_manager_jobs:
                 try:
                     manager.unregister_job(job.job_id)
-                    _handle_manager_job(job)
+                    _handle_manager_job(job, manager)
                 except Exception as exc:
                     # All exceptions that occur during the handling of a job
                     # are resolved by rolling back. The exceptions that
@@ -119,7 +116,10 @@ def main():
 
 
 def _handle_worker_job(
-    job: Job, manager: Manager, job_size: int, logging_queue: Queue
+    job: Job,
+    manager: Manager,
+    job_size: int,
+    logging_queue: Queue,
 ):
     dataset_name = job.parameters.target
     job_id = job.job_id
@@ -163,43 +163,43 @@ def _handle_worker_job(
         )
 
 
-def _handle_manager_job(job: Job):
+def _handle_manager_job(job: Job, manager: Manager):
     job_id = job.job_id
     operation = job.parameters.operation
     if operation == "BUMP":
-        datastore.bump_version(
+        manager.datastore.bump_version(
             job_id, job.parameters.bump_manifesto, job.parameters.description
         )
     elif operation == "PATCH_METADATA":
-        datastore.patch_metadata(
+        manager.datastore.patch_metadata(
             job_id, job.parameters.target, job.parameters.description
         )
     elif operation == "SET_STATUS":
-        datastore.set_draft_release_status(
+        manager.datastore.set_draft_release_status(
             job_id, job.parameters.target, job.parameters.release_status
         )
     elif operation == "ADD":
-        datastore.add(
+        manager.datastore.add(
             job_id, job.parameters.target, job.parameters.description
         )
     elif operation == "CHANGE":
-        datastore.change(
+        manager.datastore.change(
             job_id, job.parameters.target, job.parameters.description
         )
     elif operation == "REMOVE":
-        datastore.remove(
+        manager.datastore.remove(
             job_id, job.parameters.target, job.parameters.description
         )
     elif operation == "ROLLBACK_REMOVE":
-        datastore.delete_draft(
+        manager.datastore.delete_draft(
             job_id, job.parameters.target, rollback_remove=True
         )
     elif operation == "DELETE_DRAFT":
-        datastore.delete_draft(
+        manager.datastore.delete_draft(
             job_id, job.parameters.target, rollback_remove=False
         )
     elif operation == "DELETE_ARCHIVE":
-        datastore.delete_archived_input(job_id, job.parameters.target)
+        manager.datastore.delete_archived_input(job_id, job.parameters.target)
     else:
         job_service.update_job_status(
             job.job_id, "failed", log="Unknown operation for job"
