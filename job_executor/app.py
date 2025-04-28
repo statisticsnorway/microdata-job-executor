@@ -23,8 +23,7 @@ def initialize_app():
         if local_storage.temporary_backup_exists():
             raise StartupException("tmp directory exists")
     except Exception as e:
-        logger.exception("Exception when initializing", exc_info=e)
-        sys.exit("Exception when initializing")
+        raise StartupException("Exception when initializing") from e
 
 
 def handle_jobs(manager: Manager, logging_queue: Queue):
@@ -97,8 +96,8 @@ def main():
         while True:
             time.sleep(5)
             handle_jobs(manager, logging_queue)
-    except Exception as exc:
-        logger.exception("Service stopped by exception", exc_info=exc)
+    except Exception as e:
+        logger.exception("Service stopped by exception", exc_info=e)
     finally:
         # Tell the logging thread to finish up
         if logging_queue is not None:

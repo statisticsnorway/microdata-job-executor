@@ -19,6 +19,10 @@ logger = logging.getLogger()
 
 
 class JobQueryResult:
+    queued_worker_jobs: List[Job]
+    built_jobs: List[Job]
+    queued_manager_jobs: List[Job]
+
     def __init__(
         self,
         queued_worker_jobs: List[Job],
@@ -122,12 +126,6 @@ def query_for_jobs() -> JobQueryResult:
 
     When the system is paused, only jobs with a 'built' status are fetched.
     In the active state, jobs are fetched based on their operations.
-
-    Returns:
-        Dict[str, List[Job]]: A dictionary structured as:
-        - "built_jobs": Jobs that have already been built.
-        - "queued_manager_jobs": Jobs in the queue with managerial operations.
-        - "queued_worker_jobs": Jobs in the queue with worker operations.
     """
     try:
         if is_system_paused():
