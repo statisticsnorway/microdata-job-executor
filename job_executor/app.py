@@ -48,25 +48,17 @@ def main():
         while True:
             time.sleep(5)
 
-            job_dict = job_service.query_for_jobs()
-            queued_worker_jobs = job_dict["queued_worker_jobs"]
-            built_jobs = job_dict["built_jobs"]
-            queued_manager_jobs = job_dict["queued_manager_jobs"]
-
+            job_query_result = job_service.query_for_jobs()
             manager.clean_up_after_dead_workers()
 
-            available_jobs = (
-                len(queued_worker_jobs)
-                + len(built_jobs)
-                + len(queued_manager_jobs)
-            )
-            if available_jobs:
+            if job_query_result.available_jobs_count:
                 logger.info(
-                    f"Found {len(queued_worker_jobs)}/{len(built_jobs)}"
-                    f"/{len(queued_manager_jobs)}"
+                    f"Found {len(job_query_result.queued_worker_jobs)}"
+                    f"/{len(job_query_result.built_jobs)}"
+                    f"/{len(job_query_result.queued_manager_jobs)}"
                     f" (worker, built, queued manager jobs)"
                 )
-            for job in queued_worker_jobs:
+            for job in job_query_result.queued_worker_jobs:
                 job_size = local_storage.get_input_tar_size_in_bytes(
                     job.parameters.target
                 )

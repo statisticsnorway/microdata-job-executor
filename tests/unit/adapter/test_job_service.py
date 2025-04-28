@@ -127,19 +127,19 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
     [
         (
             True,
-            {
-                "built_jobs": JOB_LIST,
-                "queued_manager_jobs": [],
-                "queued_worker_jobs": [],
-            },
+            job_service.JobQueryResult(
+                built_jobs=JOB_LIST,
+                queued_manager_jobs=[],
+                queued_worker_jobs=[],
+            ),
         ),
         (
             False,
-            {
-                "built_jobs": JOB_LIST,
-                "queued_manager_jobs": JOB_LIST,
-                "queued_worker_jobs": JOB_LIST,
-            },
+            job_service.JobQueryResult(
+                built_jobs=JOB_LIST,
+                queued_manager_jobs=JOB_LIST,
+                queued_worker_jobs=JOB_LIST,
+            ),
         ),
     ],
 )
@@ -165,4 +165,11 @@ def test_query_for_jobs(
     )
 
     result = job_service.query_for_jobs()
-    assert result == expected_result
+    print(result)
+    assert result.built_jobs == JOB_LIST
+    if is_paused:
+        assert result.queued_manager_jobs == []
+        assert result.queued_worker_jobs == []
+    else:
+        assert result.queued_manager_jobs == JOB_LIST
+        assert result.queued_worker_jobs == JOB_LIST
