@@ -3,7 +3,6 @@ import os
 import sys
 import time
 from multiprocessing import Process, Queue
-from pathlib import Path
 from typing import Dict, List
 
 from job_executor.adapter import job_service, local_storage
@@ -29,7 +28,6 @@ NUMBER_OF_WORKERS = int(environment.get("NUMBER_OF_WORKERS"))
 MAX_BYTES_ALL_WORKERS = (
     int(environment.get("MAX_GB_ALL_WORKERS")) * 1024**3
 )  # Threshold in bytes
-DATASTORE_DIR = environment.get("DATASTORE_DIR")
 
 datastore = None
 
@@ -53,6 +51,8 @@ def fix_interrupted_jobs():
             fix_interrupted_job(job)
     except RollbackException as e:
         raise StartupException(e) from e
+    if local_storage.temporary_backup_exists:
+        raise StartupException("tmp directory exists")
 
 
 def fix_interrupted_job(job):
@@ -126,12 +126,6 @@ def fix_interrupted_job(job):
         raise RollbackException(log_message)
 
 
-def check_tmp_directory():
-    tmp_dir = Path(DATASTORE_DIR) / "tmp"
-    if os.path.isdir(tmp_dir):
-        raise StartupException("tmp directory exists")
-
-
 def query_for_jobs() -> Dict[str, List[Job]]:
     """
     Retrieves different types of jobs based on the system's state (paused or active).
@@ -196,7 +190,6 @@ def initialize_app():
     global datastore
     try:
         fix_interrupted_jobs()
-        check_tmp_directory()
         datastore = Datastore()
     except Exception as e:
         logger.exception("Exception when initializing", exc_info=e)
