@@ -1,7 +1,7 @@
 import sys
 import time
 import logging
-from multiprocessing import Process, Queue
+from multiprocessing import Queue
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
