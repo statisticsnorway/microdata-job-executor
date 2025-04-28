@@ -18,7 +18,7 @@ from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker,
 )
-from job_executor.worker.manager import ManagerState
+from job_executor.manager import ManagerState
 
 
 datastore = None

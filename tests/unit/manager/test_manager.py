@@ -1,5 +1,5 @@
 import time
-from job_executor.worker.manager import ManagerState
+from job_executor.manager import ManagerState
 from job_executor.model.worker import Worker
 from multiprocessing import Process
 
