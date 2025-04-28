@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Dict
 from urllib.error import HTTPError
 
 import requests
@@ -60,6 +60,12 @@ def get_maintenance_status() -> MaintenanceStatus:
     return MaintenanceStatus(**response.json())
 
 
+def is_system_paused() -> bool:
+    """Return True if the system is paused, otherwise False."""
+    maintenance_status = get_maintenance_status()
+    return maintenance_status.paused
+
+
 def execute_request(
     method: str, url: str, retry: bool = False, **kwargs
 ) -> Response:
@@ -85,3 +91,63 @@ def execute_request(
         return response
     except (RequestException, HTTPError) as e:
         raise HttpRequestError(e) from e
+
+
+def query_for_jobs() -> Dict[str, List[Job]]:
+    """
+    Retrieves different types of jobs based on the system's state (paused or active).
+
+    When the system is paused, only jobs with a 'built' status are fetched.
+    In the active state, jobs are fetched based on their operations.
+
+    Returns:
+        Dict[str, List[Job]]: A dictionary structured as:
+        - "built_jobs": Jobs that have already been built.
+        - "queued_manager_jobs": Jobs in the queue with managerial operations.
+        - "queued_worker_jobs": Jobs in the queue with worker operations.
+    """
+
+    job_dict = {
+        "built_jobs": [],
+        "queued_manager_jobs": [],
+        "queued_worker_jobs": [],
+    }
+
+    job_mapping = {
+        "built_jobs": {"status": "built", "operations": None},
+        "queued_manager_jobs": {
+            "status": "queued",
+            "operations": [
+                "SET_STATUS",
+                "BUMP",
+                "DELETE_DRAFT",
+                "REMOVE",
+                "ROLLBACK_REMOVE",
+                "DELETE_ARCHIVE",
+            ],
+        },
+        "queued_worker_jobs": {
+            "status": "queued",
+            "operations": ["PATCH_METADATA", "ADD", "CHANGE"],
+        },
+    }
+
+    try:
+        # If System is paused we only want to fetch built jobs
+        if is_system_paused():
+            logger.info("System is paused. Only fetching built jobs.")
+            job_dict["built_jobs"] = get_jobs(
+                job_status="built", operations=None
+            )
+        else:
+            for job_type, criteria in job_mapping.items():
+                job_dict[job_type] = get_jobs(
+                    job_status=criteria["status"],
+                    operations=criteria["operations"],
+                )
+
+        return job_dict
+
+    except Exception as e:
+        logger.exception("Exception when querying for jobs", exc_info=e)
+        return job_dict
