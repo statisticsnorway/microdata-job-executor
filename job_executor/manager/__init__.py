@@ -1,7 +1,15 @@
-from job_executor.adapter import job_service
-from job_executor.model.worker import Worker
-
+import logging
 from typing import List
+from multiprocessing import Process, Queue
+
+from job_executor.adapter import job_service
+from job_executor.domain import rollback
+from job_executor.model.job import Job
+from job_executor.model.worker import Worker
+from job_executor.worker import build_dataset_worker, build_metadata_worker
+
+
+logger = logging.getLogger()
 
 
 class Manager:
@@ -82,5 +90,97 @@ class Manager:
                     logger.warning(
                         f"Worker died and did not finish job {job.job_id}"
                     )
-                    fix_interrupted_job(job)
+                    rollback.fix_interrupted_job(job)
                 self.unregister_job(dead_worker.job_id)
+
+    def handle_worker_job(
+        self,
+        job: Job,
+        job_size: int,
+        logging_queue: Queue,
+    ):
+        dataset_name = job.parameters.target
+        job_id = job.job_id
+        operation = job.parameters.operation
+        if operation in ["ADD", "CHANGE"]:
+            worker = Worker(
+                process=Process(
+                    target=build_dataset_worker.run_worker,
+                    args=(
+                        job_id,
+                        dataset_name,
+                        logging_queue,
+                    ),
+                ),
+                job_id=job_id,
+                job_size=job_size,
+            )
+            self.register_job(worker)
+            job_service.update_job_status(job_id, "initiated")
+            worker.start()
+        elif operation == "PATCH_METADATA":
+            worker = Worker(
+                process=Process(
+                    target=build_metadata_worker.run_worker,
+                    args=(
+                        job_id,
+                        dataset_name,
+                        logging_queue,
+                    ),
+                ),
+                job_id=job_id,
+                job_size=job_size,
+            )
+            self.register_job(worker)
+            job_service.update_job_status(job_id, "initiated")
+            worker.start()
+        else:
+            logger.error(f'Unknown operation "{operation}"')
+            job_service.update_job_status(
+                job_id, "failed", log=f"Unknown operation type {operation}"
+            )
+
+    def handle_manager_job(self, job: Job):
+        job_id = job.job_id
+        operation = job.parameters.operation
+        self.unregister_job(job_id)  # Filter out job from worker jobs if built
+        if operation == "BUMP":
+            self.datastore.bump_version(
+                job_id,
+                job.parameters.bump_manifesto,
+                job.parameters.description,
+            )
+        elif operation == "PATCH_METADATA":
+            self.datastore.patch_metadata(
+                job_id, job.parameters.target, job.parameters.description
+            )
+        elif operation == "SET_STATUS":
+            self.datastore.set_draft_release_status(
+                job_id, job.parameters.target, job.parameters.release_status
+            )
+        elif operation == "ADD":
+            self.datastore.add(
+                job_id, job.parameters.target, job.parameters.description
+            )
+        elif operation == "CHANGE":
+            self.datastore.change(
+                job_id, job.parameters.target, job.parameters.description
+            )
+        elif operation == "REMOVE":
+            self.datastore.remove(
+                job_id, job.parameters.target, job.parameters.description
+            )
+        elif operation == "ROLLBACK_REMOVE":
+            self.datastore.delete_draft(
+                job_id, job.parameters.target, rollback_remove=True
+            )
+        elif operation == "DELETE_DRAFT":
+            self.datastore.delete_draft(
+                job_id, job.parameters.target, rollback_remove=False
+            )
+        elif operation == "DELETE_ARCHIVE":
+            self.datastore.delete_archived_input(job_id, job.parameters.target)
+        else:
+            job_service.update_job_status(
+                job.job_id, "failed", log="Unknown operation for job"
+            )

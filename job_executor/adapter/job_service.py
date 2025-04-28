@@ -37,6 +37,9 @@ class JobQueryResult:
             + len(self.queued_manager_jobs)
         )
 
+    def queued_manager_and_built_jobs(self):
+        return self.queued_manager_jobs + self.built_jobs
+
 
 def get_jobs(
     job_status: JobStatus = None,
