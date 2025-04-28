@@ -165,7 +165,6 @@ def test_query_for_jobs(
     )
 
     result = job_service.query_for_jobs()
-    print(result)
     assert result.built_jobs == JOB_LIST
     if is_paused:
         assert result.queued_manager_jobs == []
