@@ -5,7 +5,11 @@ from pathlib import Path
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.adapter.local_storage import WORKING_DIR
-from job_executor.exception import LocalStorageError, RollbackException
+from job_executor.exception import (
+    LocalStorageError,
+    RollbackException,
+    StartupException,
+)
 from job_executor.model.datastore_versions import (
     bump_dotted_version_number,
     dotted_to_underscored_version,
