@@ -39,7 +39,7 @@ def test_cannot_spawn_worker_too_many_workers():
             job_id=f"job_{i}",
             job_size=1024,
         )
-        manager_state.register_job(worker)
+        manager_state.workers.append(worker)
         worker.start()
 
     can_spawn = manager_state.can_spawn_new_worker(new_job_size=1024)
@@ -57,7 +57,7 @@ def test_cannot_spawn_worker_size_limit_reached():
         job_id="job_large",
         job_size=TWENTY_GB,
     )
-    manager_state.register_job(large_job)
+    manager_state.workers.append(large_job)
     large_job.start()
 
     # Only one job active but size limit is reached cannot spawn new job
@@ -85,7 +85,7 @@ def test_oversized_jobs():
             job_id="job_2",
             job_size=TEN_GB,
         )
-        manager_state.register_job(worker)
+        manager_state.workers.append(worker)
         worker.start()
 
 
@@ -101,12 +101,12 @@ def test_unregister_job():
             job_id=f"job_{i}",
             job_size=1024,
         )
-        manager_state.register_job(worker)
+        manager_state.workers.append(worker)
         worker.start()
 
     can_spawn = manager_state.can_spawn_new_worker(new_job_size=1024)
     assert can_spawn is False
 
-    manager_state.unregister_job("job_1")
+    manager_state.unregister_worker("job_1")
     can_spawn = manager_state.can_spawn_new_worker(new_job_size=1024)
     assert can_spawn is True

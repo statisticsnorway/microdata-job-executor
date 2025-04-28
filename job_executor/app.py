@@ -9,12 +9,7 @@ from job_executor.config.log import initialize_logging_thread, setup_logging
 from job_executor.domain import rollback
 from job_executor.exception import StartupException
 
-from job_executor.model import Datastore, Job
-from job_executor.model.worker import Worker
-from job_executor.worker import (
-    build_dataset_worker,
-    build_metadata_worker,
-)
+from job_executor.model import Datastore
 from job_executor.manager import Manager
 
 
@@ -25,7 +20,7 @@ setup_logging()
 def initialize_app():
     try:
         rollback.fix_interrupted_jobs()
-        if local_storage.temporary_backup_exists:
+        if local_storage.temporary_backup_exists():
             raise StartupException("tmp directory exists")
     except Exception as e:
         logger.exception("Exception when initializing", exc_info=e)

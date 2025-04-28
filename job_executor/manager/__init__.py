@@ -27,20 +27,6 @@ class Manager:
         self.workers: List[Worker] = []
 
     @property
-    def dead_workers(self) -> List[Worker]:
-        """
-        Return a list of dead workers
-        """
-        return [worker for worker in self.workers if not worker.is_alive()]
-
-    @property
-    def alive_workers(self) -> List[Worker]:
-        """
-        Return a list of alive workers
-        """
-        return [worker for worker in self.workers if worker.is_alive()]
-
-    @property
     def current_total_size(self) -> int:
         return sum(
             worker.job_size for worker in self.workers if worker.is_alive()
@@ -50,7 +36,10 @@ class Manager:
         """
         Called to check if a new worker can be spawned.
         """
-        if len(self.alive_workers) >= self.max_workers:
+        alive_workers = [
+            worker for worker in self.workers if worker.is_alive()
+        ]
+        if len(alive_workers) >= self.max_workers:
             return False
         if (
             self.current_total_size + new_job_size
@@ -59,22 +48,18 @@ class Manager:
             return False
         return True
 
-    def register_job(self, worker: Worker):
+    def unregister_worker(self, job_id):
         """
-        Called when a worker picks up a job.
-        """
-        self.workers.append(worker)
-
-    def unregister_job(self, job_id):
-        """
-        Called when a job finishes or fails.
+        Called when a worker finishes or fails.
         """
         self.workers = [
             worker for worker in self.workers if worker.job_id != job_id
         ]
 
     def clean_up_after_dead_workers(self) -> None:
-        dead_workers = self.dead_workers
+        dead_workers = [
+            worker for worker in self.workers if not worker.is_alive()
+        ]
         if len(dead_workers) > 0:
             in_progress_jobs = job_service.get_jobs(ignore_completed=True)
             for dead_worker in dead_workers:
@@ -91,7 +76,7 @@ class Manager:
                         f"Worker died and did not finish job {job.job_id}"
                     )
                     rollback.fix_interrupted_job(job)
-                self.unregister_job(dead_worker.job_id)
+                self.unregister_worker(dead_worker.job_id)
 
     def handle_worker_job(
         self,
@@ -115,7 +100,7 @@ class Manager:
                 job_id=job_id,
                 job_size=job_size,
             )
-            self.register_job(worker)
+            self.workers.append(worker)
             job_service.update_job_status(job_id, "initiated")
             worker.start()
         elif operation == "PATCH_METADATA":
@@ -131,7 +116,7 @@ class Manager:
                 job_id=job_id,
                 job_size=job_size,
             )
-            self.register_job(worker)
+            self.workers.append(worker)
             job_service.update_job_status(job_id, "initiated")
             worker.start()
         else:
@@ -143,7 +128,9 @@ class Manager:
     def handle_manager_job(self, job: Job):
         job_id = job.job_id
         operation = job.parameters.operation
-        self.unregister_job(job_id)  # Filter out job from worker jobs if built
+        self.unregister_worker(
+            job_id
+        )  # Filter out job from worker jobs if built
         if operation == "BUMP":
             self.datastore.bump_version(
                 job_id,
