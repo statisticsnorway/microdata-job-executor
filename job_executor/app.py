@@ -18,7 +18,7 @@ from job_executor.worker import (
     build_dataset_worker,
     build_metadata_worker,
 )
-from job_executor.manager import ManagerState
+from job_executor.manager import Manager
 
 
 datastore = None
@@ -30,94 +30,6 @@ def is_system_paused() -> bool:
     """Return True if the system is paused, otherwise False."""
     maintenance_status = job_service.get_maintenance_status()
     return maintenance_status.paused
-
-
-def fix_interrupted_jobs():
-    logger.info("Querying for interrupted jobs")
-    in_progress_jobs = job_service.get_jobs(ignore_completed=True)
-    queued_statuses = ["queued", "built"]
-    interrupted_jobs = [
-        job for job in in_progress_jobs if job.status not in queued_statuses
-    ]
-    logger.info(f"Found {len(interrupted_jobs)} interrupted jobs")
-    try:
-        for job in interrupted_jobs:
-            fix_interrupted_job(job)
-    except RollbackException as e:
-        raise StartupException(e) from e
-    if local_storage.temporary_backup_exists:
-        raise StartupException("tmp directory exists")
-
-
-def fix_interrupted_job(job):
-    job_operation = job.parameters.operation
-    logger.warning(
-        f'{job.job_id}: Rolling back job with operation "{job_operation}"'
-    )
-    if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
-        if job.status == "importing":
-            rollback.rollback_manager_phase_import_job(
-                job.job_id, job_operation, job.parameters.target
-            )
-            logger.info(
-                f"{job.job_id}: Rolled back importing of job with "
-                f'operation "{job_operation}". Retrying from status '
-                '"built"'
-            )
-            job_service.update_job_status(
-                job.job_id,
-                "built",
-                "Reset to built status will be due to unexpected interruption",
-            )
-        else:
-            rollback.rollback_worker_phase_import_job(
-                job.job_id, job_operation, job.parameters.target
-            )
-            logger.info(
-                f'{job.job_id}: Setting status to "failed" for interrupted job'
-            )
-            job_service.update_job_status(
-                job.job_id,
-                "failed",
-                "Job was failed due to an unexpected interruption",
-            )
-    elif job_operation in [
-        "SET_STATUS",
-        "DELETE_DRAFT",
-        "REMOVE",
-        "ROLLBACK_REMOVE",
-    ]:
-        logger.info(
-            'Setting status to "queued" for '
-            f"interrupted job with id {job.job_id}"
-        )
-        job_service.update_job_status(
-            job.job_id,
-            "queued",
-            "Retrying due to an unexpected interruption.",
-        )
-    elif job_operation == "BUMP":
-        try:
-            rollback.rollback_bump(job.job_id, job.parameters.bump_manifesto)
-        except Exception as exc:
-            error_message = f"Failed rollback for {job.job_id}"
-            logger.exception(error_message, exc_info=exc)
-            raise RollbackException(error_message) from exc
-        logger.info(
-            'Setting status to "failed" for '
-            f"interrupted job with id {job.job_id}"
-        )
-        job_service.update_job_status(
-            job.job_id,
-            "failed",
-            "Bump operation was interrupted and rolled back.",
-        )
-    else:
-        log_message = (
-            f"Unrecognized job operation {job_operation} for job {job.job_id}"
-        )
-        logger.error(log_message)
-        raise RollbackException(log_message)
 
 
 def query_for_jobs() -> Dict[str, List[Job]]:
@@ -183,7 +95,9 @@ def query_for_jobs() -> Dict[str, List[Job]]:
 def initialize_app():
     global datastore
     try:
-        fix_interrupted_jobs()
+        rollback.fix_interrupted_jobs()
+        if local_storage.temporary_backup_exists:
+            raise StartupException("tmp directory exists")
         datastore = Datastore()
     except Exception as e:
         logger.exception("Exception when initializing", exc_info=e)
@@ -193,7 +107,7 @@ def initialize_app():
 def main():
     initialize_app()
     logging_queue, log_thread = initialize_logging_thread()
-    manager_state = ManagerState(
+    manager = Manager(
         max_workers=int(environment.get("NUMBER_OF_WORKERS")),
         max_bytes_all_workers=(
             int(environment.get("MAX_GB_ALL_WORKERS"))
@@ -210,7 +124,7 @@ def main():
             built_jobs = job_dict["built_jobs"]
             queued_manager_jobs = job_dict["queued_manager_jobs"]
 
-            clean_up_after_dead_workers(manager_state)
+            manager.clean_up_after_dead_workers()
 
             available_jobs = (
                 len(queued_worker_jobs)
@@ -237,7 +151,7 @@ def main():
                         log="No such dataset available for import",
                     )
                     continue  # skip futher processing of this job
-                if job_size > MAX_BYTES_ALL_WORKERS:
+                if job_size > manager.max_bytes_all_workers:
                     logger.warning(
                         f"{job.job_id} Exceeded the maximum size for all workers."
                     )
@@ -247,14 +161,12 @@ def main():
                         log="Dataset too large for import",
                     )
                     continue  # skip futher processing of this job
-                if manager_state.can_spawn_new_worker(job_size):
-                    _handle_worker_job(
-                        job, manager_state, job_size, logging_queue
-                    )
+                if manager.can_spawn_new_worker(job_size):
+                    _handle_worker_job(job, manager, job_size, logging_queue)
 
             for job in built_jobs + queued_manager_jobs:
                 try:
-                    manager_state.unregister_job(job.job_id)
+                    manager.unregister_job(job.job_id)
                     _handle_manager_job(job)
                 except Exception as exc:
                     # All exceptions that occur during the handling of a job
@@ -274,29 +186,8 @@ def main():
         log_thread.join()
 
 
-def clean_up_after_dead_workers(manager_state) -> None:
-    dead_workers = manager_state.dead_workers
-    if len(dead_workers) > 0:
-        in_progress_jobs = job_service.get_jobs(ignore_completed=True)
-        for dead_worker in dead_workers:
-            job = next(
-                (
-                    job
-                    for job in in_progress_jobs
-                    if dead_worker.job_id == job.job_id
-                ),
-                None,  # not found in in_progress => completed or failed
-            )
-            if job and job.status not in ["queued", "built"]:
-                logger.warning(
-                    f"Worker died and did not finish job {job.job_id}"
-                )
-                fix_interrupted_job(job)
-            manager_state.unregister_job(dead_worker.job_id)
-
-
 def _handle_worker_job(
-    job: Job, manager_state: ManagerState, job_size: int, logging_queue: Queue
+    job: Job, manager: Manager, job_size: int, logging_queue: Queue
 ):
     dataset_name = job.parameters.target
     job_id = job.job_id
@@ -314,7 +205,7 @@ def _handle_worker_job(
             job_id=job_id,
             job_size=job_size,
         )
-        manager_state.register_job(worker)
+        manager.register_job(worker)
         job_service.update_job_status(job_id, "initiated")
         worker.start()
     elif operation == "PATCH_METADATA":
@@ -330,7 +221,7 @@ def _handle_worker_job(
             job_id=job_id,
             job_size=job_size,
         )
-        manager_state.register_job(worker)
+        manager.register_job(worker)
         job_service.update_job_status(job_id, "initiated")
         worker.start()
     else:
