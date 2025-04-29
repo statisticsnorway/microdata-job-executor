@@ -25,9 +25,9 @@ class JobQueryResult:
 
     def __init__(
         self,
-        queued_worker_jobs: List[Job],
-        built_jobs: List[Job],
-        queued_manager_jobs: List[Job],
+        queued_worker_jobs: List[Job] = [],
+        built_jobs: List[Job] = [],
+        queued_manager_jobs: List[Job] = [],
     ):
         self.queued_worker_jobs = queued_worker_jobs
         self.built_jobs = built_jobs
@@ -132,8 +132,6 @@ def query_for_jobs() -> JobQueryResult:
             logger.info("System is paused. Only fetching built jobs.")
             return JobQueryResult(
                 built_jobs=get_jobs(job_status="built", operations=None),
-                queued_manager_jobs=[],
-                queued_worker_jobs=[],
             )
         else:
             return JobQueryResult(
@@ -160,8 +158,4 @@ def query_for_jobs() -> JobQueryResult:
             )
     except Exception as e:
         logger.exception("Exception when querying for jobs", exc_info=e)
-        return JobQueryResult(
-            built_jobs=[],
-            queued_manager_jobs=[],
-            queued_worker_jobs=[],
-        )
+        return JobQueryResult()

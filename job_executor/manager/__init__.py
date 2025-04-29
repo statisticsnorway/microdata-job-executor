@@ -13,6 +13,16 @@ logger = logging.getLogger()
 
 
 class Manager:
+    """
+    Manager works in the main thread and executes all incoming jobs. Either
+    by handing off work to an available worker in a sub-process for work that
+    can be done in parallel, or by making changes to the datastore directly.
+
+    It ensures that the common workload of the application does not exceed
+    memory limits, and makes sure that the sub-process workers lifetimes
+    are handled appropriately.
+    """
+
     def __init__(self, max_workers, max_bytes_all_workers, datastore):
         """
         :param default_max_workers: The maximum number of workers
