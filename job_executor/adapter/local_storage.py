@@ -388,6 +388,14 @@ def delete_temporary_backup() -> Union[None, LocalStorageError]:
     shutil.rmtree(DATASTORE_DIR / "tmp")
 
 
+def temporary_backup_exists() -> bool:
+    """
+    Returns a boolean representing if the tmp directory exists.
+    """
+    tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    os.path.isdir(tmp_dir)
+
+
 def archive_draft_version(version: str):
     """
     Archives the current draft json

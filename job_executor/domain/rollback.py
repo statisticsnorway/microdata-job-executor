@@ -3,9 +3,13 @@ import os
 import shutil
 from pathlib import Path
 
-from job_executor.adapter import local_storage
+from job_executor.adapter import job_service, local_storage
 from job_executor.adapter.local_storage import WORKING_DIR
-from job_executor.exception import LocalStorageError
+from job_executor.exception import (
+    LocalStorageError,
+    RollbackException,
+    StartupException,
+)
 from job_executor.model.datastore_versions import (
     bump_dotted_version_number,
     dotted_to_underscored_version,
@@ -182,3 +186,89 @@ def rollback_manager_phase_import_job(
         local_storage.delete_parquet_draft(dataset_name)
     logger.info(f"{job_id}: Deleting temporary backup")
     local_storage.archive_temporary_backup()
+
+
+def fix_interrupted_jobs():
+    logger.info("Querying for interrupted jobs")
+    in_progress_jobs = job_service.get_jobs(ignore_completed=True)
+    queued_statuses = ["queued", "built"]
+    interrupted_jobs = [
+        job for job in in_progress_jobs if job.status not in queued_statuses
+    ]
+    logger.info(f"Found {len(interrupted_jobs)} interrupted jobs")
+    try:
+        for job in interrupted_jobs:
+            fix_interrupted_job(job)
+    except RollbackException as e:
+        raise StartupException(e) from e
+
+
+def fix_interrupted_job(job):
+    job_operation = job.parameters.operation
+    logger.warning(
+        f'{job.job_id}: Rolling back job with operation "{job_operation}"'
+    )
+    if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
+        if job.status == "importing":
+            rollback_manager_phase_import_job(
+                job.job_id, job_operation, job.parameters.target
+            )
+            logger.info(
+                f"{job.job_id}: Rolled back importing of job with "
+                f'operation "{job_operation}". Retrying from status '
+                '"built"'
+            )
+            job_service.update_job_status(
+                job.job_id,
+                "built",
+                "Reset to built status will be due to unexpected interruption",
+            )
+        else:
+            rollback_worker_phase_import_job(
+                job.job_id, job_operation, job.parameters.target
+            )
+            logger.info(
+                f'{job.job_id}: Setting status to "failed" for interrupted job'
+            )
+            job_service.update_job_status(
+                job.job_id,
+                "failed",
+                "Job was failed due to an unexpected interruption",
+            )
+    elif job_operation in [
+        "SET_STATUS",
+        "DELETE_DRAFT",
+        "REMOVE",
+        "ROLLBACK_REMOVE",
+    ]:
+        logger.info(
+            'Setting status to "queued" for '
+            f"interrupted job with id {job.job_id}"
+        )
+        job_service.update_job_status(
+            job.job_id,
+            "queued",
+            "Retrying due to an unexpected interruption.",
+        )
+    elif job_operation == "BUMP":
+        try:
+            rollback_bump(job.job_id, job.parameters.bump_manifesto)
+        except Exception as exc:
+            error_message = f"Failed rollback for {job.job_id}"
+            logger.exception(error_message, exc_info=exc)
+            raise RollbackException(error_message) from exc
+        logger.info(
+            'Setting status to "failed" for '
+            f"interrupted job with id {job.job_id}"
+        )
+        job_service.update_job_status(
+            job.job_id,
+            "failed",
+            "Bump operation was interrupted and rolled back.",
+        )
+    else:
+        log_message = (
+            f"Unrecognized job operation {job_operation} for job {job.job_id}"
+        )
+        logger.error(log_message)
+        raise RollbackException(log_message)
