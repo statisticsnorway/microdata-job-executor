@@ -3,7 +3,6 @@ import pytest
 from requests_mock import Mocker as RequestsMocker
 
 from job_executor.adapter import job_service
-from job_executor.app import query_for_jobs
 from job_executor.model.job import Job, JobParameters, UserInfo
 from job_executor.exception import HttpResponseError
 
@@ -128,26 +127,28 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
     [
         (
             True,
-            {
-                "built_jobs": JOB_LIST,
-                "queued_manager_jobs": [],
-                "queued_worker_jobs": [],
-            },
+            job_service.JobQueryResult(
+                built_jobs=JOB_LIST,
+                queued_manager_jobs=[],
+                queued_worker_jobs=[],
+            ),
         ),
         (
             False,
-            {
-                "built_jobs": JOB_LIST,
-                "queued_manager_jobs": JOB_LIST,
-                "queued_worker_jobs": JOB_LIST,
-            },
+            job_service.JobQueryResult(
+                built_jobs=JOB_LIST,
+                queued_manager_jobs=JOB_LIST,
+                queued_worker_jobs=JOB_LIST,
+            ),
         ),
     ],
 )
 def test_query_for_jobs(
     is_paused, expected_result, requests_mock, monkeypatch
 ):
-    monkeypatch.setattr("job_executor.app.is_system_paused", lambda: is_paused)
+    monkeypatch.setattr(
+        "job_executor.adapter.job_service.is_system_paused", lambda: is_paused
+    )
 
     # Always return built jobs even if system is paused
     # If system is paused, return empty list for queued and queued_manager jobs
@@ -163,5 +164,11 @@ def test_query_for_jobs(
         "job_executor.adapter.job_service.get_jobs", mock_get_jobs
     )
 
-    result = query_for_jobs()
-    assert result == expected_result
+    result = job_service.query_for_jobs()
+    assert result.built_jobs == JOB_LIST
+    if is_paused:
+        assert result.queued_manager_jobs == []
+        assert result.queued_worker_jobs == []
+    else:
+        assert result.queued_manager_jobs == JOB_LIST
+        assert result.queued_worker_jobs == JOB_LIST
