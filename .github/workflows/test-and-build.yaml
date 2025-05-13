@@ -102,3 +102,46 @@ jobs:
               workflow_id: '${{ secrets.INTEGRATION_TEST_WORKFLOW }}.yaml',
               ref: 'main'
             })
+
+  revoke:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mark older approvals as unnecessary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find previous workflow runs for the same workflow
+          runs=$(gh run list --workflow=87753728 --json databaseId,status --jq '.[] | select(.status == "waiting") | .databaseId')
+          
+          for run_id in $runs; do
+            echo "Marking workflow run $run_id as outdated"
+            gh run cancel $run_id
+          done
+
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    needs: [build, revoke]
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Call workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DEPLOY_PAT }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'statisticsnorway',
+              repo: '${{ secrets.DEPLOY_REPO }}',
+              workflow_id: '${{ secrets.DEPLOY_WORKFLOW }}.yaml',
+              ref: 'master',
+              inputs: {
+                environment: "PROD",
+                service: "metadata-service"
+              }
+            })
