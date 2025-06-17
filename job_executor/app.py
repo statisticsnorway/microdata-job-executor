@@ -10,6 +10,7 @@ from job_executor.exception import StartupException
 
 from job_executor.model import Datastore
 from job_executor.manager import Manager
+from job_executor.model.job import JobStatus
 
 
 logger = logging.getLogger()
@@ -46,7 +47,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue):
             )
             job_service.update_job_status(
                 job.job_id,
-                "failed",
+                JobStatus.FAILED,
                 log="No such dataset available for import",
             )
             continue  # skip futher processing of this job
@@ -56,7 +57,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue):
             )
             job_service.update_job_status(
                 job.job_id,
-                "failed",
+                JobStatus.FAILED,
                 log="Dataset too large for import",
             )
             continue  # skip futher processing of this job

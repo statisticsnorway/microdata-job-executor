@@ -154,7 +154,7 @@ class Variable(CamelModel):
     key_type: Optional[KeyType] = None
     represented_variables: List[RepresentedVariable]
 
-    def get_key_type_name(self):
+    def get_key_type_name(self) -> str | None:
         return None if self.key_type is None else self.key_type.name
 
     def validate_patching_fields(
@@ -293,7 +293,7 @@ class Metadata(CamelModel):
     temporal_status_dates: Optional[List[int]] = None
     temporal_end: Optional[TemporalEnd] = None
 
-    def get_identifier_key_type_name(self):
+    def get_identifier_key_type_name(self) -> str | None:
         return self.identifier_variables[0].get_key_type_name()
 
     def get_measure_key_type_name(self):

@@ -8,9 +8,11 @@ from job_executor.model.metadata import DATA_TYPES_MAPPING
 logger = logging.getLogger()
 
 
-def _get_norwegian_text(texts: list) -> str:
+def _get_norwegian_text(multi_language_subject_field: list[dict]) -> str:
     return next(
-        element for element in texts if element["languageCode"] == "no"
+        language
+        for language in multi_language_subject_field
+        if language["languageCode"] == "no"
     )["value"]
 
 
@@ -39,7 +41,7 @@ def _transform_data_type(data_type: str) -> str:
     return DATA_TYPES_MAPPING.get(data_type, data_type)
 
 
-def _transform_temporal_status_dates(status_dates: Union[list, None]) -> list:
+def _transform_temporal_status_dates(status_dates: list | None) -> list | None:
     return (
         None
         if status_dates is None
@@ -47,7 +49,7 @@ def _transform_temporal_status_dates(status_dates: Union[list, None]) -> list:
     )
 
 
-def _transform_subject_fields(subject_fields: List[dict]) -> List[str]:
+def _transform_subject_fields(subject_fields: list[list[dict]]) -> List[str]:
     return [
         _get_norwegian_text(subject_field) for subject_field in subject_fields
     ]

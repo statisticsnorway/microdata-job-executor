@@ -46,9 +46,9 @@ class JobQueryResult:
 
 
 def get_jobs(
-    job_status: JobStatus = None,
-    operations: List[Operation] = None,
-    ignore_completed: bool = None,
+    job_status: JobStatus | None = None,
+    operations: List[Operation] | None = None,
+    ignore_completed: bool | None = None,
 ) -> List[Job]:
     query_fields = []
     if job_status is not None:
@@ -66,8 +66,10 @@ def get_jobs(
     return [Job(**job) for job in response.json()]
 
 
-def update_job_status(job_id: str, new_status: JobStatus, log: str = None):
-    payload = {"status": new_status}
+def update_job_status(
+    job_id: str, new_status: JobStatus, log: str | None = None
+):
+    payload: dict[str, JobStatus | str] = {"status": str(new_status)}
     if log is not None:
         payload.update({"log": log})
     execute_request("PUT", f"{JOB_SERVICE_URL}/jobs/{job_id}", json=payload)
@@ -131,28 +133,32 @@ def query_for_jobs() -> JobQueryResult:
         if is_system_paused():
             logger.info("System is paused. Only fetching built jobs.")
             return JobQueryResult(
-                built_jobs=get_jobs(job_status="built", operations=None),
+                built_jobs=get_jobs(
+                    job_status=JobStatus.BUILT, operations=None
+                ),
             )
         else:
             return JobQueryResult(
-                built_jobs=get_jobs(job_status="built", operations=None),
+                built_jobs=get_jobs(
+                    job_status=JobStatus.BUILT, operations=None
+                ),
                 queued_manager_jobs=get_jobs(
-                    job_status="queued",
+                    job_status=JobStatus.QUEUED,
                     operations=[
-                        "SET_STATUS",
-                        "BUMP",
-                        "DELETE_DRAFT",
-                        "REMOVE",
-                        "ROLLBACK_REMOVE",
-                        "DELETE_ARCHIVE",
+                        Operation.SET_STATUS,
+                        Operation.BUMP,
+                        Operation.DELETE_DRAFT,
+                        Operation.REMOVE,
+                        Operation.ROLLBACK_REMOVE,
+                        Operation.DELETE_ARCHIVE,
                     ],
                 ),
                 queued_worker_jobs=get_jobs(
-                    job_status="queued",
+                    job_status=JobStatus.QUEUED,
                     operations=[
-                        "PATCH_METADATA",
-                        "ADD",
-                        "CHANGE",
+                        Operation.PATCH_METADATA,
+                        Operation.ADD,
+                        Operation.CHANGE,
                     ],
                 ),
             )

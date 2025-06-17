@@ -5,6 +5,7 @@ from pathlib import Path
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.adapter.local_storage import WORKING_DIR
+from job_executor.model.job import JobStatus
 from job_executor.exception import (
     LocalStorageError,
     RollbackException,
@@ -220,7 +221,7 @@ def fix_interrupted_job(job):
             )
             job_service.update_job_status(
                 job.job_id,
-                "built",
+                JobStatus.BUILT,
                 "Reset to built status will be due to unexpected interruption",
             )
         else:
@@ -232,7 +233,7 @@ def fix_interrupted_job(job):
             )
             job_service.update_job_status(
                 job.job_id,
-                "failed",
+                JobStatus.FAILED,
                 "Job was failed due to an unexpected interruption",
             )
     elif job_operation in [
@@ -247,7 +248,7 @@ def fix_interrupted_job(job):
         )
         job_service.update_job_status(
             job.job_id,
-            "queued",
+            JobStatus.QUEUED,
             "Retrying due to an unexpected interruption.",
         )
     elif job_operation == "BUMP":
@@ -263,7 +264,7 @@ def fix_interrupted_job(job):
         )
         job_service.update_job_status(
             job.job_id,
-            "failed",
+            JobStatus.FAILED,
             "Bump operation was interrupted and rolled back.",
         )
     else:
