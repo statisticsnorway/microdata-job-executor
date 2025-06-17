@@ -183,8 +183,7 @@ class Datastore:
             draft_metadata = Metadata(
                 **local_storage.get_working_dir_metadata(dataset_name)
             )
-            self.metadata_all_draft.remove(dataset_name)
-            self.metadata_all_draft.add(draft_metadata)
+            self.metadata_all_draft.update_one(dataset_name, draft_metadata)
             self.draft_version.add(
                 DataStructureUpdate(
                     name=dataset_name,
