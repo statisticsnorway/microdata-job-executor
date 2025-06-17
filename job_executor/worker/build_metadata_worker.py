@@ -5,6 +5,7 @@ from time import perf_counter
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.adapter import job_service, local_storage
+from job_executor.model.job import JobStatus
 from job_executor.worker.steps import (
     dataset_decryptor,
     dataset_validator,
@@ -39,10 +40,10 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
 
         local_storage.archive_input_files(dataset_name)
 
-        job_service.update_job_status(job_id, "decrypting")
+        job_service.update_job_status(job_id, JobStatus.DECRYPTING)
         dataset_decryptor.unpackage(dataset_name)
 
-        job_service.update_job_status(job_id, "validating")
+        job_service.update_job_status(job_id, JobStatus.VALIDATING)
         metadata_file_path = dataset_validator.run_for_metadata(dataset_name)
         input_metadata = local_storage.get_working_dir_input_metadata(
             dataset_name
@@ -51,25 +52,25 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         job_service.update_description(job_id, description)
         local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
 
-        job_service.update_job_status(job_id, "transforming")
+        job_service.update_job_status(job_id, JobStatus.TRANSFORMING)
         transformed_metadata_json = dataset_transformer.run(input_metadata)
         local_storage.write_working_dir_metadata(
             dataset_name, transformed_metadata_json
         )
         local_storage.delete_working_dir_file(metadata_file_path)
         local_storage.delete_archived_input(dataset_name)
-        job_service.update_job_status(job_id, "built")
+        job_service.update_job_status(job_id, JobStatus.BUILT)
     except BuilderStepError as e:
         error_message = "Failed during building metdata"
         logger.exception(error_message, exc_info=e)
         _clean_working_dir(dataset_name)
-        job_service.update_job_status(job_id, "failed", log=str(e))
+        job_service.update_job_status(job_id, JobStatus.FAILED, log=str(e))
     except HttpResponseError as e:
         logger.exception(e)
         _clean_working_dir(dataset_name)
         job_service.update_job_status(
             job_id,
-            "failed",
+            JobStatus.FAILED,
             log="Failed due to communication errors in platform",
         )
     except Exception as e:
@@ -77,7 +78,9 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
         logger.exception(error_message, exc_info=e)
         _clean_working_dir(dataset_name)
         job_service.update_job_status(
-            job_id, "failed", log="Unexpected exception when building dataset"
+            job_id,
+            JobStatus.FAILED,
+            log="Unexpected exception when building dataset",
         )
     finally:
         delta = perf_counter() - start

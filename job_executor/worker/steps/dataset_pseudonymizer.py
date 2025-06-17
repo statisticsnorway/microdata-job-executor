@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union
 import microdata_tools
 import pyarrow
 from microdata_tools.validation.exceptions import UnregisteredUnitTypeError
-from microdata_tools.validation.model.metadata import UnitType, UnitIdType
+from microdata_tools.validation.model.metadata import UnitIdType, UnitType
 from pyarrow import dataset, compute, parquet
 
 from job_executor.adapter import pseudonym_service
@@ -17,10 +17,9 @@ logger = logging.getLogger()
 
 def _get_unit_types(
     metadata: Metadata,
-) -> Tuple[Union[UnitType, None], Union[UnitType, None]]:
+) -> Tuple[str | None, str | None]:
     """
     Extracts the identifier & measure unit type from the metadata.
-    using microdata_tools/validator.
     """
     return (
         metadata.get_identifier_key_type_name(),
@@ -156,14 +155,14 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
             None
             if identifier_unit_type is None
             else microdata_tools.get_unit_id_type_for_unit_type(
-                identifier_unit_type
+                UnitType(identifier_unit_type)
             )
         )
         measure_unit_id_type = (
             None
             if measure_unit_type is None
             else microdata_tools.get_unit_id_type_for_unit_type(
-                measure_unit_type
+                UnitType(measure_unit_type)
             )
         )
         pseudonymized_table = _pseudonymize(

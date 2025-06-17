@@ -4,7 +4,7 @@ from multiprocessing import Process, Queue
 
 from job_executor.adapter import job_service
 from job_executor.domain import rollback
-from job_executor.model.job import Job
+from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
 
@@ -39,7 +39,9 @@ class Manager:
     @property
     def current_total_size(self) -> int:
         return sum(
-            worker.job_size for worker in self.workers if worker.is_alive()
+            worker.job_size
+            for worker in self.workers
+            if worker and worker.is_alive()
         )
 
     def can_spawn_new_worker(self, new_job_size: int) -> bool:
@@ -111,7 +113,7 @@ class Manager:
                 job_size=job_size,
             )
             self.workers.append(worker)
-            job_service.update_job_status(job_id, "initiated")
+            job_service.update_job_status(job_id, JobStatus.INITIATED)
             worker.start()
         elif operation == "PATCH_METADATA":
             worker = Worker(
@@ -127,12 +129,14 @@ class Manager:
                 job_size=job_size,
             )
             self.workers.append(worker)
-            job_service.update_job_status(job_id, "initiated")
+            job_service.update_job_status(job_id, JobStatus.INITIATED)
             worker.start()
         else:
             logger.error(f'Unknown operation "{operation}"')
             job_service.update_job_status(
-                job_id, "failed", log=f"Unknown operation type {operation}"
+                job_id,
+                JobStatus.FAILED,
+                log=f"Unknown operation type {operation}",
             )
 
     def handle_manager_job(self, job: Job):
@@ -141,43 +145,43 @@ class Manager:
         self.unregister_worker(
             job_id
         )  # Filter out job from worker jobs if built
-        if operation == "BUMP":
+        if operation == Operation.BUMP:
             self.datastore.bump_version(
                 job_id,
                 job.parameters.bump_manifesto,
                 job.parameters.description,
             )
-        elif operation == "PATCH_METADATA":
+        elif operation == Operation.PATCH_METADATA:
             self.datastore.patch_metadata(
                 job_id, job.parameters.target, job.parameters.description
             )
-        elif operation == "SET_STATUS":
+        elif operation == Operation.SET_STATUS:
             self.datastore.set_draft_release_status(
                 job_id, job.parameters.target, job.parameters.release_status
             )
-        elif operation == "ADD":
+        elif operation == Operation.ADD:
             self.datastore.add(
                 job_id, job.parameters.target, job.parameters.description
             )
-        elif operation == "CHANGE":
+        elif operation == Operation.CHANGE:
             self.datastore.change(
                 job_id, job.parameters.target, job.parameters.description
             )
-        elif operation == "REMOVE":
+        elif operation == Operation.REMOVE:
             self.datastore.remove(
                 job_id, job.parameters.target, job.parameters.description
             )
-        elif operation == "ROLLBACK_REMOVE":
+        elif operation == Operation.ROLLBACK_REMOVE:
             self.datastore.delete_draft(
                 job_id, job.parameters.target, rollback_remove=True
             )
-        elif operation == "DELETE_DRAFT":
+        elif operation == Operation.DELETE_DRAFT:
             self.datastore.delete_draft(
                 job_id, job.parameters.target, rollback_remove=False
             )
-        elif operation == "DELETE_ARCHIVE":
+        elif operation == Operation.DELETE_ARCHIVE:
             self.datastore.delete_archived_input(job_id, job.parameters.target)
         else:
             job_service.update_job_status(
-                job.job_id, "failed", log="Unknown operation for job"
+                job.job_id, JobStatus.FAILED, log="Unknown operation for job"
             )

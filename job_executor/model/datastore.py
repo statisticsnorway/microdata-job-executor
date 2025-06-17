@@ -1,6 +1,7 @@
 import logging
 
 from job_executor.adapter import local_storage, job_service
+from job_executor.model.job import JobStatus
 from job_executor.domain.rollback import (
     rollback_bump,
     rollback_manager_phase_import_job,
@@ -75,7 +76,7 @@ class Datastore:
         local_storage.save_temporary_backup()
         try:
             self._log(job_id, "importing")
-            job_service.update_job_status(job_id, "importing")
+            job_service.update_job_status(job_id, JobStatus.IMPORTING)
             dataset_release_status = self._get_release_status(dataset_name)
             if dataset_release_status != "RELEASED":
                 raise VersioningException(
@@ -98,7 +99,7 @@ class Datastore:
                 )
             )
             self._log(job_id, "completed")
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
             self._log(job_id, "Deleting temporary backup")
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
@@ -109,7 +110,7 @@ class Datastore:
             rollback_manager_phase_import_job(
                 job_id, "PATCH_METADATA", dataset_name
             )
-            job_service.update_job_status(job_id, "failed", str(e))
+            job_service.update_job_status(job_id, JobStatus.FAILED, str(e))
             self.refresh()
         except Exception as e:
             self._log(job_id, "An unexpected error occured", "ERROR")
@@ -117,7 +118,7 @@ class Datastore:
             rollback_manager_phase_import_job(
                 job_id, "PATCH_METADATA", dataset_name
             )
-            job_service.update_job_status(job_id, "failed")
+            job_service.update_job_status(job_id, JobStatus.FAILED)
             self.refresh()
 
     def add(self, job_id: str, dataset_name: str, description: str):
@@ -129,7 +130,7 @@ class Datastore:
         local_storage.save_temporary_backup()
         try:
             self._log(job_id, "importing")
-            job_service.update_job_status(job_id, "importing")
+            job_service.update_job_status(job_id, JobStatus.IMPORTING)
             dataset_release_status = self._get_release_status(dataset_name)
             if dataset_release_status not in [None, "DELETED"]:
                 raise VersioningException(
@@ -150,7 +151,7 @@ class Datastore:
             self.metadata_all_draft.add(draft_metadata)
             local_storage.move_working_dir_parquet_to_datastore(dataset_name)
             self._log(job_id, "completed")
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
             self._log(job_id, "Deleting temporary backup")
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
@@ -159,7 +160,7 @@ class Datastore:
             self._log(job_id, "An unexpected error occured", "ERROR")
             self._log(job_id, str(e), "EXC", e)
             rollback_manager_phase_import_job(job_id, "ADD", dataset_name)
-            job_service.update_job_status(job_id, "failed")
+            job_service.update_job_status(job_id, JobStatus.FAILED)
             self.refresh()
 
     def change(self, job_id: str, dataset_name: str, description: str):
@@ -173,7 +174,7 @@ class Datastore:
             local_storage.save_temporary_backup()
 
             self._log(job_id, "importing")
-            job_service.update_job_status(job_id, "importing")
+            job_service.update_job_status(job_id, JobStatus.IMPORTING)
             dataset_release_status = self._get_release_status(dataset_name)
             if dataset_release_status != "RELEASED":
                 raise VersioningException(
@@ -195,7 +196,7 @@ class Datastore:
             )
             local_storage.move_working_dir_parquet_to_datastore(dataset_name)
             self._log(job_id, "completed")
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
             self._log(job_id, "Deleting temporary backup")
             local_storage.delete_temporary_backup()
             local_storage.delete_working_dir_metadata(dataset_name)
@@ -204,7 +205,7 @@ class Datastore:
             self._log(job_id, "An unexpected error occured", "ERROR")
             self._log(job_id, str(e), "EXC", e)
             rollback_manager_phase_import_job(job_id, "CHANGE", dataset_name)
-            job_service.update_job_status(job_id, "failed")
+            job_service.update_job_status(job_id, JobStatus.FAILED)
             self.refresh()
 
     def remove(self, job_id: str, dataset_name: str, description: str):
@@ -213,7 +214,7 @@ class Datastore:
         a previous version from future versions of the datastore.
         """
         self._log(job_id, "initiated")
-        job_service.update_job_status(job_id, "initiated")
+        job_service.update_job_status(job_id, JobStatus.INITIATED)
         dataset_release_status = self._get_release_status(dataset_name)
         dataset_is_draft = self.draft_version.contains(dataset_name)
         dataset_operation = self.draft_version.get_dataset_operation(
@@ -223,7 +224,9 @@ class Datastore:
             self.metadata_all_draft.remove(dataset_name)
             log_message = "Dataset already in draft with operation REMOVE."
             self._log(job_id, log_message)
-            job_service.update_job_status(job_id, "completed", log_message)
+            job_service.update_job_status(
+                job_id, JobStatus.COMPLETED, log_message
+            )
             self._log(job_id, "completed")
         elif dataset_release_status != "RELEASED":
             log_message = (
@@ -231,7 +234,9 @@ class Datastore:
                 f"release status {dataset_release_status}"
             )
             self._log(job_id, log_message, level="ERROR")
-            job_service.update_job_status(job_id, "failed", log_message)
+            job_service.update_job_status(
+                job_id, JobStatus.FAILED, log_message
+            )
         else:
             self.metadata_all_draft.remove(dataset_name)
             self.draft_version.add(
@@ -242,7 +247,7 @@ class Datastore:
                     releaseStatus="PENDING_DELETE",
                 )
             )
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
             self._log(job_id, "completed")
 
     def delete_draft(
@@ -252,7 +257,7 @@ class Datastore:
         Delete a dataset from the draft version of the datastore.
         """
         self._log(job_id, "initiated")
-        job_service.update_job_status(job_id, "initiated")
+        job_service.update_job_status(job_id, JobStatus.INITIATED)
         dataset_is_draft = self.draft_version.contains(dataset_name)
         dataset_operation = self.draft_version.get_dataset_operation(
             dataset_name
@@ -260,14 +265,18 @@ class Datastore:
         if dataset_operation != "REMOVE" and rollback_remove:
             log_message = f"{dataset_name} is not scheduled for removal"
             self._log(job_id, log_message, level="ERROR")
-            job_service.update_job_status(job_id, "failed", log_message)
+            job_service.update_job_status(
+                job_id, JobStatus.FAILED, log_message
+            )
             return
         if (not dataset_is_draft) or (
             dataset_operation == "REMOVE" and not rollback_remove
         ):
             log_message = f'Draft not found for dataset name: "{dataset_name}"'
             self._log(job_id, log_message, level="ERROR")
-            job_service.update_job_status(job_id, "failed", log_message)
+            job_service.update_job_status(
+                job_id, JobStatus.FAILED, log_message
+            )
             return
         # If dataset has previously released data/metadata that needs to
         # be restored
@@ -287,7 +296,7 @@ class Datastore:
         if dataset_operation in ["ADD", "CHANGE"]:
             local_storage.delete_parquet_draft(dataset_name)
         self.draft_version.delete_draft(dataset_name)
-        job_service.update_job_status(job_id, "completed")
+        job_service.update_job_status(job_id, JobStatus.COMPLETED)
 
     def set_draft_release_status(
         self, job_id: str, dataset_name: str, new_status: str
@@ -297,19 +306,19 @@ class Datastore:
         """
         try:
             self._log(job_id, "initiated")
-            job_service.update_job_status(job_id, "initiated")
+            job_service.update_job_status(job_id, JobStatus.INITIATED)
             self.draft_version.set_draft_release_status(
                 dataset_name, new_status
             )
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
             self._log(job_id, "completed")
         except UnnecessaryUpdateException as e:
-            job_service.update_job_status(job_id, "completed", f"{e}")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED, f"{e}")
             self._log(job_id, str(e), "EXC", e)
             self._log(job_id, "completed")
         except NoSuchDraftException as e:
             self._log(job_id, str(e), "EXC", e)
-            job_service.update_job_status(job_id, "failed", f"{e}")
+            job_service.update_job_status(job_id, JobStatus.FAILED, f"{e}")
 
     def _generate_new_metadata_all(
         self, new_version: str, new_version_metadata: list[Metadata]
@@ -404,7 +413,7 @@ class Datastore:
 
         try:
             self._log(job_id, "initiated")
-            job_service.update_job_status(job_id, "initiated")
+            job_service.update_job_status(job_id, JobStatus.INITIATED)
 
             self._log(job_id, "Validating bump manifesto")
             if not self.draft_version.validate_bump_manifesto(bump_manifesto):
@@ -413,7 +422,9 @@ class Datastore:
                     "after bump was requested"
                 )
                 self._log(job_id, log_message, "ERROR")
-                job_service.update_job_status(job_id, "failed", log_message)
+                job_service.update_job_status(
+                    job_id, JobStatus.FAILED, log_message
+                )
                 self._log(job_id, "Archiving temporary backup")
                 local_storage.archive_temporary_backup()
                 return
@@ -456,7 +467,7 @@ class Datastore:
             )
 
             self._log(job_id, "completed BUMP")
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
             self._log(job_id, "Archiving temporary backup")
             local_storage.archive_temporary_backup()
         except Exception as e:
@@ -466,7 +477,7 @@ class Datastore:
                 job_id,
                 bump_manifesto.model_dump(by_alias=True, exclude_none=True),
             )
-            job_service.update_job_status(job_id, "failed")
+            job_service.update_job_status(job_id, JobStatus.FAILED)
             self.refresh()
 
     def delete_archived_input(self, job_id: str, dataset_name: str):
@@ -475,10 +486,10 @@ class Datastore:
         """
         try:
             self._log(job_id, "initiated")
-            job_service.update_job_status(job_id, "initiated")
+            job_service.update_job_status(job_id, JobStatus.INITIATED)
             local_storage.delete_archived_input(dataset_name)
-            job_service.update_job_status(job_id, "completed")
+            job_service.update_job_status(job_id, JobStatus.COMPLETED)
         except Exception as e:
             self._log(job_id, "An unexpected error occured", "ERROR")
             self._log(job_id, str(e), "EXC", e)
-            job_service.update_job_status(job_id, "failed")
+            job_service.update_job_status(job_id, JobStatus.FAILED)

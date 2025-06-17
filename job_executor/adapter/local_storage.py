@@ -26,12 +26,14 @@ def _read_json(file_path: Path) -> dict:
         return json.load(f)
 
 
-def _write_json(content: dict, file_path: Path, indent: int = None) -> None:
+def _write_json(
+    content: dict, file_path: Path, indent: int | None = None
+) -> None:
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(content, f, indent=indent)
 
 
-def _get_parquet_path(directory: Path, dataset_name: str) -> str:
+def _get_parquet_path(directory: Path, dataset_name: str) -> Path:
     parquet_file_path = directory / f"{dataset_name}__DRAFT.parquet"
     partitioned_parquet_path = directory / f"{dataset_name}__DRAFT"
     if partitioned_parquet_path.is_dir():
@@ -50,7 +52,7 @@ def _get_datastore_draft_parquet_path(dataset_name: str) -> Path:
     )
 
 
-def _get_working_dir_draft_parquet_path(dataset_name: str):
+def _get_working_dir_draft_parquet_path(dataset_name: str) -> Path:
     return _get_parquet_path(WORKING_DIR, dataset_name)
 
 
@@ -306,7 +308,7 @@ def save_temporary_backup() -> None:
     )
 
 
-def restore_from_temporary_backup() -> Union[str, None, LocalStorageError]:
+def restore_from_temporary_backup() -> Union[str, None]:
     """
     Restores the datastore from the tmp directory.
     Raises `LocalStorageError`if there are any missing backup files.
@@ -393,7 +395,7 @@ def temporary_backup_exists() -> bool:
     Returns a boolean representing if the tmp directory exists.
     """
     tmp_dir = Path(DATASTORE_DIR) / "tmp"
-    os.path.isdir(tmp_dir)
+    return os.path.isdir(tmp_dir)
 
 
 def archive_draft_version(version: str):
