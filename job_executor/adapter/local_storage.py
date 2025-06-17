@@ -36,11 +36,11 @@ def _write_json(
 def _write_json_with_tmp(
     content: dict, file_path: Path, indent: int | None = None
 ) -> None:
-    tmp_name = f"{file_path}.tmp"
-    with open(tmp_name, "w", encoding="utf-8") as f:
+    tmp_file_path = f"{file_path}.tmp"
+    with open(tmp_file_path, "w", encoding="utf-8") as f:
         json.dump(content, f, indent=indent)
     os.remove(file_path)
-    shutil.move(tmp_name, file_path)
+    shutil.move(tmp_file_path, file_path)
 
 
 def _get_parquet_path(directory: Path, dataset_name: str) -> Path:
