@@ -33,6 +33,16 @@ def _write_json(
         json.dump(content, f, indent=indent)
 
 
+def _write_json_with_tmp(
+    content: dict, file_path: Path, indent: int | None = None
+) -> None:
+    tmp_name = f"{file_path}.tmp"
+    with open(tmp_name, "w", encoding="utf-8") as f:
+        json.dump(content, f, indent=indent)
+    os.remove(file_path)
+    shutil.move(tmp_name, file_path)
+
+
 def _get_parquet_path(directory: Path, dataset_name: str) -> Path:
     parquet_file_path = directory / f"{dataset_name}__DRAFT.parquet"
     partitioned_parquet_path = directory / f"{dataset_name}__DRAFT"
@@ -148,14 +158,18 @@ def write_metadata_all(metadata_all: dict, version: str):
     """
     Writes given dict to a metadata all json file to the appropriate
     datastore directory named with the given version.
-
+    If supplied version is 'DRAFT' a tmp file will be written to first
+    to avoid downtime in consuming services due to incomplete json while
+    writing.
     * metadata_all: dict - metadata all dict
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
-    _write_json(
-        metadata_all, DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
-    )
+    file_path = DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
+    if version == "DRAFT":
+        _write_json_with_tmp(metadata_all, file_path)
+    else:
+        _write_json(metadata_all, file_path)
 
 
 def write_working_dir_metadata(dataset_name: str, metadata: Dict) -> None:
