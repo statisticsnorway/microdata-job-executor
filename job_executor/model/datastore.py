@@ -88,8 +88,7 @@ class Datastore:
             )
             released_metadata = self.metadata_all_latest.get(dataset_name)
             patched_metadata = released_metadata.patch(draft_metadata)
-            self.metadata_all_draft.remove(dataset_name)
-            self.metadata_all_draft.add(patched_metadata)
+            self.metadata_all_draft.update_one(dataset_name, patched_metadata)
             self.draft_version.add(
                 DataStructureUpdate(
                     name=dataset_name,
