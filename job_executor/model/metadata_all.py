@@ -65,6 +65,15 @@ class MetadataAllDraft(MetadataAll):
         ]
         self._write_to_file()
 
+    def update_one(self, dataset_name: str, metadata: Metadata):
+        self.data_structures = [
+            metadata
+            for metadata in self.data_structures
+            if metadata.name != dataset_name
+        ]
+        self.data_structures.append(metadata)
+        self._write_to_file()
+
     def remove_all(self):
         self.data_structures = []
         self._write_to_file()
