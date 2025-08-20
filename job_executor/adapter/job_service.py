@@ -84,7 +84,7 @@ def update_description(job_id: str, new_description: str):
 
 
 def get_maintenance_status() -> MaintenanceStatus:
-    request_url = f"{JOB_SERVICE_URL}/maintenance-status"
+    request_url = f"{JOB_SERVICE_URL}/maintenance-statuses/latest"
     response = execute_request("GET", request_url, True)
     return MaintenanceStatus(**response.json())
 

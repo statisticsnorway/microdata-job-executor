@@ -100,7 +100,7 @@ def test_no_connection(requests_mock: RequestsMocker):
 
 def test_get_maintenance_status(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/maintenance-status",
+        f"{JOB_SERVICE_URL}/maintenance-statuses/latest",
         json={
             "paused": False,
             "msg": "OK",
@@ -113,7 +113,7 @@ def test_get_maintenance_status(requests_mock: RequestsMocker):
 
 def test_get_maintenance_status_error(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/maintenance-status",
+        f"{JOB_SERVICE_URL}/maintenance-statuses/latest",
         status_code=500,
         text=ERROR_RESPONSE,
     )
