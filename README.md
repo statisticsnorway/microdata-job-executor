@@ -6,32 +6,18 @@ Executes work for a datastore by polling a job-service for available jobs. Uses 
 
 ### Set up
 
-To work on this repository you need to install [poetry](https://python-poetry.org/docs/):
-
+To work on this repository you need to install [uv](https://docs.astral.sh/uv/).
+After cloning the repo, install and activate an environment with:
+```sh
+uv venv && uv sync && source .venv/bin/activate 
 ```
-# macOS / linux / BashOnWindows
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-
-# Windows powershell
-(Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
-```
-
-Then install the virtual environment from the root directory:
-
-```
-poetry install
-```
-
-#### Intellij IDEA
-
-Use plugin Poetry and add Python Interpreter "Poetry Environment". See https://plugins.jetbrains.com/plugin/14307-poetry
 
 ### Running tests
 
 Open terminal and go to root directory of the project and run:
 
 ```
-poetry run pytest --cov=job_executor/
+uv run pytest
 ```
 
 ### Build docker image
@@ -59,9 +45,7 @@ There is an initial set of mappings under `wiremock/mappings`. Feel free to add 
 Then set the PSEUDONYM_SERVICE_URL and JOB_SERVICE_URL to http://localhost:8080 and run the application.
 
 ## Built with
-
-- [Poetry](https://python-poetry.org/) - Python dependency and package management
-- [PyMongo](https://pymongo.readthedocs.io/en/stable/) - MongoDB Driver
+- [Uv](https://docs.astral.sh/uv/) - Python dependency and package management
 - [PyArrow](https://arrow.apache.org/docs/python/) - Apache Arrow
 - [Pandas](https://pandas.pydata.org/) - Data analysis and manipulation
 - [microdata-tools](https://pypi.org/project/microdata-tools/) - dataset packaging & validation

@@ -1,15 +1,16 @@
 name: Run Tests on PR
-
+permissions:
+  contents: read
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
+  workflow_dispatch:
 
 jobs:
   test:
-    name: Test
+    name: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
     - name: Checkout code
@@ -19,17 +20,18 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
-
-    - name: Install dependencies
-      run: |
-        curl -sSL https://install.python-poetry.org | python -
-        poetry install
+    
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v6
+    
+    - name: Sync dependencies
+      run: uv sync
 
     - name: Run tests
-      run: poetry run pytest --cov=job_executor
+      run: uv run pytest
 
     - name: Run Ruff check
-      run: poetry run ruff check --output-format=github
+      run: uv run ruff check --output-format=github
 
     - name: Run Ruff format
-      run: poetry run ruff format --diff
+      run: uv run ruff format --diff

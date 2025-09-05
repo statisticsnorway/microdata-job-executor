@@ -15,20 +15,21 @@ jobs:
         with:
           fetch-depth: 0  # Ensure the full history is fetched
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.13"
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v6
+    
+    - name: Sync dependencies
+      run: uv sync
 
       - name: Check for New Version
         id: check_version
         run: |
-          CURRENT_VERSION=$(poetry show microdata-tools | grep version | awk '{print $3}')
+          CURRENT_VERSION=$(uv pip show microdata-tools | grep Version | awk '{print $2}')
           LATEST_VERSION=$(curl -s https://pypi.org/pypi/microdata-tools/json | jq -r .info.version)
           echo "Current version: $CURRENT_VERSION"
           echo "Latest version: $LATEST_VERSION"
@@ -47,8 +48,8 @@ jobs:
           git config --global user.email 'github-actions@github.com'
           git pull origin main 
           git checkout -b bump-microdata-tools-${{ steps.check_version.outputs.new_version }}
-          poetry add microdata-tools@${{ steps.check_version.outputs.new_version }}
-          git add pyproject.toml poetry.lock
+          uv add microdata-tools@${{ steps.check_version.outputs.new_version }}
+          git add pyproject.toml uv.lock
           git commit -m "Update microdata-tools to ${{ steps.check_version.outputs.new_version }}"
           git push origin bump-microdata-tools-${{ steps.check_version.outputs.new_version }}
 
