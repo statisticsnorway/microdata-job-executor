@@ -12,16 +12,12 @@ After cloning the repo, install and activate an environment with:
 uv venv && uv sync && source .venv/bin/activate 
 ```
 
-#### Intellij IDEA
-
-Use plugin Poetry and add Python Interpreter "Poetry Environment". See https://plugins.jetbrains.com/plugin/14307-poetry
-
 ### Running tests
 
 Open terminal and go to root directory of the project and run:
 
 ```
-poetry run pytest --cov=job_executor/
+uv run pytest
 ```
 
 ### Build docker image
