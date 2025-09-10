@@ -21,7 +21,7 @@ from job_executor.worker.steps import (
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
-def _clean_working_dir(dataset_name: str):
+def _clean_working_dir(dataset_name: str) -> None:
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
         WORKING_DIR / f"{dataset_name}.parquet",
@@ -48,7 +48,7 @@ def _dataset_requires_pseudonymization(input_metadata: dict) -> bool:
     )
 
 
-def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
+def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
     start = perf_counter()
     logger = logging.getLogger()
 
