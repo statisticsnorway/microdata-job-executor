@@ -1,10 +1,8 @@
-from typing import List, Union, Tuple
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+from typing import List, Tuple, Union
 
 from pydantic import model_validator
 
-from job_executor.model.camelcase_model import CamelModel
-from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.adapter import local_storage
 from job_executor.exception import (
     BumpException,
@@ -12,6 +10,8 @@ from job_executor.exception import (
     NoSuchDraftException,
     UnnecessaryUpdateException,
 )
+from job_executor.model.camelcase_model import CamelModel
+from job_executor.model.data_structure_update import DataStructureUpdate
 
 
 class DatastoreVersion(CamelModel):

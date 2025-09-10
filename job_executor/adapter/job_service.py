@@ -8,7 +8,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from job_executor.config import environment
-from job_executor.exception import HttpResponseError, HttpRequestError
+from job_executor.exception import HttpRequestError, HttpResponseError
 from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.maintenance_status import MaintenanceStatus
 

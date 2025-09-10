@@ -2,14 +2,14 @@ import logging
 from multiprocessing import Queue
 from time import perf_counter
 
+from job_executor.adapter import job_service, local_storage
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
-from job_executor.adapter import job_service, local_storage
 from job_executor.model.job import JobStatus
 from job_executor.worker.steps import (
     dataset_decryptor,
-    dataset_validator,
     dataset_transformer,
+    dataset_validator,
 )
 
 WORKING_DIR = local_storage.WORKING_DIR

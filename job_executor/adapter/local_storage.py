@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Dict, Union
 
@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from job_executor.config import environment
 from job_executor.exception import LocalStorageError
-
 
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
 DATASTORE_DIR = Path(environment.get("DATASTORE_DIR"))

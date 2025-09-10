@@ -6,7 +6,7 @@ import microdata_tools
 import pyarrow
 from microdata_tools.validation.exceptions import UnregisteredUnitTypeError
 from microdata_tools.validation.model.metadata import UnitIdType, UnitType
-from pyarrow import dataset, compute, parquet
+from pyarrow import compute, dataset, parquet
 
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError

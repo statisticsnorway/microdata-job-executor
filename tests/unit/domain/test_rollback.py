@@ -6,7 +6,6 @@ from pathlib import Path
 from job_executor.adapter.local_storage import DATASTORE_DIR, WORKING_DIR
 from job_executor.domain import rollback
 
-
 JOB_ID = "123-123-123-123"
 BUMP_MANIFESTO = {
     "version": "0.0.0.1635299291",

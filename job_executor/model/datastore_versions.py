@@ -1,13 +1,13 @@
+from datetime import UTC, datetime
 from typing import List, Union
-from datetime import datetime, UTC
 
 from pydantic import model_validator
-from job_executor.exception import VersioningException
 
+from job_executor.adapter import local_storage
+from job_executor.exception import VersioningException
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.model.datastore_version import DatastoreVersion
-from job_executor.adapter import local_storage
 
 
 class DatastoreVersions(CamelModel, extra="forbid"):

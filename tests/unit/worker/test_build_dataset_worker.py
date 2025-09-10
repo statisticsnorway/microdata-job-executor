@@ -1,19 +1,17 @@
 import os
 import shutil
-from pathlib import Path
 from multiprocessing import Queue
+from pathlib import Path
 
-from requests_mock import Mocker as RequestsMocker
-
-from job_executor.config import environment
-from job_executor.adapter.local_storage import INPUT_DIR
-from job_executor.worker.build_dataset_worker import run_worker
-
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
-
 from microdata_tools import package_dataset
+from requests_mock import Mocker as RequestsMocker
+
+from job_executor.adapter.local_storage import INPUT_DIR
+from job_executor.config import environment
+from job_executor.worker.build_dataset_worker import run_worker
 
 RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 

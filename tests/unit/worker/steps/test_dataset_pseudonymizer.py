@@ -1,17 +1,16 @@
-import os
 import json
+import os
 import shutil
 from pathlib import Path
 
-import pytest
 import pyarrow
-from pyarrow import parquet, dataset
+import pytest
+from pyarrow import dataset, parquet
 
+from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
 from job_executor.worker.steps import dataset_pseudonymizer
-from job_executor.adapter import pseudonym_service
-
 
 TABLE_SIZE = 1000
 UNIT_ID_INPUT = [f"i{count}" for count in range(TABLE_SIZE)]

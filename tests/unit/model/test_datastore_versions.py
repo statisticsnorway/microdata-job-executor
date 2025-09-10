@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import shutil
 
 from job_executor.model import DatastoreVersions, DataStructureUpdate

@@ -1,9 +1,9 @@
 from pathlib import Path
-from job_executor.config import environment
-from job_executor.adapter.local_storage import INPUT_DIR, WORKING_DIR
 
 from microdata_tools import unpackage_dataset
 
+from job_executor.adapter.local_storage import INPUT_DIR, WORKING_DIR
+from job_executor.config import environment
 
 RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 

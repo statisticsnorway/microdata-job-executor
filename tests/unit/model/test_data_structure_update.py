@@ -1,9 +1,8 @@
 import pytest
 from pydantic import ValidationError
+
 from job_executor.exception import ReleaseStatusException
-
 from job_executor.model import DataStructureUpdate
-
 
 DATA_STRUCTURE_ADD_UPDATE = {
     "name": "KJOENN",

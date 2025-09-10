@@ -1,8 +1,7 @@
 import logging
 from pathlib import Path
 
-from pyarrow import dataset
-from pyarrow import parquet
+from pyarrow import dataset, parquet
 
 from job_executor.exception import BuilderStepError
 

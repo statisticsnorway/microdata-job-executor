@@ -1,13 +1,12 @@
 import logging
-from typing import List
 from multiprocessing import Process, Queue
+from typing import List
 
 from job_executor.adapter import job_service
 from job_executor.domain import rollback
 from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
-
 
 logger = logging.getLogger()
 

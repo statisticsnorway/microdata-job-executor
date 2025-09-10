@@ -5,7 +5,6 @@ from pathlib import Path
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.adapter.local_storage import WORKING_DIR
-from job_executor.model.job import JobStatus
 from job_executor.exception import (
     LocalStorageError,
     RollbackException,
@@ -16,6 +15,7 @@ from job_executor.model.datastore_versions import (
     dotted_to_underscored_version,
     underscored_to_dotted_version,
 )
+from job_executor.model.job import JobStatus
 
 WORKING_DIR_PATH = Path(WORKING_DIR)
 logger = logging.getLogger()

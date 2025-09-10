@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from multiprocessing import Queue
 from pathlib import Path
 from time import perf_counter
@@ -8,14 +8,14 @@ from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
-from job_executor.model.metadata import Metadata
 from job_executor.model.job import JobStatus
+from job_executor.model.metadata import Metadata
 from job_executor.worker.steps import (
     dataset_decryptor,
-    dataset_validator,
-    dataset_transformer,
     dataset_partitioner,
     dataset_pseudonymizer,
+    dataset_transformer,
+    dataset_validator,
 )
 
 WORKING_DIR = Path(environment.get("WORKING_DIR"))

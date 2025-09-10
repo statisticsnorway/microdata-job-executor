@@ -1,5 +1,5 @@
-from job_executor.model.camelcase_model import CamelModel
 from job_executor.exception import ReleaseStatusException
+from job_executor.model.camelcase_model import CamelModel
 
 
 class DataStructureUpdate(CamelModel, extra="forbid"):

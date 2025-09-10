@@ -1,7 +1,8 @@
 import time
+from multiprocessing import Process
+
 from job_executor.manager import Manager
 from job_executor.model.worker import Worker
-from multiprocessing import Process
 
 
 def dummy():

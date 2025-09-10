@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Dict, List, Union
 
 from job_executor.exception import BuilderStepError

@@ -1,11 +1,11 @@
 import os
+
 import pytest
 from requests_mock import Mocker as RequestsMocker
 
 from job_executor.adapter import job_service
-from job_executor.model.job import Job, JobParameters, UserInfo
 from job_executor.exception import HttpResponseError
-
+from job_executor.model.job import Job, JobParameters, UserInfo
 
 JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
 JOB_ID = "123"

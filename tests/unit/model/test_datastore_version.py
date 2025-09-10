@@ -1,7 +1,9 @@
-import os
 import json
+import os
 import shutil
+
 import pytest
+
 from job_executor.exception import (
     BumpException,
     ExistingDraftException,
@@ -9,8 +11,8 @@ from job_executor.exception import (
 )
 from job_executor.model import (
     DatastoreVersion,
-    DraftVersion,
     DataStructureUpdate,
+    DraftVersion,
 )
 
 

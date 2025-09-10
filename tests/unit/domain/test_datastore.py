@@ -1,15 +1,14 @@
-import os
 import json
+import os
 import shutil
-from unittest.mock import MagicMock, Mock
 from pathlib import Path
+from unittest.mock import MagicMock, Mock
 
 from requests_mock import Mocker as RequestsMocker
-from tests.unit.test_util import get_dir_list_from_dir, get_file_list_from_dir
 
-from job_executor.model import Datastore
+from job_executor.domain.datastore import Datastore
 from job_executor.model import DatastoreVersion
-
+from tests.unit.test_util import get_dir_list_from_dir, get_file_list_from_dir
 
 datastore = Datastore()
 JOB_SERVICE_URL = os.getenv("JOB_SERVICE_URL")

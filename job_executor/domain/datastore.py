@@ -1,23 +1,22 @@
 import logging
 
-from job_executor.adapter import local_storage, job_service
-from job_executor.model.job import JobStatus
+from job_executor.adapter import job_service, local_storage
 from job_executor.domain.rollback import (
     rollback_bump,
     rollback_manager_phase_import_job,
 )
-from job_executor.model.metadata import Metadata
-from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
-from job_executor.model.datastore_versions import DatastoreVersions
-from job_executor.model.datastore_version import DatastoreVersion, DraftVersion
-from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.exception import (
     NoSuchDraftException,
+    PatchingError,
     UnnecessaryUpdateException,
     VersioningException,
-    PatchingError,
 )
-
+from job_executor.model.data_structure_update import DataStructureUpdate
+from job_executor.model.datastore_version import DatastoreVersion, DraftVersion
+from job_executor.model.datastore_versions import DatastoreVersions
+from job_executor.model.job import JobStatus
+from job_executor.model.metadata import Metadata
+from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
 
 logger = logging.getLogger()
 

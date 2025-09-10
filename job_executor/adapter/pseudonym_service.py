@@ -6,7 +6,6 @@ from microdata_tools.validation.model.metadata import UnitIdType
 from job_executor.config import environment, secrets
 from job_executor.exception import HttpResponseError
 
-
 PSEUDONYM_SERVICE_URL = environment.get("PSEUDONYM_SERVICE_URL")
 PSEUDONYM_SERVICE_API_KEY = secrets.get("PSEUDONYM_SERVICE_API_KEY")
 

@@ -1,10 +1,11 @@
-import os
 import json
+import os
 import shutil
 from pathlib import Path
+
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.model import Datastore
+from job_executor.domain.datastore import Datastore
 from job_executor.model import DatastoreVersion
 
 JOB_SERVICE_URL = os.getenv("JOB_SERVICE_URL")

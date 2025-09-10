@@ -4,9 +4,8 @@ from typing import Tuple
 
 from microdata_tools import validate_dataset, validate_metadata
 
-from job_executor.exception import BuilderStepError
 from job_executor.config import environment
-
+from job_executor.exception import BuilderStepError
 
 logger = logging.getLogger()
 WORKING_DIR = Path(environment.get("WORKING_DIR"))

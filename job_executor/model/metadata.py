@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from job_executor.exception import PatchingError, MetadataException
+from job_executor.exception import MetadataException, PatchingError
 from job_executor.model.camelcase_model import CamelModel
 
 DATA_TYPES_MAPPING = {
