@@ -28,20 +28,20 @@ class JobQueryResult:
         queued_worker_jobs: List[Job] = [],
         built_jobs: List[Job] = [],
         queued_manager_jobs: List[Job] = [],
-    ):
+    ) -> None:
         self.queued_worker_jobs = queued_worker_jobs
         self.built_jobs = built_jobs
         self.queued_manager_jobs = queued_manager_jobs
 
     @property
-    def available_jobs_count(self):
+    def available_jobs_count(self) -> int:
         return (
             len(self.queued_worker_jobs)
             + len(self.built_jobs)
             + len(self.queued_manager_jobs)
         )
 
-    def queued_manager_and_built_jobs(self):
+    def queued_manager_and_built_jobs(self) -> List[Job]:
         return self.queued_manager_jobs + self.built_jobs
 
 
@@ -68,14 +68,14 @@ def get_jobs(
 
 def update_job_status(
     job_id: str, new_status: JobStatus, log: str | None = None
-):
+) -> None :
     payload: dict[str, JobStatus | str] = {"status": str(new_status)}
     if log is not None:
         payload.update({"log": log})
     execute_request("PUT", f"{JOB_SERVICE_URL}/jobs/{job_id}", json=payload)
 
 
-def update_description(job_id: str, new_description: str):
+def update_description(job_id: str, new_description: str) -> None:
     execute_request(
         "PUT",
         f"{JOB_SERVICE_URL}/jobs/{job_id}",
@@ -96,14 +96,15 @@ def is_system_paused() -> bool:
 
 
 def execute_request(
-    method: str, url: str, retry: bool = False, **kwargs
+    method: str, url: str, retry: bool = False, **kwargs #noqa
 ) -> Response:
     try:
         if retry:
             with requests.Session() as s:
                 retries = Retry(
                     total=6,
-                    backoff_factor=0.5,  # [0.0s, 1.0s, 2.0s, 4.0s, 8.0s, 16.0s] between retries
+                    backoff_factor=0.5,
+                    # [0.0s, 1.0s, 2.0s, 4.0s, 8.0s, 16.0s] between retries
                     allowed_methods={"GET"},
                 )
                 s.mount("http://", HTTPAdapter(max_retries=retries))
@@ -124,7 +125,8 @@ def execute_request(
 
 def query_for_jobs() -> JobQueryResult:
     """
-    Retrieves different types of jobs based on the system's state (paused or active).
+    Retrieves different types of jobs based on the system's state
+    (paused or active).
 
     When the system is paused, only jobs with a 'built' status are fetched.
     In the active state, jobs are fetched based on their operations.

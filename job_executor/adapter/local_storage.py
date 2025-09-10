@@ -89,7 +89,7 @@ def get_data_versions(version: Union[str, None]) -> dict:
     )
 
 
-def write_data_versions(data_versions: dict, version: str):
+def write_data_versions(data_versions: dict, version: str) -> None:
     """
     Writes given dict to a new data versions json file to the appropriate
     datastore directory named with the given version.
