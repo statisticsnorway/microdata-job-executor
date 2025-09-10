@@ -8,7 +8,7 @@ class DataStructureUpdate(CamelModel, extra="forbid"):
     operation: str
     release_status: str
 
-    def set_release_status(self, new_status: str):
+    def set_release_status(self, new_status: str) -> None:
         if new_status == "PENDING_RELEASE":
             if self.operation not in ["ADD", "CHANGE", "PATCH_METADATA"]:
                 raise ReleaseStatusException(

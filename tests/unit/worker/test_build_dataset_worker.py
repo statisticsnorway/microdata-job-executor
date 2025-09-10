@@ -330,9 +330,7 @@ def test_import_no_pseudonymization(requests_mock: RequestsMocker):
     assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
     assert not os.path.exists(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
     assert not os.path.isfile(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.csv")
-    assert not os.path.isfile(
-        f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.json"
-    )
+    assert not os.path.isfile(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.json")
     assert os.path.isdir(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}__DRAFT")
     assert os.path.isfile(
         f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}__DRAFT.json"

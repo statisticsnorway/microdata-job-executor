@@ -148,9 +148,7 @@ def get_metadata_all(version: str) -> dict:
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
-    return _read_json(
-        DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
-    )
+    return _read_json(DATASTORE_DIR / f"datastore/metadata_all__{version}.json")
 
 
 def write_metadata_all(metadata_all: dict, version: str):
@@ -236,9 +234,7 @@ def move_working_dir_parquet_to_datastore(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    working_dir_parquet_path = _get_working_dir_draft_parquet_path(
-        dataset_name
-    )
+    working_dir_parquet_path = _get_working_dir_draft_parquet_path(dataset_name)
     shutil.move(
         working_dir_parquet_path,
         (
@@ -273,9 +269,7 @@ def delete_working_dir_file(file_path: Path) -> None:
     * file_name: str - name of temporary file
     """
     if not str(file_path).startswith(str(WORKING_DIR)):
-        raise LocalStorageError(
-            f"Filepath {file_path} is not in {WORKING_DIR}"
-        )
+        raise LocalStorageError(f"Filepath {file_path} is not in {WORKING_DIR}")
     if file_path.is_file():
         os.remove(file_path)
 

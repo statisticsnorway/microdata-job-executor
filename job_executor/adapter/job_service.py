@@ -68,7 +68,7 @@ def get_jobs(
 
 def update_job_status(
     job_id: str, new_status: JobStatus, log: str | None = None
-) -> None :
+) -> None:
     payload: dict[str, JobStatus | str] = {"status": str(new_status)}
     if log is not None:
         payload.update({"log": log})
@@ -96,7 +96,10 @@ def is_system_paused() -> bool:
 
 
 def execute_request(
-    method: str, url: str, retry: bool = False, **kwargs #noqa
+    method: str,
+    url: str,
+    retry: bool = False,
+    **kwargs,  # noqa
 ) -> Response:
     try:
         if retry:

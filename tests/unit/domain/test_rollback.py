@@ -81,9 +81,7 @@ def teardown_function():
 
 
 def test_rollback_interrupted_bump():
-    draft_version_backup = _read_json(
-        DATASTORE_TEMP_DIR / "draft_version.json"
-    )
+    draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     metadata_all_draft_backup = _read_json(
         DATASTORE_TEMP_DIR / "metadata_all__DRAFT.json"
     )
@@ -125,9 +123,7 @@ def test_rollback_interrupted_bump_patch():
         "tests/resources/datastores/ROLLBACK_DATASTORE_PATCH",
         "tests/resources/datastores/TEST_DATASTORE",
     )
-    draft_version_backup = _read_json(
-        DATASTORE_TEMP_DIR / "draft_version.json"
-    )
+    draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     rollback.rollback_bump(JOB_ID, BUMP_MANIFESTO_PATCH)
 
     restored_draft_version = _read_json(
@@ -177,9 +173,7 @@ def test_rollback_interrupted_worker():
 
 
 def test_rollback_interrupted_import():
-    draft_version_backup = _read_json(
-        DATASTORE_TEMP_DIR / "draft_version.json"
-    )
+    draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     metadata_all_draft_backup = _read_json(
         DATASTORE_TEMP_DIR / "metadata_all__DRAFT.json"
     )

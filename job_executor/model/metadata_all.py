@@ -90,9 +90,7 @@ class MetadataAllDraft(MetadataAll):
     ):
         previous_data_structures = {ds.name: ds for ds in self.data_structures}
         new_data_structures = {
-            ds.name: Metadata(
-                **ds.model_dump(by_alias=True, exclude_none=True)
-            )
+            ds.name: Metadata(**ds.model_dump(by_alias=True, exclude_none=True))
             for ds in released_metadata
         }
         for draft in draft_version:

@@ -47,15 +47,10 @@ class Manager:
         """
         Called to check if a new worker can be spawned.
         """
-        alive_workers = [
-            worker for worker in self.workers if worker.is_alive()
-        ]
+        alive_workers = [worker for worker in self.workers if worker.is_alive()]
         if len(alive_workers) >= self.max_workers:
             return False
-        if (
-            self.current_total_size + new_job_size
-            >= self.max_bytes_all_workers
-        ):
+        if self.current_total_size + new_job_size >= self.max_bytes_all_workers:
             return False
         return True
 

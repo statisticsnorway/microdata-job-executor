@@ -58,7 +58,7 @@ class JobParameters(CamelModel, use_enum_values=True):
     bump_to_version: Optional[str] = None
 
     @model_validator(mode="after")
-    def validate_job_type(self: "JobParameters"):
+    def validate_job_type(self) -> "JobParameters":
         operation: Operation = self.operation
         if operation == Operation.BUMP and (
             self.bump_manifesto is None

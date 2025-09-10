@@ -132,9 +132,7 @@ def test_draft_version_validate_bump_manifesto():
     bump_manifesto = DatastoreVersion(**DRAFT_VERSION_IDENTICAL)
     assert draft_version.validate_bump_manifesto(bump_manifesto)
 
-    bump_manifesto_only_pending = DatastoreVersion(
-        **DRAFT_VERSION_ONLY_PENDING
-    )
+    bump_manifesto_only_pending = DatastoreVersion(**DRAFT_VERSION_ONLY_PENDING)
     assert draft_version.validate_bump_manifesto(bump_manifesto_only_pending)
 
     bump_manifesto_added_pending = DatastoreVersion(

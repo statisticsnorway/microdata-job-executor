@@ -44,8 +44,7 @@ def test_get_jobs(requests_mock: RequestsMocker):
     requests_mock.get(
         f"{JOB_SERVICE_URL}/jobs",
         json=[
-            job.model_dump(by_alias=True, exclude_none=True)
-            for job in JOB_LIST
+            job.model_dump(by_alias=True, exclude_none=True) for job in JOB_LIST
         ],
     )
     jobs = job_service.get_jobs()
@@ -143,9 +142,7 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
         ),
     ],
 )
-def test_query_for_jobs(
-    is_paused, expected_result, requests_mock, monkeypatch
-):
+def test_query_for_jobs(is_paused, expected_result, requests_mock, monkeypatch):
     monkeypatch.setattr(
         "job_executor.adapter.job_service.is_system_paused", lambda: is_paused
     )

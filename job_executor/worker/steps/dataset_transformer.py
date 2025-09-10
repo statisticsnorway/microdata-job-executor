@@ -62,15 +62,11 @@ def _represented_variables_from_description(
         {
             "description": description,
             "validPeriod": {
-                "start": (
-                    start if start is None else _days_since_epoch(start)
-                ),
+                "start": (start if start is None else _days_since_epoch(start)),
                 "stop": (stop if stop is None else _days_since_epoch(stop)),
             },
             "valueDomain": {
-                "description": _get_norwegian_text(
-                    value_domain["description"]
-                ),
+                "description": _get_norwegian_text(value_domain["description"]),
                 "unitOfMeasure": _get_norwegian_text(
                     value_domain.get(
                         "measurementUnitDescription",

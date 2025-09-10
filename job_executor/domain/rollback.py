@@ -15,13 +15,13 @@ from job_executor.model.datastore_versions import (
     dotted_to_underscored_version,
     underscored_to_dotted_version,
 )
-from job_executor.model.job import JobStatus
+from job_executor.model.job import Job, JobStatus
 
 WORKING_DIR_PATH = Path(WORKING_DIR)
 logger = logging.getLogger()
 
 
-def rollback_bump(job_id: str, bump_manifesto: dict):
+def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
     try:
         logger.info(f"{job_id}: Restoring files from temporary backup")
         restored_version_number = local_storage.restore_from_temporary_backup()
@@ -71,8 +71,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
                 os.remove(data_versions_path)
 
         metadata_all_path = (
-            datastore_info_dir
-            / f"metadata_all__{bumped_version_metadata}.json"
+            datastore_info_dir / f"metadata_all__{bumped_version_metadata}.json"
         )
         if metadata_all_path.exists():
             logger.info(f"{job_id}: Deleting {metadata_all_path}")
@@ -124,7 +123,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict):
 
 def rollback_worker_phase_import_job(
     job_id: str, operation: str, dataset_name: str
-):
+) -> None:
     logger.warning(
         f"{job_id}: Rolling back worker job "
         f'with target: "{dataset_name}" and operation "{operation}"'
@@ -169,7 +168,7 @@ def rollback_worker_phase_import_job(
 
 def rollback_manager_phase_import_job(
     job_id: str, operation: str, dataset_name: str
-):
+) -> None:
     """
     Rolls back manager phase import job.
     Exceptions are not handled here on purpose. It is a catastrophic thing
@@ -189,7 +188,7 @@ def rollback_manager_phase_import_job(
     local_storage.archive_temporary_backup()
 
 
-def fix_interrupted_jobs():
+def fix_interrupted_jobs() -> None:
     logger.info("Querying for interrupted jobs")
     in_progress_jobs = job_service.get_jobs(ignore_completed=True)
     queued_statuses = ["queued", "built"]
@@ -204,7 +203,7 @@ def fix_interrupted_jobs():
         raise StartupException(e) from e
 
 
-def fix_interrupted_job(job):
+def fix_interrupted_job(job: Job) -> None:
     job_operation = job.parameters.operation
     logger.warning(
         f'{job.job_id}: Rolling back job with operation "{job_operation}"'
@@ -253,7 +252,10 @@ def fix_interrupted_job(job):
         )
     elif job_operation == "BUMP":
         try:
-            rollback_bump(job.job_id, job.parameters.bump_manifesto)
+            bump_manifesto = job.parameters.bump_manifesto
+            if bump_manifesto is None:
+                raise RollbackException("No bump manifesto available")
+            rollback_bump(job.job_id, bump_manifesto.model_dump())
         except Exception as exc:
             error_message = f"Failed rollback for {job.job_id}"
             logger.exception(error_message, exc_info=exc)

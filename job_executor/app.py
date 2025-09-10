@@ -40,9 +40,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue):
             job.parameters.target
         )
         if job_size == 0:
-            logger.error(
-                f"{job.job_id} Failed to get the size of the dataset."
-            )
+            logger.error(f"{job.job_id} Failed to get the size of the dataset.")
             job_service.update_job_status(
                 job.job_id,
                 JobStatus.FAILED,

@@ -54,9 +54,7 @@ def test_get_dataset_release_status():
     assert (
         datastore_versions.get_dataset_release_status("SIVSTAND") == "RELEASED"
     )
-    assert (
-        datastore_versions.get_dataset_release_status("INNTEKT") == "DELETED"
-    )
+    assert datastore_versions.get_dataset_release_status("INNTEKT") == "DELETED"
     assert (
         datastore_versions.get_dataset_release_status("DOES_NOT_EXIST") is None
     )
