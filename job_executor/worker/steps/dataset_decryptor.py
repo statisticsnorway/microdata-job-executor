@@ -8,7 +8,7 @@ from job_executor.config import environment
 RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
 
-def unpackage(dataset_name: str):
+def unpackage(dataset_name: str) -> None:
     file_path = Path(f"{INPUT_DIR}/archive/{dataset_name}.tar")
     unpackage_dataset(
         packaged_file_path=file_path,

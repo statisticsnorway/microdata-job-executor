@@ -8,7 +8,7 @@ from job_executor.exception import BuilderStepError
 logger = logging.getLogger()
 
 
-def run(data_path: Path, dataset_name: str):
+def run(data_path: Path, dataset_name: str) -> None:
     """
     Partitions the given dataset by the 'start_year' column.
 
@@ -24,8 +24,8 @@ def run(data_path: Path, dataset_name: str):
     try:
         ds = dataset.dataset(data_path)
 
-        # Check if "start_year" column exists in the schema without loading the entire
-        # dataset into memory
+        # Check if "start_year" column exists in the schema without loading
+        # the entire dataset into memory
         if "start_year" not in ds.schema.names:
             raise BuilderStepError(
                 "Column 'start_year' not found in the dataset"

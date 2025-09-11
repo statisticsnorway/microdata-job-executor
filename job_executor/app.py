@@ -15,7 +15,7 @@ logger = logging.getLogger()
 setup_logging()
 
 
-def initialize_app():
+def initialize_app() -> None:
     try:
         rollback.fix_interrupted_jobs()
         if local_storage.temporary_backup_exists():
@@ -24,7 +24,7 @@ def initialize_app():
         raise StartupException("Exception when initializing") from e
 
 
-def handle_jobs(manager: Manager, logging_queue: Queue):
+def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
     job_query_result = job_service.query_for_jobs()
     manager.clean_up_after_dead_workers()
     if job_query_result.available_jobs_count:
@@ -74,7 +74,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue):
             raise exc
 
 
-def main():
+def main() -> None:
     logging_queue = None
     log_thread = None
     try:

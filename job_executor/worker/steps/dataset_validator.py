@@ -36,8 +36,9 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
         logger.error("Dataset failed validation with microdata-tools")
         raise BuilderStepError(
             "Failed to validate dataset. "
-            "Resolve errors with the microdata-tools validator before uploading. "
-            "Remember to update to the latest version of microdata-tools. "
+            "Resolve errors with the microdata-tools validator before "
+            "uploading. Remember to update to the latest version of "
+            "microdata-tools. "
         )
 
     return (
@@ -57,8 +58,8 @@ def run_for_metadata(dataset_name: str) -> Path:
     try:
         validation_errors = validate_metadata(
             dataset_name,
-            input_directory=WORKING_DIR,
-            working_directory=WORKING_DIR,
+            input_directory=str(WORKING_DIR),
+            working_directory=str(WORKING_DIR),
             keep_temporary_files=True,
         )
 
@@ -71,7 +72,8 @@ def run_for_metadata(dataset_name: str) -> Path:
         logger.error("Dataset failed validation with microdata-tools")
         raise BuilderStepError(
             "Failed to validate metadata. "
-            "Resolve errors with the microdata-tools validator before uploading."
-            "Remember to update to the latest version of microdata-tools. "
+            "Resolve errors with the microdata-tools validator before "
+            "uploading. Remember to update to the latest version of "
+            "microdata-tools. "
         )
     return WORKING_DIR / f"{dataset_name}.json"

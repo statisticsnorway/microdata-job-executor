@@ -32,7 +32,7 @@ def _fetch_column_pseudonyms(
     column_name: str,
     unit_id_type: Union[None, UnitIdType],
     job_id: str,
-) -> Optional[List[str]]:
+) -> List[str] | None:
     """
     Pseudonymizes a column if a pseudonymizable unit ID type is provided.
     Returns None otherwise.
@@ -43,7 +43,7 @@ def _fetch_column_pseudonyms(
     identifiers_table = input_dataset.to_table(columns=[column_name])
 
     string_identifiers = identifiers_table[column_name].cast(pyarrow.string())
-    unique_identifiers = compute.unique(string_identifiers).to_pylist()
+    unique_identifiers = compute.unique(string_identifiers).to_pylist()  # type: ignore
 
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
         unique_identifiers, unit_id_type, job_id
@@ -139,13 +139,15 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
     """
     Pseudonymizes the identifier & measure column of the dataset if.
 
-    First extracts and validate the identifier unit type and measure unit type from
-    the metadata using microdata_tools/validator.
+    First extracts and validate the identifier unit type and measure unit type
+    from the metadata using microdata_tools/validator.
 
-    If valid unit types are provided, the unique values in the identifier & measure column
-    are extracted and pseudonymized using the external pseudonym service.
+    If valid unit types are provided, the unique values in the identifier &
+    measure column are extracted and pseudonymized using the external
+    pseudonym service.
 
-    Finally all values in the identifier & measure column are replaced with the pseudonyms
+    Finally all values in the identifier & measure column are replaced with
+    the pseudonyms.
     """
     try:
         logger.info(f"Pseudonymizing data {input_parquet_path}")
