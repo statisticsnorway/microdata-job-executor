@@ -98,9 +98,9 @@ def _represented_variables_from_code_list(
         for item in code_items
         if item.get("validUntil", None) is not None
     ]
-    has_ongoing_time_period = any([
-        item.get("validUntil", None) is None for item in code_items
-    ])
+    has_ongoing_time_period = any(
+        [item.get("validUntil", None) is None for item in code_items]
+    )
     unique_dates = list(set(valid_from_dates + valid_until_dates))
     unique_dates.sort()
 
@@ -140,26 +140,36 @@ def _represented_variables_from_code_list(
                 and code_period_started_before_valid_period
             ) or (valid_period_inside_code_period)
             if code_in_valid_period:
-                codeList.append({
-                    "category": _get_norwegian_text(code_item["categoryTitle"]),
-                    "code": code_item["code"],
-                })
+                codeList.append(
+                    {
+                        "category": _get_norwegian_text(
+                            code_item["categoryTitle"]
+                        ),
+                        "code": code_item["code"],
+                    }
+                )
         if sentinel_and_missing_values:
             for code_item in sentinel_and_missing_values:
-                codeList.append({
-                    "category": _get_norwegian_text(code_item["categoryTitle"]),
-                    "code": code_item["code"],
-                })
-        represented_variables.append({
-            "description": description,
-            "validPeriod": valid_period,
-            "valueDomain": {
-                "codeList": codeList,
-                "missingValues": [
-                    value["code"] for value in sentinel_and_missing_values
-                ],
-            },
-        })
+                codeList.append(
+                    {
+                        "category": _get_norwegian_text(
+                            code_item["categoryTitle"]
+                        ),
+                        "code": code_item["code"],
+                    }
+                )
+        represented_variables.append(
+            {
+                "description": description,
+                "validPeriod": valid_period,
+                "valueDomain": {
+                    "codeList": codeList,
+                    "missingValues": [
+                        value["code"] for value in sentinel_and_missing_values
+                    ],
+                },
+            }
+        )
     return represented_variables
 
 
@@ -187,7 +197,9 @@ def _create_represented_variables(
         )
 
 
-def _transform_variable(variable: dict, role: str, start: str, stop: str):
+def _transform_variable(
+    variable: dict, role: str, start: str, stop: str
+) -> dict:
     variable_description = (
         _get_norwegian_text(variable["description"])
         if "description" in variable

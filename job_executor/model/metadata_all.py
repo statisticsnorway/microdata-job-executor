@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import List, Union
 
 from pydantic import model_validator
@@ -26,7 +27,7 @@ class MetadataAll(CamelModel):
     data_structures: List[Metadata]
     languages: List[LanguageInfo]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Metadata]:  # type: ignore
         return iter(
             [
                 Metadata(
@@ -50,15 +51,15 @@ class MetadataAll(CamelModel):
 class MetadataAllDraft(MetadataAll):
     @model_validator(mode="before")
     @classmethod
-    def read_file(cls, _):
+    def read_file(cls, _) -> dict:  # noqa
         return local_storage.get_metadata_all("DRAFT")
 
-    def _write_to_file(self):
+    def _write_to_file(self) -> None:
         local_storage.write_metadata_all(
             self.model_dump(by_alias=True, exclude_none=True), "DRAFT"
         )
 
-    def remove(self, dataset_name: str):
+    def remove(self, dataset_name: str) -> None:
         self.data_structures = [
             metadata
             for metadata in self.data_structures
@@ -66,7 +67,7 @@ class MetadataAllDraft(MetadataAll):
         ]
         self._write_to_file()
 
-    def update_one(self, dataset_name: str, metadata: Metadata):
+    def update_one(self, dataset_name: str, metadata: Metadata) -> None:
         self.data_structures = [
             metadata
             for metadata in self.data_structures
@@ -75,11 +76,11 @@ class MetadataAllDraft(MetadataAll):
         self.data_structures.append(metadata)
         self._write_to_file()
 
-    def remove_all(self):
+    def remove_all(self) -> None:
         self.data_structures = []
         self._write_to_file()
 
-    def add(self, metadata: Metadata):
+    def add(self, metadata: Metadata) -> None:
         self.data_structures.append(metadata)
         self._write_to_file()
 
@@ -87,7 +88,7 @@ class MetadataAllDraft(MetadataAll):
         self,
         released_metadata: List[Metadata],
         draft_version: DatastoreVersion,
-    ):
+    ) -> None:
         previous_data_structures = {ds.name: ds for ds in self.data_structures}
         new_data_structures = {
             ds.name: Metadata(**ds.model_dump(by_alias=True, exclude_none=True))

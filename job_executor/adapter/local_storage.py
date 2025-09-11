@@ -151,7 +151,7 @@ def get_metadata_all(version: str) -> dict:
     return _read_json(DATASTORE_DIR / f"datastore/metadata_all__{version}.json")
 
 
-def write_metadata_all(metadata_all: dict, version: str):
+def write_metadata_all(metadata_all: dict, version: str) -> None:
     """
     Writes given dict to a metadata all json file to the appropriate
     datastore directory named with the given version.
@@ -405,7 +405,7 @@ def temporary_backup_exists() -> bool:
     return os.path.isdir(tmp_dir)
 
 
-def archive_draft_version(version: str):
+def archive_draft_version(version: str) -> None:
     """
     Archives the current draft json
     * dataset_name: str - name of dataset draft
@@ -421,7 +421,7 @@ def archive_draft_version(version: str):
     shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
 
 
-def archive_input_files(dataset_name: str):
+def archive_input_files(dataset_name: str) -> None:
     """
     Archives the input .tar files if not already archived
     """
@@ -435,7 +435,7 @@ def archive_input_files(dataset_name: str):
         shutil.move(str(tar_file), str(archive_dir))
 
 
-def delete_archived_input(dataset_name: str):
+def delete_archived_input(dataset_name: str) -> None:
     """
     Delete the archived .tar file from the archive directory.
     """
