@@ -264,8 +264,8 @@ def test_pseudonymizer_invalid_unit_id_type():
 # In Parquet, the physical type refers to how the data is stored.
 # INT32 and INT16 are both physically stored as INT32 in Parquet files.
 # The logical type can provide additional context about the data.
-# For example, it can tell you that a certain INT32 physical column is to be interpreted
-# as a INT16 logical type.
+# For example, it can tell you that a certain INT32 physical column is to be
+# interpreted as a INT16 logical type.
 def _verify_parquet_schema(parquet_file_path, expected_types):
     """
     Checks the logical type of each column in the parquet file to make sure

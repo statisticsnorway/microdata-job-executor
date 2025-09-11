@@ -7,12 +7,12 @@ from job_executor.model.worker import Worker
 
 def dummy():
     time.sleep(10)
-    print("hello")
+    print("hello")  #noqa
 
 
 def test_initial_state():
     manager = Manager(
-        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None
+        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None  # type: ignore
     )
 
     assert manager.current_total_size == 0
@@ -21,7 +21,7 @@ def test_initial_state():
 
 def test_can_spawn_worker():
     manager = Manager(
-        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None
+        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None  # type: ignore
     )
 
     can_spawn = manager.can_spawn_new_worker(new_job_size=1)
@@ -30,7 +30,7 @@ def test_can_spawn_worker():
 
 def test_cannot_spawn_worker_too_many_workers():
     manager = Manager(
-        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None
+        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None  # type: ignore
     )
 
     # Register 4 jobs
@@ -50,7 +50,7 @@ def test_cannot_spawn_worker_too_many_workers():
 def test_cannot_spawn_worker_size_limit_reached():
     TWENTY_GB = 20 * 1024**3
     manager = Manager(
-        max_workers=20, max_bytes_all_workers=TWENTY_GB, datastore=None
+        max_workers=20, max_bytes_all_workers=TWENTY_GB, datastore=None  # type: ignore
     )
 
     large_job = Worker(
@@ -70,7 +70,7 @@ def test_oversized_jobs():
     FIFTY_GB = 50 * 1024**3
     TEN_GB = 10 * 1024**3
     manager = Manager(
-        max_workers=4, max_bytes_all_workers=20 * 1024**3, datastore=None
+        max_workers=4, max_bytes_all_workers=20 * 1024**3, datastore=None  # type: ignore
     )
 
     # This job will never be processed
@@ -92,7 +92,7 @@ def test_oversized_jobs():
 
 def test_unregister_job():
     manager = Manager(
-        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None
+        max_workers=4, max_bytes_all_workers=50 * 1024**3, datastore=None  # type: ignore
     )
 
     # Register 4 jobs

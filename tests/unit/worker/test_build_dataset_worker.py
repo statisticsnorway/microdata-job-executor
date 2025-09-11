@@ -356,7 +356,6 @@ def test_import_no_pseudonymization_no_partitioning(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     run_worker(JOB_ID, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())
-    print(os.listdir(f"{WORKING_DIR}"))
     assert not os.path.exists(
         f"{INPUT_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}.tar"
     )
