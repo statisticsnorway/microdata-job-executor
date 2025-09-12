@@ -26,7 +26,7 @@ class Datastore:
     metadata_all_draft: MetadataAllDraft
     datastore_versions: DatastoreVersions
     draft_version: DraftVersion
-    latest_version_number: str
+    latest_version_number: str | None
 
     def __init__(self) -> None:
         self.refresh()
@@ -396,9 +396,13 @@ class Datastore:
                     for dataset in new_metadata_datasets
                     if dataset.name != dataset_name
                 ]
-                new_metadata_datasets.append(
-                    self.metadata_all_draft.get(dataset_name)  # TODO
-                )
+                updated_dataset = self.metadata_all_draft.get(dataset_name)
+                if updated_dataset is None:
+                    raise NoSuchDraftException(
+                        f"Could not find draft metadata for {dataset_name}"
+                        " when up versioning the pending operations"
+                    )
+                new_metadata_datasets.append(updated_dataset)
             if operation in ["ADD", "CHANGE"]:
                 self._log(
                     job_id, "Renaming data file and updating data_versions"
@@ -439,7 +443,9 @@ class Datastore:
                 return
 
             self._log(job_id, "Archiving draft version")
-            local_storage.archive_draft_version(self.latest_version_number)
+            local_storage.archive_draft_version(
+                self.latest_version_number or "0.0.0.0"
+            )
 
             self._log(job_id, "Release pending operations from draft_version")
             release_updates, update_type = self.draft_version.release_pending()
@@ -469,6 +475,7 @@ class Datastore:
             self._log(job_id, "Writing new metadata_all to file")
             self._generate_new_metadata_all(new_version, new_metadata_datasets)
             self.latest_version_number = new_version
+            assert self.metadata_all_latest is not None
 
             self._log(job_id, "Rebuilding metadata_all_DRAFT")
             self.metadata_all_draft.rebuild(

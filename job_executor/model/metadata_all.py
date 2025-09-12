@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterator
 from typing import List, Union
 
 from pydantic import model_validator
@@ -27,7 +27,7 @@ class MetadataAll(CamelModel):
     data_structures: List[Metadata]
     languages: List[LanguageInfo]
 
-    def __iter__(self) -> Iterable[Metadata]:  # type: ignore
+    def __iter__(self) -> Iterator[Metadata]:  # type: ignore
         return iter(
             [
                 Metadata(

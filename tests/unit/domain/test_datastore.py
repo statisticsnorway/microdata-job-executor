@@ -69,6 +69,7 @@ def test_patch_metadata(requests_mock: RequestsMocker):
         draft["name"] == DATASET_NAME
         for draft in metadata_all_draft["dataStructures"]
     )
+    assert datastore.metadata_all_latest is not None
     released_metadata = next(
         metadata.model_dump(by_alias=True, exclude_none=True)
         for metadata in datastore.metadata_all_latest
