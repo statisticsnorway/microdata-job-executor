@@ -1,6 +1,5 @@
 import datetime
 from enum import StrEnum
-from typing import List, Optional
 
 from pydantic import model_validator
 
@@ -51,11 +50,11 @@ class UserInfo(CamelModel, extra="forbid"):
 class JobParameters(CamelModel, use_enum_values=True):
     operation: Operation
     target: str
-    bump_manifesto: Optional[DatastoreVersion] = None
-    description: Optional[str] = None
-    release_status: Optional[ReleaseStatus] = None
-    bump_from_version: Optional[str] = None
-    bump_to_version: Optional[str] = None
+    bump_manifesto: DatastoreVersion | None = None
+    description: str | None = None
+    release_status: ReleaseStatus | None = None
+    bump_from_version: str | None = None
+    bump_to_version: str | None = None
 
     @model_validator(mode="after")
     def validate_job_type(self) -> "JobParameters":
@@ -85,6 +84,6 @@ class Job(CamelModel, use_enum_values=True):
     job_id: str
     status: JobStatus
     parameters: JobParameters
-    log: Optional[List[Log]] = []
+    log: list[Log] | None = []
     created_at: str
     created_by: UserInfo

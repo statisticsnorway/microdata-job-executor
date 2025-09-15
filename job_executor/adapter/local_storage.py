@@ -3,7 +3,6 @@ import os
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Union
 
 from pydantic import ValidationError
 
@@ -74,7 +73,7 @@ def make_dataset_dir(dataset_name: str) -> None:
     os.makedirs(DATASTORE_DIR / f"data/{dataset_name}", exist_ok=True)
 
 
-def get_data_versions(version: Union[str, None]) -> dict:
+def get_data_versions(version: str | None) -> dict:
     """
     Returns the data_versions json file for the given version as a dict.
     Returns an empty dictionary if given version is None.
@@ -169,13 +168,13 @@ def write_metadata_all(metadata_all: dict, version: str) -> None:
         _write_json(metadata_all, file_path)
 
 
-def write_working_dir_metadata(dataset_name: str, metadata: Dict) -> None:
+def write_working_dir_metadata(dataset_name: str, metadata: dict) -> None:
     """
     Writes a json to a the working directory as the processed metadata file
     named: {dataset_name}__DRAFT.json
 
     * dataset_name: str - name of dataset
-    * metadata: Dict - dictionary to write as json
+    * metadata: dict - dictionary to write as json
     """
     _write_json(metadata, WORKING_DIR / f"{dataset_name}__DRAFT.json")
 
@@ -315,7 +314,7 @@ def save_temporary_backup() -> None:
     )
 
 
-def restore_from_temporary_backup() -> Union[str, None]:
+def restore_from_temporary_backup() -> str | None:
     """
     Restores the datastore from the tmp directory.
     Raises `LocalStorageError`if there are any missing backup files.
@@ -348,7 +347,7 @@ def restore_from_temporary_backup() -> Union[str, None]:
         raise LocalStorageError("Invalid backup file") from e
 
 
-def archive_temporary_backup() -> Union[None, LocalStorageError]:
+def archive_temporary_backup() -> None:
     """
     Archives the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files
@@ -373,7 +372,7 @@ def archive_temporary_backup() -> Union[None, LocalStorageError]:
     shutil.move(DATASTORE_DIR / "tmp", ARCHIVE_DIR / f"tmp_{timestamp}")
 
 
-def delete_temporary_backup() -> Union[None, LocalStorageError]:
+def delete_temporary_backup() -> None:
     """
     Deletes the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files

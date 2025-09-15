@@ -1,4 +1,3 @@
-from typing import List, Optional, Union
 
 from job_executor.exception import MetadataException, PatchingError
 from job_executor.model.camelcase_model import CamelModel
@@ -14,8 +13,8 @@ DATA_TYPES_SIKT_TO_SSB = {v: k for k, v in DATA_TYPES_MAPPING.items()}
 
 
 class TimePeriod(CamelModel):
-    start: Union[int, None]
-    stop: Optional[Union[int, None]] = None
+    start: int | None
+    stop: int | None = None
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, TimePeriod):
@@ -49,10 +48,10 @@ class CodeListItem(CamelModel):
 
 
 class ValueDomain(CamelModel):
-    description: Optional[str] = None
-    unit_of_measure: Optional[str] = None
-    code_list: Optional[List[CodeListItem]] = None
-    missing_values: Optional[List[str]] = None
+    description: str | None = None
+    unit_of_measure: str | None = None
+    code_list: list[CodeListItem] | None = None
+    missing_values: list[str] | None = None
 
     def is_enumerated_value_domain(self) -> bool:
         return (
@@ -157,7 +156,7 @@ class Variable(CamelModel):
     format: str | None = None
     variable_role: str
     key_type: KeyType | None = None
-    represented_variables: List[RepresentedVariable]
+    represented_variables: list[RepresentedVariable]
 
     def get_key_type_name(self) -> str | None:
         return None if self.key_type is None else self.key_type.name
@@ -288,7 +287,7 @@ class AttributeVariable(Variable): ...
 
 class TemporalEnd(CamelModel):
     description: str
-    successors: Optional[List[str]] = None
+    successors: list[str] | None = None
 
 
 class Metadata(CamelModel):
@@ -297,13 +296,13 @@ class Metadata(CamelModel):
     language_code: str
     sensitivity_level: str
     population_description: str
-    subject_fields: List[str]
+    subject_fields: list[str]
     temporal_coverage: TimePeriod
     measure_variable: MeasureVariable
-    identifier_variables: List[IdentifierVariable]
-    attribute_variables: List[AttributeVariable]
-    temporal_status_dates: Optional[List[int]] = None
-    temporal_end: Optional[TemporalEnd] = None
+    identifier_variables: list[IdentifierVariable]
+    attribute_variables: list[AttributeVariable]
+    temporal_status_dates: list[int] | None = None
+    temporal_end: TemporalEnd | None = None
 
     def get_identifier_key_type_name(self) -> str | None:
         return self.identifier_variables[0].get_key_type_name()

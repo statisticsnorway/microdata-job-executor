@@ -1,5 +1,4 @@
 from collections.abc import Iterator
-from typing import List, Union
 
 from pydantic import model_validator
 
@@ -24,8 +23,8 @@ class LanguageInfo(CamelModel):
 
 class MetadataAll(CamelModel):
     data_store: DataStoreInfo
-    data_structures: List[Metadata]
-    languages: List[LanguageInfo]
+    data_structures: list[Metadata]
+    languages: list[LanguageInfo]
 
     def __iter__(self) -> Iterator[Metadata]:  # type: ignore
         return iter(
@@ -39,7 +38,7 @@ class MetadataAll(CamelModel):
             ]
         )
 
-    def get(self, dataset_name: str) -> Union[Metadata, None]:
+    def get(self, dataset_name: str) -> Metadata | None:
         for metadata in self.data_structures:
             if metadata.name == dataset_name:
                 return Metadata(
@@ -86,7 +85,7 @@ class MetadataAllDraft(MetadataAll):
 
     def rebuild(
         self,
-        released_metadata: List[Metadata],
+        released_metadata: list[Metadata],
         draft_version: DatastoreVersion,
     ) -> None:
         previous_data_structures = {ds.name: ds for ds in self.data_structures}

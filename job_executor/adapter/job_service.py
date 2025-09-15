@@ -1,5 +1,4 @@
 import logging
-from typing import List
 from urllib.error import HTTPError
 
 import requests
@@ -19,15 +18,15 @@ logger = logging.getLogger()
 
 
 class JobQueryResult:
-    queued_worker_jobs: List[Job]
-    built_jobs: List[Job]
-    queued_manager_jobs: List[Job]
+    queued_worker_jobs: list[Job]
+    built_jobs: list[Job]
+    queued_manager_jobs: list[Job]
 
     def __init__(
         self,
-        queued_worker_jobs: List[Job] = [],
-        built_jobs: List[Job] = [],
-        queued_manager_jobs: List[Job] = [],
+        queued_worker_jobs: list[Job] = [],
+        built_jobs: list[Job] = [],
+        queued_manager_jobs: list[Job] = [],
     ) -> None:
         self.queued_worker_jobs = queued_worker_jobs
         self.built_jobs = built_jobs
@@ -41,15 +40,15 @@ class JobQueryResult:
             + len(self.queued_manager_jobs)
         )
 
-    def queued_manager_and_built_jobs(self) -> List[Job]:
+    def queued_manager_and_built_jobs(self) -> list[Job]:
         return self.queued_manager_jobs + self.built_jobs
 
 
 def get_jobs(
     job_status: JobStatus | None = None,
-    operations: List[Operation] | None = None,
+    operations: list[Operation] | None = None,
     ignore_completed: bool | None = None,
-) -> List[Job]:
+) -> list[Job]:
     query_fields = []
     if job_status is not None:
         query_fields.append(f"status={job_status}")

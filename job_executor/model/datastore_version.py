@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import Iterator, Tuple
+from typing import Iterator
 
 from pydantic import model_validator
 
@@ -136,7 +136,7 @@ class DraftVersion(DatastoreVersion):
                 return False
         return True
 
-    def release_pending(self) -> Tuple[list[DataStructureUpdate], str]:
+    def release_pending(self) -> tuple[list[DataStructureUpdate], str]:
         if self.update_type is None:
             raise BumpException("No pending operations in draft version")
         draft_updates = []

@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Tuple
 
 from microdata_tools import validate_dataset, validate_metadata
 
@@ -11,7 +10,7 @@ logger = logging.getLogger()
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
-def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
+def run_for_dataset(dataset_name: str) -> tuple[Path, Path]:
     """
     Validates the data and metadata file in the working_directory
     using the microdata-tools.

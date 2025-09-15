@@ -1,6 +1,5 @@
 import logging
 from multiprocessing import Process, Queue
-from typing import List
 
 from job_executor.adapter import job_service
 from job_executor.domain import rollback
@@ -36,7 +35,7 @@ class Manager:
         self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
         self.datastore = datastore
-        self.workers: List[Worker] = []
+        self.workers: list[Worker] = []
 
     @property
     def current_total_size(self) -> int:

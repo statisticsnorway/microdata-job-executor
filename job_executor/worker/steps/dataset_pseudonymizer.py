@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import microdata_tools
 import pyarrow
@@ -17,7 +16,7 @@ logger = logging.getLogger()
 
 def _get_unit_types(
     metadata: Metadata,
-) -> Tuple[str | None, str | None]:
+) -> tuple[str | None, str | None]:
     """
     Extracts the identifier & measure unit type from the metadata.
     """
@@ -30,9 +29,9 @@ def _get_unit_types(
 def _fetch_column_pseudonyms(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: Union[None, UnitIdType],
+    unit_id_type: UnitIdType | None,
     job_id: str,
-) -> List[str] | None:
+) -> list[str] | None:
     """
     Pseudonymizes a column if a pseudonymizable unit ID type is provided.
     Returns None otherwise.
@@ -60,7 +59,7 @@ def _fetch_column_pseudonyms(
 def _get_column_pseudonyms_array(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: Optional[UnitIdType],
+    unit_id_type: UnitIdType | None,
     job_id: str,
 ) -> pyarrow.Array:
     """
@@ -97,8 +96,8 @@ def _get_regular_column(
 
 def _pseudonymize(
     input_parquet_path: Path,
-    identifier_unit_id_type: Optional[UnitIdType],
-    measure_unit_id_type: Optional[UnitIdType],
+    identifier_unit_id_type: UnitIdType | None,
+    measure_unit_id_type: UnitIdType | None,
     job_id: str,
 ) -> pyarrow.Table:
     input_dataset = dataset.dataset(input_parquet_path)

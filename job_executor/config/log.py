@@ -5,7 +5,6 @@ import logging.handlers
 import sys
 import threading
 from multiprocessing import Queue
-from typing import Tuple
 
 from job_executor.config import environment
 
@@ -66,7 +65,7 @@ def logger_thread(logging_queue: Queue) -> None:
         logger.handle(record)
 
 
-def initialize_logging_thread() -> Tuple[Queue, threading.Thread]:
+def initialize_logging_thread() -> tuple[Queue, threading.Thread]:
     logging_queue = Queue()
 
     log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))

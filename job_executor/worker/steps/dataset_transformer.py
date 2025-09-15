@@ -1,6 +1,5 @@
 import logging
 from datetime import UTC, datetime
-from typing import Dict, List, Union
 
 from job_executor.exception import BuilderStepError
 from job_executor.model.metadata import DATA_TYPES_MAPPING
@@ -29,7 +28,7 @@ def _get_variable_role(attribute_type: str) -> str:
 
 
 def _get_temporal_coverage(
-    start: Union[None, str], stop: Union[None, str]
+    start: str | None, stop: str | None
 ) -> dict:
     period = {"start": start if start is None else _days_since_epoch(start)}
     if stop:
@@ -49,7 +48,7 @@ def _transform_temporal_status_dates(status_dates: list | None) -> list | None:
     )
 
 
-def _transform_subject_fields(subject_fields: list[list[dict]]) -> List[str]:
+def _transform_subject_fields(subject_fields: list[list[dict]]) -> list[str]:
     return [
         _get_norwegian_text(subject_field) for subject_field in subject_fields
     ]
@@ -284,7 +283,7 @@ def _transform_temporal_end(temporal_end: dict) -> dict[str, str]:
     return temporal_end_result
 
 
-def _transform_metadata(metadata: Dict) -> Dict:
+def _transform_metadata(metadata: dict) -> dict:
     logger.info("Transforming metadata")
     # These values are found by going through the data file.
     # When we do transformation of metadata alone, we do not
@@ -330,7 +329,7 @@ def _transform_metadata(metadata: Dict) -> Dict:
     return transformed
 
 
-def run(metadata: Dict) -> Dict:
+def run(metadata: dict) -> dict:
     """
     Transforms a metadatafile from the input model to the SIKT
     metadata model that is stored in the datastore.
