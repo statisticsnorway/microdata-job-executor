@@ -1,4 +1,3 @@
-
 from job_executor.exception import MetadataException, PatchingError
 from job_executor.model.camelcase_model import CamelModel
 

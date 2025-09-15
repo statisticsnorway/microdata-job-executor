@@ -27,9 +27,7 @@ def _get_variable_role(attribute_type: str) -> str:
     )
 
 
-def _get_temporal_coverage(
-    start: str | None, stop: str | None
-) -> dict:
+def _get_temporal_coverage(start: str | None, stop: str | None) -> dict:
     period = {"start": start if start is None else _days_since_epoch(start)}
     if stop:
         period["stop"] = _days_since_epoch(stop)
