@@ -6,7 +6,6 @@ from pathlib import Path
 from job_executor.adapter.local_storage import DATASTORE_DIR, WORKING_DIR
 from job_executor.domain import rollback
 
-
 JOB_ID = "123-123-123-123"
 BUMP_MANIFESTO = {
     "version": "0.0.0.1635299291",
@@ -53,7 +52,7 @@ BUMP_MANIFESTO_PATCH = {
 }
 
 
-def _read_json(file_path: str) -> dict:
+def _read_json(file_path: Path) -> dict:
     with open(file_path, encoding="utf-8") as f:
         return json.load(f)
 
@@ -82,9 +81,7 @@ def teardown_function():
 
 
 def test_rollback_interrupted_bump():
-    draft_version_backup = _read_json(
-        DATASTORE_TEMP_DIR / "draft_version.json"
-    )
+    draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     metadata_all_draft_backup = _read_json(
         DATASTORE_TEMP_DIR / "metadata_all__DRAFT.json"
     )
@@ -126,9 +123,7 @@ def test_rollback_interrupted_bump_patch():
         "tests/resources/datastores/ROLLBACK_DATASTORE_PATCH",
         "tests/resources/datastores/TEST_DATASTORE",
     )
-    draft_version_backup = _read_json(
-        DATASTORE_TEMP_DIR / "draft_version.json"
-    )
+    draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     rollback.rollback_bump(JOB_ID, BUMP_MANIFESTO_PATCH)
 
     restored_draft_version = _read_json(
@@ -178,9 +173,7 @@ def test_rollback_interrupted_worker():
 
 
 def test_rollback_interrupted_import():
-    draft_version_backup = _read_json(
-        DATASTORE_TEMP_DIR / "draft_version.json"
-    )
+    draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     metadata_all_draft_backup = _read_json(
         DATASTORE_TEMP_DIR / "metadata_all__DRAFT.json"
     )

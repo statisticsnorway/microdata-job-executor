@@ -1,30 +1,29 @@
-from typing import List, Union
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from pydantic import model_validator
-from job_executor.exception import VersioningException
 
+from job_executor.adapter import local_storage
+from job_executor.exception import VersioningException
 from job_executor.model.camelcase_model import CamelModel
 from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.model.datastore_version import DatastoreVersion
-from job_executor.adapter import local_storage
 
 
 class DatastoreVersions(CamelModel, extra="forbid"):
     name: str
     label: str
     description: str
-    versions: List[DatastoreVersion]
+    versions: list[DatastoreVersion]
 
     @model_validator(mode="before")
     @classmethod
-    def read_file(cls, _):
+    def read_file(cls, _):  # noqa
         return local_storage.get_datastore_versions()
 
-    def _write_to_file(self):
+    def _write_to_file(self) -> None:
         local_storage.write_datastore_versions(self.model_dump(by_alias=True))
 
-    def _get_current_epoch_seconds(self):
+    def _get_current_epoch_seconds(self) -> int:
         return int(
             (
                 datetime.now(UTC).replace(tzinfo=None)
@@ -34,7 +33,7 @@ class DatastoreVersions(CamelModel, extra="forbid"):
 
     def add_new_release_version(
         self,
-        data_structure_updates: List[DataStructureUpdate],
+        data_structure_updates: list[DataStructureUpdate],
         description: str,
         update_type: str,
     ) -> str:
@@ -63,23 +62,21 @@ class DatastoreVersions(CamelModel, extra="forbid"):
             description=description,
             release_time=self._get_current_epoch_seconds(),
             language_code="no",
-            updateType=update_type,
+            update_type=update_type,
             data_structure_updates=released_data_structure_updates,
         )
         self.versions = [new_release_version] + self.versions
         self._write_to_file()
         return dotted_to_underscored_version(new_version_number)
 
-    def get_dataset_release_status(
-        self, dataset_name: str
-    ) -> Union[str, None]:
+    def get_dataset_release_status(self, dataset_name: str) -> str | None:
         for version in self.versions:
             release_status = version.get_dataset_release_status(dataset_name)
             if release_status is not None:
                 return release_status
         return None
 
-    def get_latest_version_number(self) -> str:
+    def get_latest_version_number(self) -> str | None:
         if len(self.versions):
             return dotted_to_underscored_version(self.versions[0].version)
         else:

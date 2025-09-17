@@ -2,10 +2,9 @@ import json
 from pathlib import Path
 
 from microdata_tools.validation.components import (
-    unit_type_variables,
     temporal_attributes,
+    unit_type_variables,
 )
-
 
 INPUT_DATA_PATH = Path("tests/resources/worker/steps/transformer/input_data")
 EXPECTED_DATA_PATH = Path("tests/resources/worker/steps/transformer/expected")

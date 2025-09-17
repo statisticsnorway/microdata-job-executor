@@ -1,23 +1,21 @@
-import time
 import logging
+import time
 from multiprocessing import Queue
 
 from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import initialize_logging_thread, setup_logging
 from job_executor.domain import rollback
+from job_executor.domain.datastore import Datastore
 from job_executor.exception import StartupException
-
-from job_executor.model import Datastore
 from job_executor.manager import Manager
 from job_executor.model.job import JobStatus
-
 
 logger = logging.getLogger()
 setup_logging()
 
 
-def initialize_app():
+def initialize_app() -> None:
     try:
         rollback.fix_interrupted_jobs()
         if local_storage.temporary_backup_exists():
@@ -26,7 +24,7 @@ def initialize_app():
         raise StartupException("Exception when initializing") from e
 
 
-def handle_jobs(manager: Manager, logging_queue: Queue):
+def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
     job_query_result = job_service.query_for_jobs()
     manager.clean_up_after_dead_workers()
     if job_query_result.available_jobs_count:
@@ -42,9 +40,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue):
             job.parameters.target
         )
         if job_size == 0:
-            logger.error(
-                f"{job.job_id} Failed to get the size of the dataset."
-            )
+            logger.error(f"{job.job_id} Failed to get the size of the dataset.")
             job_service.update_job_status(
                 job.job_id,
                 JobStatus.FAILED,
@@ -78,7 +74,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue):
             raise exc
 
 
-def main():
+def main() -> None:
     logging_queue = None
     log_thread = None
     try:

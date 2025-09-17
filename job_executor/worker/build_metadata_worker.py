@@ -2,20 +2,20 @@ import logging
 from multiprocessing import Queue
 from time import perf_counter
 
+from job_executor.adapter import job_service, local_storage
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
-from job_executor.adapter import job_service, local_storage
 from job_executor.model.job import JobStatus
 from job_executor.worker.steps import (
     dataset_decryptor,
-    dataset_validator,
     dataset_transformer,
+    dataset_validator,
 )
 
 WORKING_DIR = local_storage.WORKING_DIR
 
 
-def _clean_working_dir(dataset_name: str):
+def _clean_working_dir(dataset_name: str) -> None:
     generated_files = [
         WORKING_DIR / f"{dataset_name}.json",
         WORKING_DIR / dataset_name,
@@ -27,7 +27,7 @@ def _clean_working_dir(dataset_name: str):
             local_storage.delete_working_dir_file(file_path)
 
 
-def run_worker(job_id: str, dataset_name: str, logging_queue: Queue):
+def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
     start = perf_counter()
     logger = logging.getLogger()
 

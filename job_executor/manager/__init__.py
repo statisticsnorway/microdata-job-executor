@@ -1,13 +1,12 @@
 import logging
-from typing import List
 from multiprocessing import Process, Queue
 
 from job_executor.adapter import job_service
 from job_executor.domain import rollback
+from job_executor.domain.datastore import Datastore
 from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
-
 
 logger = logging.getLogger()
 
@@ -23,7 +22,9 @@ class Manager:
     are handled appropriately.
     """
 
-    def __init__(self, max_workers, max_bytes_all_workers, datastore):
+    def __init__(
+        self, max_workers: int, max_bytes_all_workers: int, datastore: Datastore
+    ) -> None:
         """
         :param default_max_workers: The maximum number of workers
         :param max_gb_all_workers: Threshold in GB (50) for when the number
@@ -34,7 +35,7 @@ class Manager:
         self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
         self.datastore = datastore
-        self.workers: List[Worker] = []
+        self.workers: list[Worker] = []
 
     @property
     def current_total_size(self) -> int:
@@ -48,19 +49,14 @@ class Manager:
         """
         Called to check if a new worker can be spawned.
         """
-        alive_workers = [
-            worker for worker in self.workers if worker.is_alive()
-        ]
+        alive_workers = [worker for worker in self.workers if worker.is_alive()]
         if len(alive_workers) >= self.max_workers:
             return False
-        if (
-            self.current_total_size + new_job_size
-            >= self.max_bytes_all_workers
-        ):
+        if self.current_total_size + new_job_size >= self.max_bytes_all_workers:
             return False
         return True
 
-    def unregister_worker(self, job_id):
+    def unregister_worker(self, job_id: str) -> None:
         """
         Called when a worker finishes or fails.
         """
@@ -95,7 +91,7 @@ class Manager:
         job: Job,
         job_size: int,
         logging_queue: Queue,
-    ):
+    ) -> None:
         dataset_name = job.parameters.target
         job_id = job.job_id
         operation = job.parameters.operation
@@ -139,37 +135,49 @@ class Manager:
                 log=f"Unknown operation type {operation}",
             )
 
-    def handle_manager_job(self, job: Job):
+    def handle_manager_job(self, job: Job) -> None:
         job_id = job.job_id
         operation = job.parameters.operation
         self.unregister_worker(
             job_id
         )  # Filter out job from worker jobs if built
+        # Ignoring a lot of types here as we already have done the validation
+        # in the pydantic model.
         if operation == Operation.BUMP:
             self.datastore.bump_version(
                 job_id,
-                job.parameters.bump_manifesto,
-                job.parameters.description,
+                job.parameters.bump_manifesto,  # type: ignore
+                job.parameters.description,  # type: ignore
             )
         elif operation == Operation.PATCH_METADATA:
             self.datastore.patch_metadata(
-                job_id, job.parameters.target, job.parameters.description
+                job_id,
+                job.parameters.target,
+                job.parameters.description,  # type: ignore
             )
         elif operation == Operation.SET_STATUS:
             self.datastore.set_draft_release_status(
-                job_id, job.parameters.target, job.parameters.release_status
+                job_id,
+                job.parameters.target,
+                job.parameters.release_status,  # type: ignore
             )
         elif operation == Operation.ADD:
             self.datastore.add(
-                job_id, job.parameters.target, job.parameters.description
+                job_id,
+                job.parameters.target,
+                job.parameters.description,  # type: ignore
             )
         elif operation == Operation.CHANGE:
             self.datastore.change(
-                job_id, job.parameters.target, job.parameters.description
+                job_id,
+                job.parameters.target,
+                job.parameters.description,  # type: ignore
             )
         elif operation == Operation.REMOVE:
             self.datastore.remove(
-                job_id, job.parameters.target, job.parameters.description
+                job_id,
+                job.parameters.target,
+                job.parameters.description,  # type: ignore
             )
         elif operation == Operation.ROLLBACK_REMOVE:
             self.datastore.delete_draft(

@@ -5,13 +5,12 @@ import logging.handlers
 import sys
 import threading
 from multiprocessing import Queue
-from typing import Tuple
 
 from job_executor.config import environment
 
 
 class MicrodataJSONFormatter(logging.Formatter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.host = environment.get("DOCKER_HOST_NAME")
         self.command = json.dumps(sys.argv)
         self.commit_id = environment.get("COMMIT_ID")
@@ -45,15 +44,15 @@ class MicrodataJSONFormatter(logging.Formatter):
 class WorkerFilter(logging.Filter):
     job_id = ""
 
-    def __init__(self, job_id: str):
+    def __init__(self, job_id: str) -> None:
         self.job_id = job_id
 
-    def filter(self, record: logging.LogRecord):
+    def filter(self, record: logging.LogRecord) -> bool:
         record.msg = f"{self.job_id}: {record.msg}"
         return True
 
 
-def logger_thread(logging_queue: Queue):
+def logger_thread(logging_queue: Queue) -> None:
     """
     This method will run as a thread in the main process and will receive
     logs from workers via Queue.
@@ -66,7 +65,7 @@ def logger_thread(logging_queue: Queue):
         logger.handle(record)
 
 
-def initialize_logging_thread() -> Tuple[Queue, threading.Thread]:
+def initialize_logging_thread() -> tuple[Queue, threading.Thread]:
     logging_queue = Queue()
 
     log_thread = threading.Thread(target=logger_thread, args=(logging_queue,))
@@ -85,7 +84,7 @@ def setup_logging(log_level: int = logging.INFO) -> None:
     logger.addHandler(stream_handler)
 
 
-def configure_worker_logger(queue: Queue, job_id: str):
+def configure_worker_logger(queue: Queue, job_id: str) -> None:
     queue_handler = logging.handlers.QueueHandler(queue)
     queue_handler.setLevel(logging.INFO)
 

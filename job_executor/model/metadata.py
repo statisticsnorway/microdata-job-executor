@@ -1,6 +1,4 @@
-from typing import List, Optional, Union
-
-from job_executor.exception import PatchingError, MetadataException
+from job_executor.exception import MetadataException, PatchingError
 from job_executor.model.camelcase_model import CamelModel
 
 DATA_TYPES_MAPPING = {
@@ -14,13 +12,16 @@ DATA_TYPES_SIKT_TO_SSB = {v: k for k, v in DATA_TYPES_MAPPING.items()}
 
 
 class TimePeriod(CamelModel):
-    start: Union[int, None]
-    stop: Optional[Union[int, None]] = None
+    start: int | None
+    stop: int | None = None
 
-    def __eq__(self, other):
-        return self.start == other.start and self.stop == other.stop
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, TimePeriod):
+            return self.start == other.start and self.stop == other.stop
+        else:
+            return False
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
 
@@ -34,7 +35,7 @@ class CodeListItem(CamelModel):
     category: str
     code: str
 
-    def patch(self, other: "CodeListItem"):
+    def patch(self, other: "CodeListItem | None") -> "CodeListItem":
         if other is None:
             raise PatchingError("Can not delete CodeListItem")
         if self.code != other.code:
@@ -46,19 +47,19 @@ class CodeListItem(CamelModel):
 
 
 class ValueDomain(CamelModel):
-    description: Optional[str] = None
-    unit_of_measure: Optional[str] = None
-    code_list: Optional[List[CodeListItem]] = None
-    missing_values: Optional[List[str]] = None
+    description: str | None = None
+    unit_of_measure: str | None = None
+    code_list: list[CodeListItem] | None = None
+    missing_values: list[str] | None = None
 
-    def is_enumerated_value_domain(self):
+    def is_enumerated_value_domain(self) -> bool:
         return (
             self.code_list is not None
             and self.description is None
             and self.unit_of_measure is None
         )
 
-    def is_described_value_domain(self):
+    def is_described_value_domain(self) -> bool:
         return (
             self.description is not None
             and self.unit_of_measure is not None
@@ -66,7 +67,7 @@ class ValueDomain(CamelModel):
             and self.missing_values is None
         )
 
-    def patch(self, other: "ValueDomain"):
+    def patch(self, other: "ValueDomain | None") -> "ValueDomain":
         patched = {}
         if other is None:
             raise PatchingError("Can not delete ValueDomain")
@@ -83,7 +84,7 @@ class ValueDomain(CamelModel):
                     "Can not change ValueDomain.sentinelAndMissingValues from "
                     f'"{self.missing_values}" to "{other.missing_values}"'
                 )
-            if len(self.code_list) != len(other.code_list):
+            if len(self.code_list or []) != len(other.code_list or []):
                 raise PatchingError(
                     "Can not add or remove codes from ValueDomain.codeList"
                 )
@@ -92,7 +93,9 @@ class ValueDomain(CamelModel):
                 patched.update(
                     {"missingValues": [value for value in self.missing_values]}
                 )
-            sorted_code_list = sorted(self.code_list, key=lambda key: key.code)
+            sorted_code_list = sorted(
+                self.code_list or [], key=lambda key: key.code
+            )
             sorted_other_code_list = sorted(
                 other.code_list, key=lambda key: key.code
             )
@@ -102,7 +105,7 @@ class ValueDomain(CamelModel):
                         by_alias=True, exclude_none=True
                     )
                 )
-            return ValueDomain(**patched)
+            return ValueDomain.model_validate(patched)
         else:
             raise MetadataException("Invalid ValueDomain")
 
@@ -112,7 +115,7 @@ class RepresentedVariable(CamelModel):
     valid_period: TimePeriod
     value_domain: ValueDomain
 
-    def patch(self, other: "RepresentedVariable"):
+    def patch(self, other: "RepresentedVariable") -> "RepresentedVariable":
         is_enumerated = self.value_domain.is_enumerated_value_domain()
         if is_enumerated:
             if self.valid_period != other.valid_period:
@@ -130,7 +133,7 @@ class RepresentedVariable(CamelModel):
             }
         )
 
-    def patch_description(self, description: str):
+    def patch_description(self, description: str) -> "RepresentedVariable":
         return RepresentedVariable(
             **{
                 "description": description,
@@ -149,17 +152,20 @@ class Variable(CamelModel):
     label: str
     not_pseudonym: bool
     data_type: str
-    format: Optional[str] = None
+    format: str | None = None
     variable_role: str
-    key_type: Optional[KeyType] = None
-    represented_variables: List[RepresentedVariable]
+    key_type: KeyType | None = None
+    represented_variables: list[RepresentedVariable]
 
     def get_key_type_name(self) -> str | None:
         return None if self.key_type is None else self.key_type.name
 
     def validate_patching_fields(
-        self, other, with_name: bool = False, with_key_type: bool = False
-    ):
+        self,
+        other: "Variable",
+        with_name: bool = False,
+        with_key_type: bool = False,
+    ) -> None:
         caption = "Illegal change to one of these variable fields: \n"
         message = ""
 
@@ -176,16 +182,20 @@ class Variable(CamelModel):
                 f"{other.variable_role}\n"
             )
         if with_name and self.name != other.name:
-            message += f"shortName: {self.name} to {other.name}\n"
-        if with_key_type and self.key_type.name != other.key_type.name:
-            message += (
-                f"unitType.name: {self.key_type.name} to {other.key_type.name}"
-            )
+            message += f"shortName: {self.name or None} to {other.name}\n"
+        if with_key_type:
+            if self.key_type is None or other.key_type is None:
+                message += "Can not change unitType to None\n"
+            elif self.key_type.name != other.key_type.name:
+                message += (
+                    f"unitType.name: {self.key_type.name}"
+                    f" to {other.key_type.name}"
+                )
 
         if message:
             raise PatchingError(caption + message)
 
-    def validate_represented_variables(self, other: "Variable"):
+    def validate_represented_variables(self, other: "Variable") -> None:
         if len(self.represented_variables) != len(other.represented_variables):
             raise PatchingError(
                 "Can not change the number of code list time periods "
@@ -195,11 +205,15 @@ class Variable(CamelModel):
 
 
 class IdentifierVariable(Variable):
-    def patch(self, other: "Variable") -> "Variable":
+    def patch(self, other: "Variable | None") -> "Variable":
         if other is None:
             raise PatchingError("Can not delete Variable")
-
-        if self.key_type.name != other.key_type.name:
+        if self.key_type is None:
+            if other.key_type is None:
+                raise PatchingError("Identifier is missing a unitType")
+        elif other.key_type is None:
+            raise PatchingError("Can not change Identifier unitType to None")
+        elif self.key_type.name != other.key_type.name:
             raise PatchingError(
                 "Can not change Identifier unitType from "
                 f"{self.key_type.name} to {other.key_type.name}"
@@ -213,19 +227,21 @@ class IdentifierVariable(Variable):
 
 
 class MeasureVariable(Variable):
-    def patch(self, other: "Variable") -> "Variable":
+    def patch(self, other: "Variable | None") -> "Variable":
         centralized_variable_definition = False
+        key_type_dump = {}
         if other is None:
             raise PatchingError("Can not delete Variable")
         if self.key_type is not None:
             if other.key_type is None:
-                raise PatchingError(
-                    f"Can not remove unitType: {self.key_type}"
-                )
+                raise PatchingError(f"Can not remove unitType: {self.key_type}")
             # Centralized variable definition was used,
             # it is safe to only patch label and description fields.
             self.validate_patching_fields(other, with_key_type=True)
             centralized_variable_definition = True
+            key_type_dump = other.key_type.model_dump(
+                by_alias=True, exclude_none=True
+            )
         else:
             if other.key_type is not None:
                 raise PatchingError(f"Can not add unitType: {other.key_type}")
@@ -261,13 +277,7 @@ class MeasureVariable(Variable):
         if self.format is not None:
             patched.update({"format": self.format})
         if centralized_variable_definition:
-            patched.update(
-                {
-                    "keyType": self.key_type.model_dump(
-                        by_alias=True, exclude_none=True
-                    )
-                }
-            )
+            patched.update({"keyType": key_type_dump})
         return Variable(**patched)
 
 
@@ -276,7 +286,7 @@ class AttributeVariable(Variable): ...
 
 class TemporalEnd(CamelModel):
     description: str
-    successors: Optional[List[str]] = None
+    successors: list[str] | None = None
 
 
 class Metadata(CamelModel):
@@ -285,21 +295,21 @@ class Metadata(CamelModel):
     language_code: str
     sensitivity_level: str
     population_description: str
-    subject_fields: List[str]
+    subject_fields: list[str]
     temporal_coverage: TimePeriod
     measure_variable: MeasureVariable
-    identifier_variables: List[IdentifierVariable]
-    attribute_variables: List[AttributeVariable]
-    temporal_status_dates: Optional[List[int]] = None
-    temporal_end: Optional[TemporalEnd] = None
+    identifier_variables: list[IdentifierVariable]
+    attribute_variables: list[AttributeVariable]
+    temporal_status_dates: list[int] | None = None
+    temporal_end: TemporalEnd | None = None
 
     def get_identifier_key_type_name(self) -> str | None:
         return self.identifier_variables[0].get_key_type_name()
 
-    def get_measure_key_type_name(self):
+    def get_measure_key_type_name(self) -> str | None:
         return self.measure_variable.get_key_type_name()
 
-    def patch(self, other: "Metadata") -> "Metadata":
+    def patch(self, other: "Metadata | None") -> "Metadata":
         if other is None:
             raise PatchingError("Can not patch with NoneType Metadata")
         if (

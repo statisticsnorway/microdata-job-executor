@@ -1,17 +1,16 @@
-import os
 import json
+import os
 import shutil
 from pathlib import Path
 
-import pytest
 import pyarrow
-from pyarrow import parquet, dataset
+import pytest
+from pyarrow import dataset, parquet
 
+from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError
 from job_executor.model import Metadata
 from job_executor.worker.steps import dataset_pseudonymizer
-from job_executor.adapter import pseudonym_service
-
 
 TABLE_SIZE = 1000
 UNIT_ID_INPUT = [f"i{count}" for count in range(TABLE_SIZE)]
@@ -265,8 +264,8 @@ def test_pseudonymizer_invalid_unit_id_type():
 # In Parquet, the physical type refers to how the data is stored.
 # INT32 and INT16 are both physically stored as INT32 in Parquet files.
 # The logical type can provide additional context about the data.
-# For example, it can tell you that a certain INT32 physical column is to be interpreted
-# as a INT16 logical type.
+# For example, it can tell you that a certain INT32 physical column is to be
+# interpreted as a INT16 logical type.
 def _verify_parquet_schema(parquet_file_path, expected_types):
     """
     Checks the logical type of each column in the parquet file to make sure

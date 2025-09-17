@@ -1,7 +1,9 @@
-import os
 import json
+import os
 import shutil
+
 import pytest
+
 from job_executor.exception import (
     BumpException,
     ExistingDraftException,
@@ -9,8 +11,8 @@ from job_executor.exception import (
 )
 from job_executor.model import (
     DatastoreVersion,
-    DraftVersion,
     DataStructureUpdate,
+    DraftVersion,
 )
 
 
@@ -85,14 +87,14 @@ def test_get_dataset_release_status():
 
 
 def test_draft_version():
-    draft_version = DraftVersion()
+    draft_version = DraftVersion()  # type: ignore
     assert draft_version.model_dump(
         by_alias=True, exclude_none=True
     ) == load_json(DRAFT_VERSION_PATH)
 
 
 def test_draft_version_delete_draft():
-    draft_version = DraftVersion()
+    draft_version = DraftVersion()  # type: ignore
     release_time = draft_version.release_time
     version = draft_version.version
     draft_version.delete_draft("BRUTTO_INNTEKT")
@@ -111,28 +113,26 @@ def test_draft_version_delete_draft():
 
 
 def test_add_draft_version_already_existing_dataset():
-    draft_version = DraftVersion()
+    draft_version = DraftVersion()  # type: ignore
     with pytest.raises(ExistingDraftException) as e:
         draft_version.add(
             DataStructureUpdate(
                 name="UTDANNING",
                 description="",
                 operation="ADD",
-                releaseStatus="DRAFT",
+                release_status="DRAFT",
             )
         )
     assert "Draft for UTDANNING already exists" in str(e)
 
 
 def test_draft_version_validate_bump_manifesto():
-    draft_version = DraftVersion()
+    draft_version = DraftVersion()  # type: ignore
 
     bump_manifesto = DatastoreVersion(**DRAFT_VERSION_IDENTICAL)
     assert draft_version.validate_bump_manifesto(bump_manifesto)
 
-    bump_manifesto_only_pending = DatastoreVersion(
-        **DRAFT_VERSION_ONLY_PENDING
-    )
+    bump_manifesto_only_pending = DatastoreVersion(**DRAFT_VERSION_ONLY_PENDING)
     assert draft_version.validate_bump_manifesto(bump_manifesto_only_pending)
 
     bump_manifesto_added_pending = DatastoreVersion(
@@ -144,7 +144,7 @@ def test_draft_version_validate_bump_manifesto():
 
 
 def test_draft_version_release_pending():
-    draft_version = DraftVersion()
+    draft_version = DraftVersion()  # type: ignore
     release_time = draft_version.release_time
     version = draft_version.version
     updates, update_type = draft_version.release_pending()
@@ -167,7 +167,7 @@ def test_draft_version_release_pending():
 
 
 def test_set_draft_release_status():
-    draft_version = DraftVersion()
+    draft_version = DraftVersion()  # type: ignore
     release_time = draft_version.release_time
     version = draft_version.version
     draft_version.set_draft_release_status("UTDANNING", "PENDING_RELEASE")

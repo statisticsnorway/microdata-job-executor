@@ -51,7 +51,7 @@ def teardown_function():
     shutil.move(f"{WORKING_DIR}_backup", WORKING_DIR)
 
 
-def test_partitioner(mocker):
+def test_partitioner():
     dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
     dataset_partitioner.run(dataset_path, "input")
     output_dir = dataset_path.parent / "input__DRAFT"
@@ -69,7 +69,7 @@ def test_partitioner(mocker):
         assert len(files) == 1
 
         # 3. column names are the same except for the partition column
-        table_whole_year = pyarrow.parquet.read_table(partition_path)
+        table_whole_year = pyarrow.parquet.read_table(partition_path)  # type: ignore
         assert table_whole_year.column_names == [
             "unit_id",
             "value",
@@ -78,7 +78,7 @@ def test_partitioner(mocker):
         ]
 
         # 4. Load the parquet file and check its length
-        table_from_partition = pyarrow.parquet.read_table(files[0])
+        table_from_partition = pyarrow.parquet.read_table(files[0])  # type: ignore
         assert len(table_from_partition) == 1000  # Each year has 1000 records
 
         # 5. Check if start_epoch_days is within the correct start_year
@@ -96,7 +96,7 @@ def test_partitioner(mocker):
             raise AssertionError(f"Unexpected year: {year}")
 
 
-def test_partitioner_missing_start_year(mocker):
+def test_partitioner_missing_start_year():
     # remove start_year column from input table
     input_table = INPUT_TABLE.remove_column(2)
     parquet.write_table(

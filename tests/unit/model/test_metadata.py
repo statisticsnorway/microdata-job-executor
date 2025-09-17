@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 
-from job_executor.model import MetadataAll, Metadata
+from job_executor.model import Metadata, MetadataAll
 
 
 def load_json(file_path):

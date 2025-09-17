@@ -13,9 +13,7 @@ def test_transform_identifier():
     assert transformed_identifier["dataType"] == "Long"
 
     # test that not pseudonymized variable keeps dataType
-    assert (
-        test_data.BK_HELSTASJONSKONSULTASJON_IDENTIFIER["dataType"] == "LONG"
-    )
+    assert test_data.BK_HELSTASJONSKONSULTASJON_IDENTIFIER["dataType"] == "LONG"
     transformed_identifier = dataset_transformer._transform_variable(
         test_data.BK_HELSTASJONSKONSULTASJON_IDENTIFIER,
         "Identifier",

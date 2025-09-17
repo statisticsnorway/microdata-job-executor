@@ -1,18 +1,16 @@
 import logging
 from pathlib import Path
-from typing import Tuple
 
 from microdata_tools import validate_dataset, validate_metadata
 
-from job_executor.exception import BuilderStepError
 from job_executor.config import environment
-
+from job_executor.exception import BuilderStepError
 
 logger = logging.getLogger()
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
 
 
-def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
+def run_for_dataset(dataset_name: str) -> tuple[Path, Path]:
     """
     Validates the data and metadata file in the working_directory
     using the microdata-tools.
@@ -37,8 +35,9 @@ def run_for_dataset(dataset_name: str) -> Tuple[Path, Path]:
         logger.error("Dataset failed validation with microdata-tools")
         raise BuilderStepError(
             "Failed to validate dataset. "
-            "Resolve errors with the microdata-tools validator before uploading. "
-            "Remember to update to the latest version of microdata-tools. "
+            "Resolve errors with the microdata-tools validator before "
+            "uploading. Remember to update to the latest version of "
+            "microdata-tools. "
         )
 
     return (
@@ -58,8 +57,8 @@ def run_for_metadata(dataset_name: str) -> Path:
     try:
         validation_errors = validate_metadata(
             dataset_name,
-            input_directory=WORKING_DIR,
-            working_directory=WORKING_DIR,
+            input_directory=str(WORKING_DIR),
+            working_directory=str(WORKING_DIR),
             keep_temporary_files=True,
         )
 
@@ -72,7 +71,8 @@ def run_for_metadata(dataset_name: str) -> Path:
         logger.error("Dataset failed validation with microdata-tools")
         raise BuilderStepError(
             "Failed to validate metadata. "
-            "Resolve errors with the microdata-tools validator before uploading."
-            "Remember to update to the latest version of microdata-tools. "
+            "Resolve errors with the microdata-tools validator before "
+            "uploading. Remember to update to the latest version of "
+            "microdata-tools. "
         )
     return WORKING_DIR / f"{dataset_name}.json"

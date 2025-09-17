@@ -1,15 +1,13 @@
 import json
 import os
 import shutil
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Union
 
 from pydantic import ValidationError
 
 from job_executor.config import environment
 from job_executor.exception import LocalStorageError
-
 
 WORKING_DIR = Path(environment.get("WORKING_DIR"))
 DATASTORE_DIR = Path(environment.get("DATASTORE_DIR"))
@@ -75,7 +73,7 @@ def make_dataset_dir(dataset_name: str) -> None:
     os.makedirs(DATASTORE_DIR / f"data/{dataset_name}", exist_ok=True)
 
 
-def get_data_versions(version: Union[str, None]) -> dict:
+def get_data_versions(version: str | None) -> dict:
     """
     Returns the data_versions json file for the given version as a dict.
     Returns an empty dictionary if given version is None.
@@ -90,7 +88,7 @@ def get_data_versions(version: Union[str, None]) -> dict:
     )
 
 
-def write_data_versions(data_versions: dict, version: str):
+def write_data_versions(data_versions: dict, version: str) -> None:
     """
     Writes given dict to a new data versions json file to the appropriate
     datastore directory named with the given version.
@@ -149,12 +147,10 @@ def get_metadata_all(version: str) -> dict:
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
                      or 'DRAFT'
     """
-    return _read_json(
-        DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
-    )
+    return _read_json(DATASTORE_DIR / f"datastore/metadata_all__{version}.json")
 
 
-def write_metadata_all(metadata_all: dict, version: str):
+def write_metadata_all(metadata_all: dict, version: str) -> None:
     """
     Writes given dict to a metadata all json file to the appropriate
     datastore directory named with the given version.
@@ -172,13 +168,13 @@ def write_metadata_all(metadata_all: dict, version: str):
         _write_json(metadata_all, file_path)
 
 
-def write_working_dir_metadata(dataset_name: str, metadata: Dict) -> None:
+def write_working_dir_metadata(dataset_name: str, metadata: dict) -> None:
     """
     Writes a json to a the working directory as the processed metadata file
     named: {dataset_name}__DRAFT.json
 
     * dataset_name: str - name of dataset
-    * metadata: Dict - dictionary to write as json
+    * metadata: dict - dictionary to write as json
     """
     _write_json(metadata, WORKING_DIR / f"{dataset_name}__DRAFT.json")
 
@@ -237,9 +233,7 @@ def move_working_dir_parquet_to_datastore(dataset_name: str) -> None:
 
     * dataset_name: str - name of dataset
     """
-    working_dir_parquet_path = _get_working_dir_draft_parquet_path(
-        dataset_name
-    )
+    working_dir_parquet_path = _get_working_dir_draft_parquet_path(dataset_name)
     shutil.move(
         working_dir_parquet_path,
         (
@@ -274,9 +268,7 @@ def delete_working_dir_file(file_path: Path) -> None:
     * file_name: str - name of temporary file
     """
     if not str(file_path).startswith(str(WORKING_DIR)):
-        raise LocalStorageError(
-            f"Filepath {file_path} is not in {WORKING_DIR}"
-        )
+        raise LocalStorageError(f"Filepath {file_path} is not in {WORKING_DIR}")
     if file_path.is_file():
         os.remove(file_path)
 
@@ -322,7 +314,7 @@ def save_temporary_backup() -> None:
     )
 
 
-def restore_from_temporary_backup() -> Union[str, None]:
+def restore_from_temporary_backup() -> str | None:
     """
     Restores the datastore from the tmp directory.
     Raises `LocalStorageError`if there are any missing backup files.
@@ -355,7 +347,7 @@ def restore_from_temporary_backup() -> Union[str, None]:
         raise LocalStorageError("Invalid backup file") from e
 
 
-def archive_temporary_backup() -> Union[None, LocalStorageError]:
+def archive_temporary_backup() -> None:
     """
     Archives the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files
@@ -380,7 +372,7 @@ def archive_temporary_backup() -> Union[None, LocalStorageError]:
     shutil.move(DATASTORE_DIR / "tmp", ARCHIVE_DIR / f"tmp_{timestamp}")
 
 
-def delete_temporary_backup() -> Union[None, LocalStorageError]:
+def delete_temporary_backup() -> None:
     """
     Deletes the tmp directory within the datastore if the directory
     exists. Raises `LocalStorageError` if there are any unrecognized files
@@ -412,7 +404,7 @@ def temporary_backup_exists() -> bool:
     return os.path.isdir(tmp_dir)
 
 
-def archive_draft_version(version: str):
+def archive_draft_version(version: str) -> None:
     """
     Archives the current draft json
     * dataset_name: str - name of dataset draft
@@ -428,7 +420,7 @@ def archive_draft_version(version: str):
     shutil.copyfile(DRAFT_VERSION_PATH, archived_draft_version_path)
 
 
-def archive_input_files(dataset_name: str):
+def archive_input_files(dataset_name: str) -> None:
     """
     Archives the input .tar files if not already archived
     """
@@ -442,7 +434,7 @@ def archive_input_files(dataset_name: str):
         shutil.move(str(tar_file), str(archive_dir))
 
 
-def delete_archived_input(dataset_name: str):
+def delete_archived_input(dataset_name: str) -> None:
     """
     Delete the archived .tar file from the archive directory.
     """

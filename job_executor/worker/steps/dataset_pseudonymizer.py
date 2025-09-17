@@ -1,12 +1,11 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import microdata_tools
 import pyarrow
 from microdata_tools.validation.exceptions import UnregisteredUnitTypeError
 from microdata_tools.validation.model.metadata import UnitIdType, UnitType
-from pyarrow import dataset, compute, parquet
+from pyarrow import compute, dataset, parquet
 
 from job_executor.adapter import pseudonym_service
 from job_executor.exception import BuilderStepError
@@ -17,7 +16,7 @@ logger = logging.getLogger()
 
 def _get_unit_types(
     metadata: Metadata,
-) -> Tuple[str | None, str | None]:
+) -> tuple[str | None, str | None]:
     """
     Extracts the identifier & measure unit type from the metadata.
     """
@@ -30,9 +29,9 @@ def _get_unit_types(
 def _fetch_column_pseudonyms(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: Union[None, UnitIdType],
+    unit_id_type: UnitIdType | None,
     job_id: str,
-) -> Optional[List[str]]:
+) -> list[str] | None:
     """
     Pseudonymizes a column if a pseudonymizable unit ID type is provided.
     Returns None otherwise.
@@ -43,7 +42,7 @@ def _fetch_column_pseudonyms(
     identifiers_table = input_dataset.to_table(columns=[column_name])
 
     string_identifiers = identifiers_table[column_name].cast(pyarrow.string())
-    unique_identifiers = compute.unique(string_identifiers).to_pylist()
+    unique_identifiers = compute.unique(string_identifiers).to_pylist()  # type: ignore
 
     identifier_to_pseudonym = pseudonym_service.pseudonymize(
         unique_identifiers, unit_id_type, job_id
@@ -60,7 +59,7 @@ def _fetch_column_pseudonyms(
 def _get_column_pseudonyms_array(
     input_dataset: dataset.FileSystemDataset,
     column_name: str,
-    unit_id_type: Optional[UnitIdType],
+    unit_id_type: UnitIdType | None,
     job_id: str,
 ) -> pyarrow.Array:
     """
@@ -97,8 +96,8 @@ def _get_regular_column(
 
 def _pseudonymize(
     input_parquet_path: Path,
-    identifier_unit_id_type: Optional[UnitIdType],
-    measure_unit_id_type: Optional[UnitIdType],
+    identifier_unit_id_type: UnitIdType | None,
+    measure_unit_id_type: UnitIdType | None,
     job_id: str,
 ) -> pyarrow.Table:
     input_dataset = dataset.dataset(input_parquet_path)
@@ -139,13 +138,15 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
     """
     Pseudonymizes the identifier & measure column of the dataset if.
 
-    First extracts and validate the identifier unit type and measure unit type from
-    the metadata using microdata_tools/validator.
+    First extracts and validate the identifier unit type and measure unit type
+    from the metadata using microdata_tools/validator.
 
-    If valid unit types are provided, the unique values in the identifier & measure column
-    are extracted and pseudonymized using the external pseudonym service.
+    If valid unit types are provided, the unique values in the identifier &
+    measure column are extracted and pseudonymized using the external
+    pseudonym service.
 
-    Finally all values in the identifier & measure column are replaced with the pseudonyms
+    Finally all values in the identifier & measure column are replaced with
+    the pseudonyms.
     """
     try:
         logger.info(f"Pseudonymizing data {input_parquet_path}")
@@ -186,8 +187,6 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
         ) from e
 
     except Exception as e:
-        logger.exception(
-            "Error stacktrace during pseudonymization", exc_info=e
-        )
+        logger.exception("Error stacktrace during pseudonymization", exc_info=e)
         logger.error(f"Error during pseudonymization: {str(e)}")
         raise BuilderStepError("Failed to pseudonymize dataset") from e

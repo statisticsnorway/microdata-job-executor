@@ -1,15 +1,16 @@
-import os
 import json
+import os
 import shutil
 from pathlib import Path
+
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.model import Datastore
+from job_executor.domain.datastore import Datastore
 from job_executor.model import DatastoreVersion
 
 JOB_SERVICE_URL = os.getenv("JOB_SERVICE_URL")
 JOB_ID = "123-123-123-123"
-DATASTORE_DIR = Path(os.getenv("DATASTORE_DIR"))
+DATASTORE_DIR = Path(os.getenv("DATASTORE_DIR"))  # type: ignore
 UTDANNING_DATA_DIR = DATASTORE_DIR / "data" / "UTDANNING"
 DATASTORE_INFO_DIR = DATASTORE_DIR / "datastore"
 DATASTORE_VERSIONS = DATASTORE_INFO_DIR / "datastore_versions.json"

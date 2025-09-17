@@ -3,15 +3,14 @@ import os
 import shutil
 from multiprocessing import Queue
 from pathlib import Path
-from microdata_tools import package_dataset
 
+from microdata_tools import package_dataset
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.config import environment
 from job_executor.adapter.local_storage import INPUT_DIR
+from job_executor.config import environment
 from job_executor.worker.build_metadata_worker import run_worker
 from tests.unit.worker.test_build_dataset_worker import _create_rsa_public_key
-
 
 RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 

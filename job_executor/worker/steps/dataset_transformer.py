@@ -1,6 +1,5 @@
 import logging
-from datetime import datetime, UTC
-from typing import Dict, List, Union
+from datetime import UTC, datetime
 
 from job_executor.exception import BuilderStepError
 from job_executor.model.metadata import DATA_TYPES_MAPPING
@@ -28,9 +27,7 @@ def _get_variable_role(attribute_type: str) -> str:
     )
 
 
-def _get_temporal_coverage(
-    start: Union[None, str], stop: Union[None, str]
-) -> dict:
+def _get_temporal_coverage(start: str | None, stop: str | None) -> dict:
     period = {"start": start if start is None else _days_since_epoch(start)}
     if stop:
         period["stop"] = _days_since_epoch(stop)
@@ -49,7 +46,7 @@ def _transform_temporal_status_dates(status_dates: list | None) -> list | None:
     )
 
 
-def _transform_subject_fields(subject_fields: list[list[dict]]) -> List[str]:
+def _transform_subject_fields(subject_fields: list[list[dict]]) -> list[str]:
     return [
         _get_norwegian_text(subject_field) for subject_field in subject_fields
     ]
@@ -62,15 +59,11 @@ def _represented_variables_from_description(
         {
             "description": description,
             "validPeriod": {
-                "start": (
-                    start if start is None else _days_since_epoch(start)
-                ),
+                "start": (start if start is None else _days_since_epoch(start)),
                 "stop": (stop if stop is None else _days_since_epoch(stop)),
             },
             "valueDomain": {
-                "description": _get_norwegian_text(
-                    value_domain["description"]
-                ),
+                "description": _get_norwegian_text(value_domain["description"]),
                 "unitOfMeasure": _get_norwegian_text(
                     value_domain.get(
                         "measurementUnitDescription",
@@ -201,7 +194,9 @@ def _create_represented_variables(
         )
 
 
-def _transform_variable(variable: dict, role: str, start: str, stop: str):
+def _transform_variable(
+    variable: dict, role: str, start: str, stop: str
+) -> dict:
     variable_description = (
         _get_norwegian_text(variable["description"])
         if "description" in variable
@@ -241,7 +236,9 @@ def _transform_variable(variable: dict, role: str, start: str, stop: str):
     return transformed_variable
 
 
-def _transform_attribute_variables(metadata: dict, start: str, stop: str):
+def _transform_attribute_variables(
+    metadata: dict, start: str, stop: str
+) -> list[dict]:
     attributes = [
         next(
             (
@@ -272,7 +269,7 @@ def _transform_attribute_variables(metadata: dict, start: str, stop: str):
     ]
 
 
-def _transform_temporal_end(temporal_end: dict):
+def _transform_temporal_end(temporal_end: dict) -> dict[str, str]:
     temporal_end_result = {
         "description": _get_norwegian_text(temporal_end["description"])
     }
@@ -284,7 +281,7 @@ def _transform_temporal_end(temporal_end: dict):
     return temporal_end_result
 
 
-def _transform_metadata(metadata: Dict) -> Dict:
+def _transform_metadata(metadata: dict) -> dict:
     logger.info("Transforming metadata")
     # These values are found by going through the data file.
     # When we do transformation of metadata alone, we do not
@@ -330,7 +327,7 @@ def _transform_metadata(metadata: Dict) -> Dict:
     return transformed
 
 
-def run(metadata: Dict) -> Dict:
+def run(metadata: dict) -> dict:
     """
     Transforms a metadatafile from the input model to the SIKT
     metadata model that is stored in the datastore.

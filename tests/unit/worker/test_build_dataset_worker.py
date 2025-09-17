@@ -1,19 +1,17 @@
 import os
 import shutil
-from pathlib import Path
 from multiprocessing import Queue
+from pathlib import Path
 
-from requests_mock import Mocker as RequestsMocker
-
-from job_executor.config import environment
-from job_executor.adapter.local_storage import INPUT_DIR
-from job_executor.worker.build_dataset_worker import run_worker
-
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
-
 from microdata_tools import package_dataset
+from requests_mock import Mocker as RequestsMocker
+
+from job_executor.adapter.local_storage import INPUT_DIR
+from job_executor.config import environment
+from job_executor.worker.build_dataset_worker import run_worker
 
 RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
 
@@ -332,9 +330,7 @@ def test_import_no_pseudonymization(requests_mock: RequestsMocker):
     assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
     assert not os.path.exists(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
     assert not os.path.isfile(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.csv")
-    assert not os.path.isfile(
-        f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.json"
-    )
+    assert not os.path.isfile(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}.json")
     assert os.path.isdir(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}__DRAFT")
     assert os.path.isfile(
         f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}__DRAFT.json"
@@ -360,7 +356,6 @@ def test_import_no_pseudonymization_no_partitioning(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     run_worker(JOB_ID, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())
-    print(os.listdir(f"{WORKING_DIR}"))
     assert not os.path.exists(
         f"{INPUT_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}.tar"
     )

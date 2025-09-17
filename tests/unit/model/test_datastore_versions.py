@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import shutil
 
 from job_executor.model import DatastoreVersions, DataStructureUpdate
@@ -26,14 +26,14 @@ def teardown_function():
 
 
 def test_datastore_versions():
-    datastore_versions = DatastoreVersions()
+    datastore_versions = DatastoreVersions()  # type: ignore
     assert datastore_versions.model_dump(
         by_alias=True, exclude_none=True
     ) == load_json(DATASTORE_VERSIONS_PATH)
 
 
 def test_add_new_release_version():
-    datastore_versions = DatastoreVersions()
+    datastore_versions = DatastoreVersions()  # type: ignore
     datastore_versions.add_new_release_version(
         [
             DataStructureUpdate(
@@ -50,13 +50,11 @@ def test_add_new_release_version():
 
 
 def test_get_dataset_release_status():
-    datastore_versions = DatastoreVersions()
+    datastore_versions = DatastoreVersions()  # type: ignore
     assert (
         datastore_versions.get_dataset_release_status("SIVSTAND") == "RELEASED"
     )
-    assert (
-        datastore_versions.get_dataset_release_status("INNTEKT") == "DELETED"
-    )
+    assert datastore_versions.get_dataset_release_status("INNTEKT") == "DELETED"
     assert (
         datastore_versions.get_dataset_release_status("DOES_NOT_EXIST") is None
     )

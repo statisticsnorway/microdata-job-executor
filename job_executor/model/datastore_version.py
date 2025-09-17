@@ -1,10 +1,8 @@
-from typing import List, Union, Tuple
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+from typing import Iterator
 
 from pydantic import model_validator
 
-from job_executor.model.camelcase_model import CamelModel
-from job_executor.model.data_structure_update import DataStructureUpdate
 from job_executor.adapter import local_storage
 from job_executor.exception import (
     BumpException,
@@ -12,6 +10,8 @@ from job_executor.exception import (
     NoSuchDraftException,
     UnnecessaryUpdateException,
 )
+from job_executor.model.camelcase_model import CamelModel
+from job_executor.model.data_structure_update import DataStructureUpdate
 
 
 class DatastoreVersion(CamelModel):
@@ -19,10 +19,10 @@ class DatastoreVersion(CamelModel):
     description: str
     release_time: int
     language_code: str
-    update_type: Union[str, None]
-    data_structure_updates: List[DataStructureUpdate]
+    update_type: str | None
+    data_structure_updates: list[DataStructureUpdate]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[DataStructureUpdate]:  # type: ignore
         return iter(
             [
                 DataStructureUpdate(
@@ -32,7 +32,7 @@ class DatastoreVersion(CamelModel):
             ]
         )
 
-    def _get_current_epoch_seconds(self):
+    def _get_current_epoch_seconds(self) -> int:
         return int(
             (
                 datetime.now(UTC).replace(tzinfo=None)
@@ -40,7 +40,7 @@ class DatastoreVersion(CamelModel):
             ).total_seconds()
         )
 
-    def _calculate_update_type(self):
+    def _calculate_update_type(self) -> None:
         pending_operations = [
             update.operation
             for update in self.data_structure_updates
@@ -55,15 +55,13 @@ class DatastoreVersion(CamelModel):
         else:
             self.update_type = None
 
-    def get_dataset_release_status(
-        self, dataset_name: str
-    ) -> Union[str, None]:
+    def get_dataset_release_status(self, dataset_name: str) -> str | None:
         for update in self.data_structure_updates:
             if update.name == dataset_name:
                 return update.release_status
         return None
 
-    def get_dataset_operation(self, dataset_name: str) -> Union[str, None]:
+    def get_dataset_operation(self, dataset_name: str) -> str | None:
         for update in self.data_structure_updates:
             if update.name == dataset_name:
                 return update.operation
@@ -81,10 +79,10 @@ class DatastoreVersion(CamelModel):
 class DraftVersion(DatastoreVersion):
     @model_validator(mode="before")
     @classmethod
-    def read_file(cls, _):
+    def read_file(cls, _):  # noqa
         return local_storage.get_draft_version()
 
-    def add(self, data_structure_update: DataStructureUpdate):
+    def add(self, data_structure_update: DataStructureUpdate) -> None:
         current_update_names = [update.name for update in self]
         if data_structure_update.name in current_update_names:
             raise ExistingDraftException(
@@ -106,8 +104,7 @@ class DraftVersion(DatastoreVersion):
         )
         if deleted_draft is None:
             raise NoSuchDraftException(
-                f"Can't delete draft for {dataset_name}"
-                " as no such draft exists"
+                f"Can't delete draft for {dataset_name} as no such draft exists"
             )
         self.data_structure_updates = [
             update
@@ -139,7 +136,7 @@ class DraftVersion(DatastoreVersion):
                 return False
         return True
 
-    def release_pending(self) -> Tuple[List[DataStructureUpdate], str]:
+    def release_pending(self) -> tuple[list[DataStructureUpdate], str]:
         if self.update_type is None:
             raise BumpException("No pending operations in draft version")
         draft_updates = []
@@ -156,10 +153,12 @@ class DraftVersion(DatastoreVersion):
         self._write_to_file()
         return pending_updates, update_type
 
-    def _write_to_file(self):
+    def _write_to_file(self) -> None:
         local_storage.write_draft_version(self.model_dump(by_alias=True))
 
-    def set_draft_release_status(self, dataset_name: str, new_status: str):
+    def set_draft_release_status(
+        self, dataset_name: str, new_status: str
+    ) -> None:
         dataset_update = next(
             update
             for update in self.data_structure_updates
@@ -176,7 +175,7 @@ class DraftVersion(DatastoreVersion):
         self._calculate_update_type()
         self._write_to_file()
 
-    def _set_release_time(self):
+    def _set_release_time(self) -> None:
         self.release_time = self._get_current_epoch_seconds()
         version_list = list(self.version.split("."))
         version_list[-1] = str(self.release_time)
