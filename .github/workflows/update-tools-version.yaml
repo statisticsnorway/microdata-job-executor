@@ -15,16 +15,16 @@ jobs:
         with:
           fetch-depth: 0  # Ensure the full history is fetched
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
-    
-    - name: Install the latest version of uv
-      uses: astral-sh/setup-uv@v6
-    
-    - name: Sync dependencies
-      run: uv sync
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Sync dependencies
+        run: uv sync
 
       - name: Check for New Version
         id: check_version
@@ -60,7 +60,7 @@ jobs:
             --base main \
             --head bump-microdata-tools-${{ steps.check_version.outputs.new_version }} \
             --title "Update microdata-tools to ${{ steps.check_version.outputs.new_version }}" \
-            --body "This PR updates microdata-tools to version ${{ steps.check_version.outputs.new_version }}." 
-        # --reviewer statisticsnorway/microdata-developers # Reviwer not found [should work according to docs](https://cli.github.com/manual/gh_pr_create)  
+            --body "This PR updates microdata-tools to version ${{ steps.check_version.outputs.new_version }}."
+        # --reviewer statisticsnorway/microdata-developers # Reviwer not found [should work according to docs](https://cli.github.com/manual/gh_pr_create)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
