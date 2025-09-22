@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from job_executor.exception import BuilderStepError
 from job_executor.model.metadata import DATA_TYPES_MAPPING
@@ -16,8 +16,8 @@ def _get_norwegian_text(multi_language_subject_field: list[dict]) -> str:
 
 
 def _days_since_epoch(date_string: str) -> int:
-    epoch = datetime.fromtimestamp(0, UTC).replace(tzinfo=None)
-    date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+    epoch = datetime.fromtimestamp(0, tz=timezone.utc)
+    date_obj = datetime.fromisoformat(date_string).replace(tzinfo=timezone.utc)
     return (date_obj - epoch).days
 
 
