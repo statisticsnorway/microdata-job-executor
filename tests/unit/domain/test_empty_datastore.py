@@ -5,6 +5,7 @@ from pathlib import Path
 
 from requests_mock import Mocker as RequestsMocker
 
+from job_executor.domain import datastore
 from job_executor.domain.datastore import Datastore
 from job_executor.model import DatastoreVersion
 
@@ -38,10 +39,12 @@ def test_bump_empty_datastore(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    datastore = Datastore()
+    test_datastore = Datastore()
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
-    datastore.bump_version(JOB_ID, bump_manifesto, "description")
+    datastore.bump_version(
+        test_datastore, JOB_ID, bump_manifesto, "description"
+    )
     assert len(requests_mock.request_history) == 2
     # check draft version after bump
     with open(DRAFT_VERSION, encoding="utf-8") as f:
