@@ -135,10 +135,12 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
         "releaseStatus": "DRAFT",
     } in draft_version["dataStructureUpdates"]
     assert draft_version["releaseTime"] > 1_000_000
-    assert any([
-        draft.name == DATASET_NAME
-        for draft in test_datastore.metadata_all_draft
-    ])
+    assert any(
+        [
+            draft.name == DATASET_NAME
+            for draft in test_datastore.metadata_all_draft
+        ]
+    )
 
 
 def test_change(requests_mock: RequestsMocker):
