@@ -509,3 +509,84 @@ class Datastore:
             self._log(job_id, "An unexpected error occured", "ERROR")
             self._log(job_id, str(e), "EXC", e)
             job_service.update_job_status(job_id, JobStatus.FAILED)
+
+
+def patch_metadata(
+    datastore: Datastore, job_id: str, dataset_name: str, description: str
+) -> None:
+    """
+    Patch metadata for a released dataset with updated metadata
+    file.
+    """
+    datastore.patch_metadata(job_id, dataset_name, description)
+
+
+def add(
+    datastore: Datastore, job_id: str, dataset_name: str, description: str
+) -> None:
+    """
+    Import metadata and data as draft for a new dataset that
+    has not been released in a previous versions.
+    """
+    datastore.add(job_id, dataset_name, description)
+
+
+def change(
+    datastore: Datastore, job_id: str, dataset_name: str, description: str
+) -> None:
+    """
+    Import metadata and data as draft for as an update
+    for a dataset that has already been released in a
+    previous version.
+    """
+    datastore.change(job_id, dataset_name, description)
+
+
+def remove(
+    datastore: Datastore, job_id: str, dataset_name: str, description: str
+) -> None:
+    """
+    Remove a released dataset that has been released in
+    a previous version from future versions of the datastore.
+    """
+    datastore.remove(job_id, dataset_name, description)
+
+
+def delete_draft(
+    datastore: Datastore, job_id: str, dataset_name: str, rollback_remove: bool
+) -> None:
+    """
+    Delete a dataset from the draft version of the datastore.
+    """
+    datastore.delete_draft(job_id, dataset_name, rollback_remove)
+
+
+def set_draft_release_status(
+    datastore: Datastore, job_id: str, dataset_name: str, new_status: str
+) -> None:
+    """
+    Set a new release status for a dataset in the draft version.
+    """
+    datastore.set_draft_release_status(job_id, dataset_name, new_status)
+
+
+def bump_version(
+    datastore: Datastore,
+    job_id: str,
+    bump_manifesto: DatastoreVersion,
+    description: str,
+) -> None:
+    """
+    Release a new version of the datastore with the pending
+    operations in the draft version of the datastore.
+    """
+    datastore.bump_version(job_id, bump_manifesto, description)
+
+
+def delete_archived_input(
+    datastore: Datastore, job_id: str, dataset_name: str
+) -> None:
+    """
+    Delete the archived dataset from archive directory.
+    """
+    datastore.delete_archived_input(job_id, dataset_name)
