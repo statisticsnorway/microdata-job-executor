@@ -2,7 +2,7 @@ import logging
 from multiprocessing import Process, Queue
 
 from job_executor.adapter import job_service
-from job_executor.domain import rollback
+from job_executor.domain import datastore, rollback
 from job_executor.domain.datastore import Datastore
 from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.worker import Worker
@@ -23,7 +23,10 @@ class Manager:
     """
 
     def __init__(
-        self, max_workers: int, max_bytes_all_workers: int, datastore: Datastore
+        self,
+        max_workers: int,
+        max_bytes_all_workers: int,
+        this_datastore: Datastore,
     ) -> None:
         """
         :param default_max_workers: The maximum number of workers
@@ -34,7 +37,7 @@ class Manager:
         """
         self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
-        self.datastore = datastore
+        self.datastore = this_datastore
         self.workers: list[Worker] = []
 
     @property
@@ -144,51 +147,65 @@ class Manager:
         # Ignoring a lot of types here as we already have done the validation
         # in the pydantic model.
         if operation == Operation.BUMP:
-            self.datastore.bump_version(
+            datastore.bump_version(
+                self.datastore,
                 job_id,
                 job.parameters.bump_manifesto,  # type: ignore
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.PATCH_METADATA:
-            self.datastore.patch_metadata(
+            datastore.patch_metadata(
+                self.datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.SET_STATUS:
-            self.datastore.set_draft_release_status(
+            datastore.set_draft_release_status(
+                self.datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.release_status,  # type: ignore
             )
         elif operation == Operation.ADD:
-            self.datastore.add(
+            datastore.add(
+                self.datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.CHANGE:
-            self.datastore.change(
+            datastore.change(
+                self.datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.REMOVE:
-            self.datastore.remove(
+            datastore.remove(
+                self.datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.ROLLBACK_REMOVE:
-            self.datastore.delete_draft(
-                job_id, job.parameters.target, rollback_remove=True
+            datastore.delete_draft(
+                self.datastore,
+                job_id,
+                job.parameters.target,
+                rollback_remove=True,
             )
         elif operation == Operation.DELETE_DRAFT:
-            self.datastore.delete_draft(
-                job_id, job.parameters.target, rollback_remove=False
+            datastore.delete_draft(
+                self.datastore,
+                job_id,
+                job.parameters.target,
+                rollback_remove=False,
             )
         elif operation == Operation.DELETE_ARCHIVE:
-            self.datastore.delete_archived_input(job_id, job.parameters.target)
+            datastore.delete_archived_input(
+                self.datastore, job_id, job.parameters.target
+            )
         else:
             job_service.update_job_status(
                 job.job_id, JobStatus.FAILED, log="Unknown operation for job"
