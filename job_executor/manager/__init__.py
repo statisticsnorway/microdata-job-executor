@@ -203,9 +203,7 @@ class Manager:
                 rollback_remove=False,
             )
         elif operation == Operation.DELETE_ARCHIVE:
-            datastore.delete_archived_input(
-                job_id, job.parameters.target
-            )
+            datastore.delete_archived_input(job_id, job.parameters.target)
         else:
             job_service.update_job_status(
                 job.job_id, JobStatus.FAILED, log="Unknown operation for job"

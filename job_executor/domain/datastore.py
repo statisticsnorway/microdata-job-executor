@@ -45,37 +45,39 @@ class Datastore:
                 **local_storage.get_metadata_all(self.latest_version_number)
             )
 
-    def get_release_status(self, dataset_name: str) -> str | None:
-        release_status = self.draft_version.get_dataset_release_status(
+
+def _get_release_status(datastore: Datastore, dataset_name: str) -> str | None:
+    release_status = datastore.draft_version.get_dataset_release_status(
+        dataset_name
+    )
+    return (
+        release_status
+        if release_status is not None
+        else datastore.datastore_versions.get_dataset_release_status(
             dataset_name
         )
-        return (
-            release_status
-            if release_status is not None
-            else self.datastore_versions.get_dataset_release_status(
-                dataset_name
-            )
-        )
+    )
 
-    def _generate_new_metadata_all(
-        self, new_version: str, new_version_metadata: list[Metadata]
-    ) -> None:
-        new_metadata_all_dict = self.metadata_all_draft.model_dump(
-            by_alias=True, exclude_none=True
-        )
-        del new_metadata_all_dict["dataStructures"]
-        new_metadata_all_dict["dataStructures"] = [
-            dataset.model_dump(by_alias=True, exclude_none=True)
-            for dataset in new_version_metadata
-        ]
-        new_metadata_all = MetadataAll(**new_metadata_all_dict)
-        local_storage.write_metadata_all(
-            new_metadata_all.model_dump(by_alias=True, exclude_none=True),
-            new_version,
-        )
-        self.metadata_all_latest = MetadataAll(
-            **local_storage.get_metadata_all(new_version)
-        )
+
+def _generate_new_metadata_all(
+    datastore: Datastore, new_version: str, new_version_metadata: list[Metadata]
+) -> None:
+    new_metadata_all_dict = datastore.metadata_all_draft.model_dump(
+        by_alias=True, exclude_none=True
+    )
+    del new_metadata_all_dict["dataStructures"]
+    new_metadata_all_dict["dataStructures"] = [
+        dataset.model_dump(by_alias=True, exclude_none=True)
+        for dataset in new_version_metadata
+    ]
+    new_metadata_all = MetadataAll(**new_metadata_all_dict)
+    local_storage.write_metadata_all(
+        new_metadata_all.model_dump(by_alias=True, exclude_none=True),
+        new_version,
+    )
+    datastore.metadata_all_latest = MetadataAll(
+        **local_storage.get_metadata_all(new_version)
+    )
 
 
 def _version_pending_operations(
@@ -158,7 +160,7 @@ def patch_metadata(
     try:
         logger.info(f"{job_id}: importing")
         job_service.update_job_status(job_id, JobStatus.IMPORTING)
-        dataset_release_status = datastore.get_release_status(dataset_name)
+        dataset_release_status = _get_release_status(datastore, dataset_name)
         if dataset_release_status != "RELEASED":
             raise VersioningException(
                 "Can't patch metadata of dataset with status "
@@ -218,7 +220,7 @@ def add(
     try:
         logger.info(f"{job_id}: importing")
         job_service.update_job_status(job_id, JobStatus.IMPORTING)
-        dataset_release_status = datastore.get_release_status(dataset_name)
+        dataset_release_status = _get_release_status(datastore, dataset_name)
         if dataset_release_status not in [None, "DELETED"]:
             raise VersioningException(
                 f"Can't add dataset with status {dataset_release_status}"
@@ -265,7 +267,7 @@ def change(
 
         logger.info(f"{job_id}: importing")
         job_service.update_job_status(job_id, JobStatus.IMPORTING)
-        dataset_release_status = datastore.get_release_status(dataset_name)
+        dataset_release_status = _get_release_status(datastore, dataset_name)
         if dataset_release_status != "RELEASED":
             raise VersioningException(
                 "Can't change data for dataset with release status"
@@ -307,7 +309,7 @@ def remove(
     """
     logger.info(f"{job_id}: initiated")
     job_service.update_job_status(job_id, JobStatus.INITIATED)
-    dataset_release_status = datastore.get_release_status(dataset_name)
+    dataset_release_status = _get_release_status(datastore, dataset_name)
     dataset_is_draft = datastore.draft_version.contains(dataset_name)
     dataset_operation = datastore.draft_version.get_dataset_operation(
         dataset_name
@@ -465,7 +467,9 @@ def bump_version(
             local_storage.write_data_versions(new_data_versions, new_version)
 
         logger.info(f"{job_id}: Writing new metadata_all to file")
-        datastore._generate_new_metadata_all(new_version, new_metadata_datasets)
+        _generate_new_metadata_all(
+            datastore, new_version, new_metadata_datasets
+        )
         datastore.latest_version_number = new_version
         assert datastore.metadata_all_latest is not None
 
