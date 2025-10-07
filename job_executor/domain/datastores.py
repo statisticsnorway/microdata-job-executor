@@ -29,9 +29,6 @@ class Datastore:
     latest_version_number: str | None
 
     def __init__(self) -> None:
-        self.refresh()
-
-    def refresh(self) -> None:
         self.draft_version = DraftVersion()  # type: ignore
         self.datastore_versions = DatastoreVersions()  # type: ignore
         self.latest_version_number = (
@@ -197,7 +194,6 @@ def patch_metadata(
             job_id, "PATCH_METADATA", dataset_name
         )
         job_service.update_job_status(job_id, JobStatus.FAILED, str(e))
-        datastore.refresh()
     except Exception as e:
         logger.error(f"{job_id}: An unexpected error occured")
         logger.exception(f"{job_id}: {str(e)}", exc_info=e)
@@ -205,7 +201,6 @@ def patch_metadata(
             job_id, "PATCH_METADATA", dataset_name
         )
         job_service.update_job_status(job_id, JobStatus.FAILED)
-        datastore.refresh()
 
 
 def add(
@@ -250,7 +245,6 @@ def add(
         logger.exception(f"{job_id}: {str(e)}", exc_info=e)
         rollback_manager_phase_import_job(job_id, "ADD", dataset_name)
         job_service.update_job_status(job_id, JobStatus.FAILED)
-        datastore.refresh()
 
 
 def change(
@@ -297,7 +291,6 @@ def change(
         logger.exception(f"{job_id}: {str(e)}", exc_info=e)
         rollback_manager_phase_import_job(job_id, "CHANGE", dataset_name)
         job_service.update_job_status(job_id, JobStatus.FAILED)
-        datastore.refresh()
 
 
 def remove(
@@ -491,7 +484,6 @@ def bump_version(
             bump_manifesto.model_dump(by_alias=True, exclude_none=True),
         )
         job_service.update_job_status(job_id, JobStatus.FAILED)
-        datastore.refresh()
 
 
 def delete_archived_input(job_id: str, dataset_name: str) -> None:
