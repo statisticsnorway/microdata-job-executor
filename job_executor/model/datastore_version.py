@@ -1,8 +1,6 @@
 from datetime import UTC, datetime
 from typing import Iterator
 
-from pydantic import model_validator
-
 from job_executor.adapter import local_storage
 from job_executor.exception import (
     BumpException,

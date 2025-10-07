@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 from requests_mock import Mocker as RequestsMocker
 
