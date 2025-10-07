@@ -2,8 +2,8 @@ import logging
 from multiprocessing import Process, Queue
 
 from job_executor.adapter import job_service
-from job_executor.domain import datastore, rollback
-from job_executor.domain.datastore import Datastore
+from job_executor.domain import datastores, rollback
+from job_executor.domain.datastores import Datastore
 from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
@@ -26,7 +26,6 @@ class Manager:
         self,
         max_workers: int,
         max_bytes_all_workers: int,
-        this_datastore: Datastore,
     ) -> None:
         """
         :param default_max_workers: The maximum number of workers
@@ -37,7 +36,6 @@ class Manager:
         """
         self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
-        self.datastore = this_datastore
         self.workers: list[Worker] = []
 
     @property
@@ -141,69 +139,70 @@ class Manager:
     def handle_manager_job(self, job: Job) -> None:
         job_id = job.job_id
         operation = job.parameters.operation
+        datastore = Datastore()
         self.unregister_worker(
             job_id
         )  # Filter out job from worker jobs if built
         # Ignoring a lot of types here as we already have done the validation
         # in the pydantic model.
         if operation == Operation.BUMP:
-            datastore.bump_version(
-                self.datastore,
+            datastores.bump_version(
+                datastore,
                 job_id,
                 job.parameters.bump_manifesto,  # type: ignore
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.PATCH_METADATA:
-            datastore.patch_metadata(
-                self.datastore,
+            datastores.patch_metadata(
+                datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.SET_STATUS:
-            datastore.set_draft_release_status(
-                self.datastore,
+            datastores.set_draft_release_status(
+                datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.release_status,  # type: ignore
             )
         elif operation == Operation.ADD:
-            datastore.add(
-                self.datastore,
+            datastores.add(
+                datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.CHANGE:
-            datastore.change(
-                self.datastore,
+            datastores.change(
+                datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.REMOVE:
-            datastore.remove(
-                self.datastore,
+            datastores.remove(
+                datastore,
                 job_id,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.ROLLBACK_REMOVE:
-            datastore.delete_draft(
-                self.datastore,
+            datastores.delete_draft(
+                datastore,
                 job_id,
                 job.parameters.target,
                 rollback_remove=True,
             )
         elif operation == Operation.DELETE_DRAFT:
-            datastore.delete_draft(
-                self.datastore,
+            datastores.delete_draft(
+                datastore,
                 job_id,
                 job.parameters.target,
                 rollback_remove=False,
             )
         elif operation == Operation.DELETE_ARCHIVE:
-            datastore.delete_archived_input(job_id, job.parameters.target)
+            datastores.delete_archived_input(job_id, job.parameters.target)
         else:
             job_service.update_job_status(
                 job.job_id, JobStatus.FAILED, log="Unknown operation for job"

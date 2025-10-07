@@ -14,7 +14,6 @@ def test_initial_state():
     manager = Manager(
         max_workers=4,
         max_bytes_all_workers=50 * 1024**3,
-        this_datastore=None,  # type: ignore
     )
 
     assert manager.current_total_size == 0
@@ -25,7 +24,6 @@ def test_can_spawn_worker():
     manager = Manager(
         max_workers=4,
         max_bytes_all_workers=50 * 1024**3,
-        this_datastore=None,  # type: ignore
     )
 
     can_spawn = manager.can_spawn_new_worker(new_job_size=1)
@@ -36,7 +34,6 @@ def test_cannot_spawn_worker_too_many_workers():
     manager = Manager(
         max_workers=4,
         max_bytes_all_workers=50 * 1024**3,
-        this_datastore=None,  # type: ignore
     )
 
     # Register 4 jobs
@@ -58,7 +55,6 @@ def test_cannot_spawn_worker_size_limit_reached():
     manager = Manager(
         max_workers=20,
         max_bytes_all_workers=TWENTY_GB,
-        this_datastore=None,  # type: ignore
     )
 
     large_job = Worker(
@@ -80,7 +76,6 @@ def test_oversized_jobs():
     manager = Manager(
         max_workers=4,
         max_bytes_all_workers=20 * 1024**3,
-        this_datastore=None,  # type: ignore
     )
 
     # This job will never be processed
@@ -104,7 +99,6 @@ def test_unregister_job():
     manager = Manager(
         max_workers=4,
         max_bytes_all_workers=50 * 1024**3,
-        this_datastore=None,  # type: ignore
     )
 
     # Register 4 jobs
