@@ -420,8 +420,8 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    test_datastore.set_draft_release_status(
-        JOB_ID, "INNTEKT", "PENDING_RELEASE"
+    datastore.set_draft_release_status(
+        test_datastore, JOB_ID, "INNTEKT", "PENDING_RELEASE"
     )
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))

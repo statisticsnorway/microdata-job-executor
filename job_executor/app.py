@@ -86,7 +86,7 @@ def main() -> None:
                 int(environment.get("MAX_GB_ALL_WORKERS"))
                 * 1024**3  # Covert from GB to bytes
             ),
-            datastore=Datastore(),
+            this_datastore=Datastore(),
         )
 
         while True:
