@@ -204,7 +204,7 @@ class Manager:
             )
         elif operation == Operation.DELETE_ARCHIVE:
             datastore.delete_archived_input(
-                self.datastore, job_id, job.parameters.target
+                job_id, job.parameters.target
             )
         else:
             job_service.update_job_status(
