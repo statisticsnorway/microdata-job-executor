@@ -77,11 +77,6 @@ class DatastoreVersion(CamelModel):
 
 
 class DraftVersion(DatastoreVersion):
-    @model_validator(mode="before")
-    @classmethod
-    def read_file(cls, _):  # noqa
-        return local_storage.get_draft_version()
-
     def add(self, data_structure_update: DataStructureUpdate) -> None:
         current_update_names = [update.name for update in self]
         if data_structure_update.name in current_update_names:

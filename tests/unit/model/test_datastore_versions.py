@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 
+from job_executor.adapter import local_storage
 from job_executor.model import DatastoreVersions, DataStructureUpdate
 
 
@@ -26,14 +27,18 @@ def teardown_function():
 
 
 def test_datastore_versions():
-    datastore_versions = DatastoreVersions()  # type: ignore
+    datastore_versions = DatastoreVersions.model_validate(
+        local_storage.get_datastore_versions()
+    )
     assert datastore_versions.model_dump(
         by_alias=True, exclude_none=True
     ) == load_json(DATASTORE_VERSIONS_PATH)
 
 
 def test_add_new_release_version():
-    datastore_versions = DatastoreVersions()  # type: ignore
+    datastore_versions = DatastoreVersions.model_validate(
+        local_storage.get_datastore_versions()
+    )
     datastore_versions.add_new_release_version(
         [
             DataStructureUpdate(
@@ -50,7 +55,9 @@ def test_add_new_release_version():
 
 
 def test_get_dataset_release_status():
-    datastore_versions = DatastoreVersions()  # type: ignore
+    datastore_versions = DatastoreVersions.model_validate(
+        local_storage.get_datastore_versions()
+    )
     assert (
         datastore_versions.get_dataset_release_status("SIVSTAND") == "RELEASED"
     )

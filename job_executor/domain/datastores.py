@@ -29,17 +29,23 @@ class Datastore:
     latest_version_number: str | None
 
     def __init__(self) -> None:
-        self.draft_version = DraftVersion()  # type: ignore
-        self.datastore_versions = DatastoreVersions()  # type: ignore
+        self.draft_version = DraftVersion.model_validate(
+            local_storage.get_draft_version()
+        )
+        self.datastore_versions = DatastoreVersions.model_validate(
+            local_storage.get_datastore_versions()
+        )
         self.latest_version_number = (
             self.datastore_versions.get_latest_version_number()
         )
-        self.metadata_all_draft = MetadataAllDraft()  # type: ignore
+        self.metadata_all_draft = MetadataAllDraft.model_validate(
+            local_storage.get_metadata_all("DRAFT")
+        )
         if self.latest_version_number is None:
             self.metadata_all_latest = None
         else:
-            self.metadata_all_latest = MetadataAll(
-                **local_storage.get_metadata_all(self.latest_version_number)
+            self.metadata_all_latest = MetadataAll.model_validate(
+                local_storage.get_metadata_all(self.latest_version_number)
             )
 
 

@@ -48,11 +48,6 @@ class MetadataAll(CamelModel):
 
 
 class MetadataAllDraft(MetadataAll):
-    @model_validator(mode="before")
-    @classmethod
-    def read_file(cls, _) -> dict:  # noqa
-        return local_storage.get_metadata_all("DRAFT")
-
     def _write_to_file(self) -> None:
         local_storage.write_metadata_all(
             self.model_dump(by_alias=True, exclude_none=True), "DRAFT"

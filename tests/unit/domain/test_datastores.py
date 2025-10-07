@@ -444,14 +444,12 @@ def test_failed_bump(
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    test_datastore.refresh = MagicMock(return_value=None)
     test_datastore.latest_version_number = Mock(side_effect=Exception())
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
     datastores.bump_version(
         test_datastore, JOB_ID, bump_manifesto, "description"
     )
-    test_datastore.refresh.assert_called_once()
 
 
 def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
