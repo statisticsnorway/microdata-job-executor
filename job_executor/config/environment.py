@@ -8,7 +8,7 @@ def _initialize_environment() -> dict:
         "DATASTORE_DIR": os.environ["DATASTORE_DIR"],
         "RSA_KEYS_DIRECTORY": os.environ["RSA_KEYS_DIRECTORY"],
         "PSEUDONYM_SERVICE_URL": os.environ["PSEUDONYM_SERVICE_URL"],
-        "JOB_SERVICE_URL": os.environ["JOB_SERVICE_URL"],
+        "DATASTORE_API_URL": os.environ["DATASTORE_API_URL"],
         "NUMBER_OF_WORKERS": int(os.environ["NUMBER_OF_WORKERS"]),
         "SECRETS_FILE": os.environ["SECRETS_FILE"],
         "DOCKER_HOST_NAME": os.environ["DOCKER_HOST_NAME"],

@@ -6,42 +6,20 @@ from requests import RequestException, Response
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
+from job_executor.adapter.datastore_api.models import (
+    Job,
+    JobQueryResult,
+    JobStatus,
+    MaintenanceStatus,
+    Operation,
+)
 from job_executor.config import environment
 from job_executor.exception import HttpRequestError, HttpResponseError
-from job_executor.model.job import Job, JobStatus, Operation
-from job_executor.model.maintenance_status import MaintenanceStatus
 
-JOB_SERVICE_URL = environment.get("JOB_SERVICE_URL")
+DATASTORE_API_URL = environment.get("DATASTORE_API_URL")
 DEFAULT_REQUESTS_TIMEOUT = (10, 60)  # (read timeout, connect timeout)
 
 logger = logging.getLogger()
-
-
-class JobQueryResult:
-    queued_worker_jobs: list[Job]
-    built_jobs: list[Job]
-    queued_manager_jobs: list[Job]
-
-    def __init__(
-        self,
-        queued_worker_jobs: list[Job] = [],
-        built_jobs: list[Job] = [],
-        queued_manager_jobs: list[Job] = [],
-    ) -> None:
-        self.queued_worker_jobs = queued_worker_jobs
-        self.built_jobs = built_jobs
-        self.queued_manager_jobs = queued_manager_jobs
-
-    @property
-    def available_jobs_count(self) -> int:
-        return (
-            len(self.queued_worker_jobs)
-            + len(self.built_jobs)
-            + len(self.queued_manager_jobs)
-        )
-
-    def queued_manager_and_built_jobs(self) -> list[Job]:
-        return self.queued_manager_jobs + self.built_jobs
 
 
 def get_jobs(
@@ -57,7 +35,7 @@ def get_jobs(
     if ignore_completed is not None:
         query_fields.append(f"ignoreCompleted={str(ignore_completed).lower()}")
 
-    request_url = f"{JOB_SERVICE_URL}/jobs"
+    request_url = f"{DATASTORE_API_URL}/jobs"
     if query_fields:
         request_url += f"?{'&'.join(query_fields)}"
 
@@ -71,19 +49,19 @@ def update_job_status(
     payload: dict[str, JobStatus | str] = {"status": str(new_status)}
     if log is not None:
         payload.update({"log": log})
-    execute_request("PUT", f"{JOB_SERVICE_URL}/jobs/{job_id}", json=payload)
+    execute_request("PUT", f"{DATASTORE_API_URL}/jobs/{job_id}", json=payload)
 
 
 def update_description(job_id: str, new_description: str) -> None:
     execute_request(
         "PUT",
-        f"{JOB_SERVICE_URL}/jobs/{job_id}",
+        f"{DATASTORE_API_URL}/jobs/{job_id}",
         json={"description": new_description},
     )
 
 
 def get_maintenance_status() -> MaintenanceStatus:
-    request_url = f"{JOB_SERVICE_URL}/maintenance-statuses/latest"
+    request_url = f"{DATASTORE_API_URL}/maintenance-statuses/latest"
     response = execute_request("GET", request_url, True)
     return MaintenanceStatus(**response.json())
 

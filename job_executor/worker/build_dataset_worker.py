@@ -4,11 +4,11 @@ from multiprocessing import Queue
 from pathlib import Path
 from time import perf_counter
 
-from job_executor.adapter import job_service, local_storage
+from job_executor.adapter import datastore_api, local_storage
+from job_executor.adapter.datastore_api.models import JobStatus
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
-from job_executor.model.job import JobStatus
 from job_executor.model.metadata import Metadata
 from job_executor.worker.steps import (
     dataset_decryptor,
@@ -61,10 +61,10 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
 
         local_storage.archive_input_files(dataset_name)
 
-        job_service.update_job_status(job_id, JobStatus.DECRYPTING)
+        datastore_api.update_job_status(job_id, JobStatus.DECRYPTING)
         dataset_decryptor.unpackage(dataset_name)
 
-        job_service.update_job_status(job_id, JobStatus.VALIDATING)
+        datastore_api.update_job_status(job_id, JobStatus.VALIDATING)
         (
             data_path,
             metadata_file_path,
@@ -73,10 +73,10 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
             dataset_name
         )
         description = input_metadata["dataRevision"]["description"][0]["value"]
-        job_service.update_description(job_id, description)
+        datastore_api.update_description(job_id, description)
 
         local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
-        job_service.update_job_status(job_id, JobStatus.TRANSFORMING)
+        datastore_api.update_job_status(job_id, JobStatus.TRANSFORMING)
         transformed_metadata_json = dataset_transformer.run(input_metadata)
         local_storage.write_working_dir_metadata(
             dataset_name, transformed_metadata_json
@@ -86,14 +86,14 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
 
         temporality_type = transformed_metadata.temporality
         if _dataset_requires_pseudonymization(input_metadata):
-            job_service.update_job_status(job_id, JobStatus.PSEUDONYMIZING)
+            datastore_api.update_job_status(job_id, JobStatus.PSEUDONYMIZING)
             pre_pseudonymized_data_path = data_path
             data_path = dataset_pseudonymizer.run(
                 data_path, transformed_metadata, job_id
             )
             local_storage.delete_working_dir_file(pre_pseudonymized_data_path)
 
-        job_service.update_job_status(job_id, JobStatus.PARTITIONING)
+        datastore_api.update_job_status(job_id, JobStatus.PARTITIONING)
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             dataset_partitioner.run(data_path, dataset_name)
             local_storage.delete_working_dir_file(data_path)
@@ -104,16 +104,16 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
             )
             os.rename(data_path, target_path)
         local_storage.delete_archived_input(dataset_name)
-        job_service.update_job_status(job_id, JobStatus.BUILT)
+        datastore_api.update_job_status(job_id, JobStatus.BUILT)
         logger.info("Dataset built successfully")
     except BuilderStepError as e:
         logger.error(str(e))
         _clean_working_dir(dataset_name)
-        job_service.update_job_status(job_id, JobStatus.FAILED, log=str(e))
+        datastore_api.update_job_status(job_id, JobStatus.FAILED, log=str(e))
     except HttpResponseError as e:
         logger.error(str(e))
         _clean_working_dir(dataset_name)
-        job_service.update_job_status(
+        datastore_api.update_job_status(
             job_id,
             JobStatus.FAILED,
             log="Failed due to communication errors in platform",
@@ -121,7 +121,7 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
     except Exception as e:
         logger.exception(e)
         _clean_working_dir(dataset_name)
-        job_service.update_job_status(
+        datastore_api.update_job_status(
             job_id,
             JobStatus.FAILED,
             log="Unexpected error when building dataset",

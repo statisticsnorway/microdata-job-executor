@@ -3,9 +3,8 @@ import os
 import pytest
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.adapter import job_service
-from job_executor.exception import HttpResponseError
-from job_executor.model.job import (
+from job_executor.adapter import datastore_api
+from job_executor.adapter.datastore_api.models import (
     Job,
     JobParameters,
     JobStatus,
@@ -13,8 +12,9 @@ from job_executor.model.job import (
     ReleaseStatus,
     UserInfo,
 )
+from job_executor.exception import HttpResponseError
 
-JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
+DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
 JOB_ID = "123"
 JOB_LIST = [
     Job(
@@ -49,22 +49,22 @@ ERROR_RESPONSE = "Internal Server Error"
 
 def test_get_jobs(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/jobs",
+        f"{DATASTORE_API_URL}/jobs",
         json=[
             job.model_dump(by_alias=True, exclude_none=True) for job in JOB_LIST
         ],
     )
-    jobs = job_service.get_jobs()
+    jobs = datastore_api.get_jobs()
     assert jobs == JOB_LIST
     assert len(requests_mock.request_history) == 1
 
 
 def test_update_job_status(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    job_service.update_job_status(JOB_ID, JobStatus.QUEUED)
-    job_service.update_job_status(JOB_ID, JobStatus.QUEUED, LOG_MESSAGE)
+    datastore_api.update_job_status(JOB_ID, JobStatus.QUEUED)
+    datastore_api.update_job_status(JOB_ID, JobStatus.QUEUED, LOG_MESSAGE)
     request_history = requests_mock.request_history
     assert len(request_history) == 2
     assert request_history[0].json() == {"status": "queued"}
@@ -76,9 +76,9 @@ def test_update_job_status(requests_mock: RequestsMocker):
 
 def test_update_description(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    job_service.update_description(JOB_ID, DESCRIPTION)
+    datastore_api.update_description(JOB_ID, DESCRIPTION)
     request_history = requests_mock.request_history
     assert len(request_history) == 1
     assert request_history[0].json() == {"description": DESCRIPTION}
@@ -86,45 +86,45 @@ def test_update_description(requests_mock: RequestsMocker):
 
 def test_no_connection(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/jobs", status_code=500, text=ERROR_RESPONSE
+        f"{DATASTORE_API_URL}/jobs", status_code=500, text=ERROR_RESPONSE
     )
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
         status_code=500,
         text=ERROR_RESPONSE,
     )
     with pytest.raises(HttpResponseError) as e:
-        job_service.get_jobs()
+        datastore_api.get_jobs()
     assert ERROR_RESPONSE in str(e)
     with pytest.raises(HttpResponseError) as e:
-        job_service.update_job_status(JOB_ID, JobStatus.QUEUED)
+        datastore_api.update_job_status(JOB_ID, JobStatus.QUEUED)
     assert ERROR_RESPONSE in str(e)
     with pytest.raises(HttpResponseError) as e:
-        job_service.update_description(JOB_ID, DESCRIPTION)
+        datastore_api.update_description(JOB_ID, DESCRIPTION)
     assert ERROR_RESPONSE in str(e)
 
 
 def test_get_maintenance_status(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/maintenance-statuses/latest",
+        f"{DATASTORE_API_URL}/maintenance-statuses/latest",
         json={
             "paused": False,
             "msg": "OK",
             "timestamp": "2023-05-08T06:31:00.519222",
         },
     )
-    maintenance_status = job_service.get_maintenance_status()
+    maintenance_status = datastore_api.get_maintenance_status()
     assert maintenance_status.paused is False
 
 
 def test_get_maintenance_status_error(requests_mock: RequestsMocker):
     requests_mock.get(
-        f"{JOB_SERVICE_URL}/maintenance-statuses/latest",
+        f"{DATASTORE_API_URL}/maintenance-statuses/latest",
         status_code=500,
         text=ERROR_RESPONSE,
     )
     with pytest.raises(HttpResponseError) as e:
-        job_service.get_maintenance_status()
+        datastore_api.get_maintenance_status()
     assert ERROR_RESPONSE in str(e)
 
 
@@ -133,7 +133,7 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
     [
         (
             True,
-            job_service.JobQueryResult(
+            datastore_api.JobQueryResult(
                 built_jobs=JOB_LIST,
                 queued_manager_jobs=[],
                 queued_worker_jobs=[],
@@ -141,7 +141,7 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
         ),
         (
             False,
-            job_service.JobQueryResult(
+            datastore_api.JobQueryResult(
                 built_jobs=JOB_LIST,
                 queued_manager_jobs=JOB_LIST,
                 queued_worker_jobs=JOB_LIST,
@@ -151,7 +151,7 @@ def test_get_maintenance_status_error(requests_mock: RequestsMocker):
 )
 def test_query_for_jobs(is_paused, expected_result, requests_mock, monkeypatch):
     monkeypatch.setattr(
-        "job_executor.adapter.job_service.is_system_paused", lambda: is_paused
+        "job_executor.adapter.datastore_api.is_system_paused", lambda: is_paused
     )
 
     # Always return built jobs even if system is paused
@@ -165,10 +165,10 @@ def test_query_for_jobs(is_paused, expected_result, requests_mock, monkeypatch):
             return JOB_LIST if not is_paused else []
 
     monkeypatch.setattr(
-        "job_executor.adapter.job_service.get_jobs", mock_get_jobs
+        "job_executor.adapter.datastore_api.get_jobs", mock_get_jobs
     )
 
-    result = job_service.query_for_jobs()
+    result = datastore_api.query_for_jobs()
     assert result.built_jobs == JOB_LIST
     if is_paused:
         assert result.queued_manager_jobs == []

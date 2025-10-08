@@ -7,6 +7,12 @@ from job_executor.model import DatastoreVersion
 from job_executor.model.camelcase_model import CamelModel
 
 
+class MaintenanceStatus(CamelModel):
+    paused: bool
+    msg: str
+    timestamp: str
+
+
 class JobStatus(StrEnum):
     QUEUED = "queued"
     INITIATED = "initiated"
@@ -87,3 +93,30 @@ class Job(CamelModel, use_enum_values=True):
     log: list[Log] | None = []
     created_at: str
     created_by: UserInfo
+
+
+class JobQueryResult:
+    queued_worker_jobs: list[Job]
+    built_jobs: list[Job]
+    queued_manager_jobs: list[Job]
+
+    def __init__(
+        self,
+        queued_worker_jobs: list[Job] = [],
+        built_jobs: list[Job] = [],
+        queued_manager_jobs: list[Job] = [],
+    ) -> None:
+        self.queued_worker_jobs = queued_worker_jobs
+        self.built_jobs = built_jobs
+        self.queued_manager_jobs = queued_manager_jobs
+
+    @property
+    def available_jobs_count(self) -> int:
+        return (
+            len(self.queued_worker_jobs)
+            + len(self.built_jobs)
+            + len(self.queued_manager_jobs)
+        )
+
+    def queued_manager_and_built_jobs(self) -> list[Job]:
+        return self.queued_manager_jobs + self.built_jobs

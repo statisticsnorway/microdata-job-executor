@@ -2,13 +2,13 @@ import logging
 import time
 from multiprocessing import Queue
 
-from job_executor.adapter import job_service, local_storage
+from job_executor.adapter import datastore_api, local_storage
+from job_executor.adapter.datastore_api.models import JobStatus
 from job_executor.config import environment
 from job_executor.config.log import initialize_logging_thread, setup_logging
 from job_executor.domain import rollback
 from job_executor.exception import StartupException
 from job_executor.manager import Manager
-from job_executor.model.job import JobStatus
 
 logger = logging.getLogger()
 setup_logging()
@@ -24,7 +24,7 @@ def initialize_app() -> None:
 
 
 def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
-    job_query_result = job_service.query_for_jobs()
+    job_query_result = datastore_api.query_for_jobs()
     manager.clean_up_after_dead_workers()
     if job_query_result.available_jobs_count:
         logger.info(
@@ -40,7 +40,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
         )
         if job_size == 0:
             logger.error(f"{job.job_id} Failed to get the size of the dataset.")
-            job_service.update_job_status(
+            datastore_api.update_job_status(
                 job.job_id,
                 JobStatus.FAILED,
                 log="No such dataset available for import",
@@ -50,7 +50,7 @@ def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
             logger.warning(
                 f"{job.job_id} Exceeded the maximum size for all workers."
             )
-            job_service.update_job_status(
+            datastore_api.update_job_status(
                 job.job_id,
                 JobStatus.FAILED,
                 log="Dataset too large for import",

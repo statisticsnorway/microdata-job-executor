@@ -12,7 +12,7 @@ from job_executor.model import DatastoreVersion
 from tests.unit.test_util import get_dir_list_from_dir, get_file_list_from_dir
 
 test_datastore = Datastore()
-JOB_SERVICE_URL = os.getenv("JOB_SERVICE_URL")
+DATASTORE_API_URL = os.getenv("DATASTORE_API_URL")
 JOB_ID = "123-123-123-123"
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
 WORKING_DIR = os.environ["WORKING_DIR"]
@@ -48,7 +48,7 @@ def teardown_module():
 
 def test_patch_metadata(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "SIVSTAND"
     DESCRIPTION = "oppdaterte metadata"
@@ -86,7 +86,7 @@ def test_patch_metadata(requests_mock: RequestsMocker):
 
 def test_add(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "FOEDESTED"
     DESCRIPTION = "første publisering"
@@ -115,7 +115,7 @@ def test_add(requests_mock: RequestsMocker):
 
 def test_add_previously_deleted(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "INNTEKT"
     DESCRIPTION = "Ny variabel tidligere DELETED"
@@ -145,7 +145,7 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
 
 def test_change(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "oppdaterte data"
@@ -174,7 +174,7 @@ def test_change(requests_mock: RequestsMocker):
 
 def test_delete_draft(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "UTDANNING"
     datastores.delete_draft(
@@ -197,7 +197,7 @@ def test_delete_draft(requests_mock: RequestsMocker):
 
 def test_set_draft_release_status(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "FOEDESTED"
     DESCRIPTION = "første publisering"
@@ -238,7 +238,7 @@ def test_set_draft_release_status(requests_mock: RequestsMocker):
 
 def test_bump_datastore_minor(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
@@ -305,7 +305,7 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
 
 def test_remove(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "KJOENN"
     DESCRIPTION = "Fjernet variabel"
@@ -326,7 +326,7 @@ def test_remove(requests_mock: RequestsMocker):
 
 def test_bump_datastore_major(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     datastores.set_draft_release_status(
         test_datastore, JOB_ID, "FOEDSELSVEKT", "PENDING_RELEASE"
@@ -389,7 +389,7 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
 
 def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "SIVSTAND"
     # Previous interrupted run deleted metadata
@@ -418,7 +418,7 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
     requests_mock: RequestsMocker,
 ):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     datastores.set_draft_release_status(
         test_datastore, JOB_ID, "INNTEKT", "PENDING_RELEASE"
@@ -442,7 +442,7 @@ def test_failed_bump(
     requests_mock: RequestsMocker,
 ):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     test_datastore.latest_version_number = Mock(side_effect=Exception())
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -454,7 +454,7 @@ def test_failed_bump(
 
 def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "Setter til remove"
@@ -476,7 +476,7 @@ def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
 
 def test_no_rollback(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "Setter til remove"

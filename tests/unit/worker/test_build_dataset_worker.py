@@ -23,7 +23,7 @@ NO_PSEUDONYM_FIXED_DATASET_NAME = "KOMMUNE_HOYESTE_PUNKT"
 JOB_ID = "1234-1234-1234-1234"
 WORKING_DIR = os.environ["WORKING_DIR"]
 INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
-JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
+DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
 PSEUDONYM_SERVICE_URL = os.environ["PSEUDONYM_SERVICE_URL"]
 IDENTIFIERS = [
     "00000000000001",
@@ -91,27 +91,27 @@ EXPECTED_REQUESTS_PARTITIONED = [
     {
         "json": {"status": "decrypting"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "validating"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"description": "Oppdaterte data"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "transforming"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "pseudonymizing"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": [
@@ -173,12 +173,12 @@ EXPECTED_REQUESTS_PARTITIONED = [
     {
         "json": {"status": "partitioning"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "built"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
 ]
 
@@ -186,27 +186,27 @@ EXPECTED_REQUESTS_IMPORT = [
     {
         "json": {"status": "decrypting"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "validating"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"description": "Første publisering."},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "transforming"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "pseudonymizing"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": [
@@ -228,12 +228,12 @@ EXPECTED_REQUESTS_IMPORT = [
     {
         "json": {"status": "partitioning"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "built"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
 ]
 
@@ -267,7 +267,7 @@ def teardown_function():
 
 def test_build_partitioned_dataset(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     requests_mock.post(
         f"{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}",
@@ -292,7 +292,7 @@ def test_build_partitioned_dataset(requests_mock: RequestsMocker):
 
 def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     requests_mock.post(
         f"{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}",
@@ -323,7 +323,7 @@ def test_import(requests_mock: RequestsMocker):
 
 def test_import_no_pseudonymization(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     run_worker(JOB_ID, NO_PSEUDONYM_DATASET_NAME, Queue())
     assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}.tar")
@@ -353,7 +353,7 @@ def test_import_no_pseudonymization_no_partitioning(
     requests_mock: RequestsMocker,
 ):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     run_worker(JOB_ID, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())
     assert not os.path.exists(

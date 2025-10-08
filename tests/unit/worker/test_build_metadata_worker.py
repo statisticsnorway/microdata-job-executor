@@ -20,32 +20,32 @@ JOB_ID = "1234-1234-1234-1234"
 WORKING_DIR = os.environ["WORKING_DIR"]
 INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
 EXPECTED_DIR = "tests/resources/worker/build_metadata/expected"
-JOB_SERVICE_URL = os.environ["JOB_SERVICE_URL"]
+DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
 EXPECTED_REQUESTS = [
     {
         "json": {"status": "decrypting"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "validating"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"description": "Første publisering."},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "transforming"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
     {
         "json": {"status": "built"},
         "method": "PUT",
-        "url": f"{JOB_SERVICE_URL}/jobs/{JOB_ID}",
+        "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
 ]
 
@@ -72,7 +72,7 @@ def teardown_function():
 
 def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
 
     run_worker(JOB_ID, DATASET_NAME, Queue())

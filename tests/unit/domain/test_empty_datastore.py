@@ -9,7 +9,7 @@ from job_executor.domain import datastores
 from job_executor.domain.datastores import Datastore
 from job_executor.model import DatastoreVersion
 
-JOB_SERVICE_URL = os.getenv("JOB_SERVICE_URL")
+DATASTORE_API_URL = os.getenv("DATASTORE_API_URL")
 JOB_ID = "123-123-123-123"
 DATASTORE_DIR = Path(os.getenv("DATASTORE_DIR"))  # type: ignore
 UTDANNING_DATA_DIR = DATASTORE_DIR / "data" / "UTDANNING"
@@ -37,7 +37,7 @@ def teardown_module():
 
 def test_bump_empty_datastore(requests_mock: RequestsMocker):
     requests_mock.put(
-        f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+        f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     test_datastore = Datastore()
     with open(DRAFT_VERSION, encoding="utf-8") as f:
