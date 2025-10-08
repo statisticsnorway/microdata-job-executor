@@ -1,9 +1,11 @@
 import logging
 from multiprocessing import Queue
+from pathlib import Path
 from time import perf_counter
 
 from job_executor.adapter import datastore_api, local_storage
 from job_executor.adapter.datastore_api.models import JobStatus
+from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
 from job_executor.exception import BuilderStepError, HttpResponseError
 from job_executor.worker.steps import (
@@ -12,7 +14,7 @@ from job_executor.worker.steps import (
     dataset_validator,
 )
 
-WORKING_DIR = local_storage.WORKING_DIR
+WORKING_DIR = Path(environment.working_dir)
 
 
 def _clean_working_dir(dataset_name: str) -> None:

@@ -4,7 +4,7 @@ from job_executor.config import environment
 
 
 def _initialize_secrets() -> dict:
-    with open(environment.get("SECRETS_FILE"), encoding="utf-8") as f:
+    with open(environment.secrets_file, encoding="utf-8") as f:
         secrets_file = json.load(f)
     return {
         "PSEUDONYM_SERVICE_API_KEY": secrets_file["PSEUDONYM_SERVICE_API_KEY"]

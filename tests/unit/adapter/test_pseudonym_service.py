@@ -7,7 +7,7 @@ from job_executor.config import environment, secrets
 from job_executor.exception import HttpResponseError
 
 JOB_ID = "123-123-123"
-PSEUDONYM_SERVICE_URL = environment.get("PSEUDONYM_SERVICE_URL")
+PSEUDONYM_SERVICE_URL = environment.pseudonym_service_url
 API_KEY = secrets.get("PSEUDONYM_SERVICE_API_KEY")
 
 URL = f"{PSEUDONYM_SERVICE_URL}/?unit_id_type=FNR&job_id={JOB_ID}"

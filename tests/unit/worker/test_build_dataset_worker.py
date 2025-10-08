@@ -13,7 +13,7 @@ from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.config import environment
 from job_executor.worker.build_dataset_worker import run_worker
 
-RSA_KEYS_DIRECTORY = Path(environment.get("RSA_KEYS_DIRECTORY"))
+RSA_KEYS_DIRECTORY = Path(environment.rsa_keys_directory)
 
 
 PARTITIONED_DATASET_NAME = "INNTEKT"

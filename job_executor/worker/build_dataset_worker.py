@@ -18,7 +18,7 @@ from job_executor.worker.steps import (
     dataset_validator,
 )
 
-WORKING_DIR = Path(environment.get("WORKING_DIR"))
+WORKING_DIR = Path(environment.working_dir)
 
 
 def _clean_working_dir(dataset_name: str) -> None:

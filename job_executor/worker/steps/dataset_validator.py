@@ -7,7 +7,7 @@ from job_executor.config import environment
 from job_executor.exception import BuilderStepError
 
 logger = logging.getLogger()
-WORKING_DIR = Path(environment.get("WORKING_DIR"))
+WORKING_DIR = Path(environment.working_dir)
 
 
 def run_for_dataset(dataset_name: str) -> tuple[Path, Path]:

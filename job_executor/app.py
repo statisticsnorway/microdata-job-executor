@@ -80,11 +80,10 @@ def main() -> None:
         initialize_app()
         logging_queue, log_thread = initialize_logging_thread()
         manager = Manager(
-            max_workers=int(environment.get("NUMBER_OF_WORKERS")),
+            max_workers=environment.number_of_workers,
             max_bytes_all_workers=(
-                int(environment.get("MAX_GB_ALL_WORKERS"))
-                * 1024**3  # Covert from GB to bytes
-            ),
+                environment.max_gb_all_workers * 1024**3
+            ),  # Covert from GB to bytes
         )
 
         while True:
