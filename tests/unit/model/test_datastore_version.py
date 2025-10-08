@@ -5,15 +5,15 @@ import shutil
 import pytest
 
 from job_executor.adapter import local_storage
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersion,
+    DataStructureUpdate,
+    DraftVersion,
+)
 from job_executor.exception import (
     BumpException,
     ExistingDraftException,
     NoSuchDraftException,
-)
-from job_executor.model import (
-    DatastoreVersion,
-    DataStructureUpdate,
-    DraftVersion,
 )
 
 

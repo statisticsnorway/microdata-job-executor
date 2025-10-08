@@ -5,9 +5,11 @@ from pathlib import Path
 
 from requests_mock import Mocker as RequestsMocker
 
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersion,
+)
 from job_executor.domain import datastores
 from job_executor.domain.datastores import Datastore
-from job_executor.model import DatastoreVersion
 
 DATASTORE_API_URL = os.getenv("DATASTORE_API_URL")
 JOB_ID = "123-123-123-123"

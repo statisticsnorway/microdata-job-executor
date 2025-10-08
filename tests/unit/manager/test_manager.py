@@ -2,7 +2,7 @@ import time
 from multiprocessing import Process
 
 from job_executor.manager import Manager
-from job_executor.model.worker import Worker
+from job_executor.worker.models import Worker
 
 
 def dummy():

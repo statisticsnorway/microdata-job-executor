@@ -6,15 +6,15 @@ from pathlib import Path
 from job_executor.adapter import datastore_api, local_storage
 from job_executor.adapter.datastore_api.models import Job, JobStatus
 from job_executor.adapter.local_storage import WORKING_DIR
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    bump_dotted_version_number,
+    dotted_to_underscored_version,
+    underscored_to_dotted_version,
+)
 from job_executor.exception import (
     LocalStorageError,
     RollbackException,
     StartupException,
-)
-from job_executor.model.datastore_versions import (
-    bump_dotted_version_number,
-    dotted_to_underscored_version,
-    underscored_to_dotted_version,
 )
 
 WORKING_DIR_PATH = Path(WORKING_DIR)
