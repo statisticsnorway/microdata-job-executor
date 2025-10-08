@@ -3,7 +3,8 @@ import os
 import shutil
 from pathlib import Path
 
-from job_executor.adapter import job_service, local_storage
+from job_executor.adapter import datastore_api, local_storage
+from job_executor.adapter.datastore_api.models import Job, JobStatus
 from job_executor.adapter.local_storage import WORKING_DIR
 from job_executor.exception import (
     LocalStorageError,
@@ -15,7 +16,6 @@ from job_executor.model.datastore_versions import (
     dotted_to_underscored_version,
     underscored_to_dotted_version,
 )
-from job_executor.model.job import Job, JobStatus
 
 WORKING_DIR_PATH = Path(WORKING_DIR)
 logger = logging.getLogger()
@@ -190,7 +190,7 @@ def rollback_manager_phase_import_job(
 
 def fix_interrupted_jobs() -> None:
     logger.info("Querying for interrupted jobs")
-    in_progress_jobs = job_service.get_jobs(ignore_completed=True)
+    in_progress_jobs = datastore_api.get_jobs(ignore_completed=True)
     queued_statuses = ["queued", "built"]
     interrupted_jobs = [
         job for job in in_progress_jobs if job.status not in queued_statuses
@@ -218,7 +218,7 @@ def fix_interrupted_job(job: Job) -> None:
                 f'operation "{job_operation}". Retrying from status '
                 '"built"'
             )
-            job_service.update_job_status(
+            datastore_api.update_job_status(
                 job.job_id,
                 JobStatus.BUILT,
                 "Reset to built status will be due to unexpected interruption",
@@ -230,7 +230,7 @@ def fix_interrupted_job(job: Job) -> None:
             logger.info(
                 f'{job.job_id}: Setting status to "failed" for interrupted job'
             )
-            job_service.update_job_status(
+            datastore_api.update_job_status(
                 job.job_id,
                 JobStatus.FAILED,
                 "Job was failed due to an unexpected interruption",
@@ -245,7 +245,7 @@ def fix_interrupted_job(job: Job) -> None:
             'Setting status to "queued" for '
             f"interrupted job with id {job.job_id}"
         )
-        job_service.update_job_status(
+        datastore_api.update_job_status(
             job.job_id,
             JobStatus.QUEUED,
             "Retrying due to an unexpected interruption.",
@@ -264,7 +264,7 @@ def fix_interrupted_job(job: Job) -> None:
             'Setting status to "failed" for '
             f"interrupted job with id {job.job_id}"
         )
-        job_service.update_job_status(
+        datastore_api.update_job_status(
             job.job_id,
             JobStatus.FAILED,
             "Bump operation was interrupted and rolled back.",

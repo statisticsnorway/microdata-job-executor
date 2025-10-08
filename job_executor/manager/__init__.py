@@ -1,10 +1,10 @@
 import logging
 from multiprocessing import Process, Queue
 
-from job_executor.adapter import job_service
+from job_executor.adapter import datastore_api
+from job_executor.adapter.datastore_api.models import Job, JobStatus, Operation
 from job_executor.domain import datastores, rollback
 from job_executor.domain.datastores import Datastore
-from job_executor.model.job import Job, JobStatus, Operation
 from job_executor.model.worker import Worker
 from job_executor.worker import build_dataset_worker, build_metadata_worker
 
@@ -70,7 +70,7 @@ class Manager:
             worker for worker in self.workers if not worker.is_alive()
         ]
         if len(dead_workers) > 0:
-            in_progress_jobs = job_service.get_jobs(ignore_completed=True)
+            in_progress_jobs = datastore_api.get_jobs(ignore_completed=True)
             for dead_worker in dead_workers:
                 job = next(
                     (
@@ -110,7 +110,7 @@ class Manager:
                 job_size=job_size,
             )
             self.workers.append(worker)
-            job_service.update_job_status(job_id, JobStatus.INITIATED)
+            datastore_api.update_job_status(job_id, JobStatus.INITIATED)
             worker.start()
         elif operation == "PATCH_METADATA":
             worker = Worker(
@@ -126,11 +126,11 @@ class Manager:
                 job_size=job_size,
             )
             self.workers.append(worker)
-            job_service.update_job_status(job_id, JobStatus.INITIATED)
+            datastore_api.update_job_status(job_id, JobStatus.INITIATED)
             worker.start()
         else:
             logger.error(f'Unknown operation "{operation}"')
-            job_service.update_job_status(
+            datastore_api.update_job_status(
                 job_id,
                 JobStatus.FAILED,
                 log=f"Unknown operation type {operation}",
@@ -204,6 +204,6 @@ class Manager:
         elif operation == Operation.DELETE_ARCHIVE:
             datastores.delete_archived_input(job_id, job.parameters.target)
         else:
-            job_service.update_job_status(
+            datastore_api.update_job_status(
                 job.job_id, JobStatus.FAILED, log="Unknown operation for job"
             )

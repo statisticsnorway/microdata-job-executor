@@ -10,6 +10,6 @@ def test_config_from_environment():
     assert environment.get("PSEUDONYM_SERVICE_URL") == (
         os.environ.get("PSEUDONYM_SERVICE_URL")
     )
-    assert environment.get("JOB_SERVICE_URL") == (
-        os.environ.get("JOB_SERVICE_URL")
+    assert environment.get("DATASTORE_API_URL") == (
+        os.environ.get("DATASTORE_API_URL")
     )
