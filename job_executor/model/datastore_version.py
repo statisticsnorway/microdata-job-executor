@@ -1,8 +1,6 @@
 from datetime import UTC, datetime
 from typing import Iterator
 
-from pydantic import model_validator
-
 from job_executor.adapter import local_storage
 from job_executor.exception import (
     BumpException,
@@ -77,11 +75,6 @@ class DatastoreVersion(CamelModel):
 
 
 class DraftVersion(DatastoreVersion):
-    @model_validator(mode="before")
-    @classmethod
-    def read_file(cls, _):  # noqa
-        return local_storage.get_draft_version()
-
     def add(self, data_structure_update: DataStructureUpdate) -> None:
         current_update_names = [update.name for update in self]
         if data_structure_update.name in current_update_names:

@@ -1,7 +1,5 @@
 from datetime import UTC, datetime
 
-from pydantic import model_validator
-
 from job_executor.adapter import local_storage
 from job_executor.exception import VersioningException
 from job_executor.model.camelcase_model import CamelModel
@@ -14,11 +12,6 @@ class DatastoreVersions(CamelModel, extra="forbid"):
     label: str
     description: str
     versions: list[DatastoreVersion]
-
-    @model_validator(mode="before")
-    @classmethod
-    def read_file(cls, _):  # noqa
-        return local_storage.get_datastore_versions()
 
     def _write_to_file(self) -> None:
         local_storage.write_datastore_versions(self.model_dump(by_alias=True))

@@ -1,7 +1,5 @@
 from collections.abc import Iterator
 
-from pydantic import model_validator
-
 from job_executor.adapter import local_storage
 from job_executor.exception import BumpException
 from job_executor.model import Metadata
@@ -48,11 +46,6 @@ class MetadataAll(CamelModel):
 
 
 class MetadataAllDraft(MetadataAll):
-    @model_validator(mode="before")
-    @classmethod
-    def read_file(cls, _) -> dict:  # noqa
-        return local_storage.get_metadata_all("DRAFT")
-
     def _write_to_file(self) -> None:
         local_storage.write_metadata_all(
             self.model_dump(by_alias=True, exclude_none=True), "DRAFT"

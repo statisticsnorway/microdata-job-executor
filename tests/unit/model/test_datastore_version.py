@@ -4,6 +4,7 @@ import shutil
 
 import pytest
 
+from job_executor.adapter import local_storage
 from job_executor.exception import (
     BumpException,
     ExistingDraftException,
@@ -87,14 +88,18 @@ def test_get_dataset_release_status():
 
 
 def test_draft_version():
-    draft_version = DraftVersion()  # type: ignore
+    draft_version = DraftVersion.model_validate(
+        local_storage.get_draft_version()
+    )
     assert draft_version.model_dump(
         by_alias=True, exclude_none=True
     ) == load_json(DRAFT_VERSION_PATH)
 
 
 def test_draft_version_delete_draft():
-    draft_version = DraftVersion()  # type: ignore
+    draft_version = DraftVersion.model_validate(
+        local_storage.get_draft_version()
+    )
     release_time = draft_version.release_time
     version = draft_version.version
     draft_version.delete_draft("BRUTTO_INNTEKT")
@@ -113,7 +118,9 @@ def test_draft_version_delete_draft():
 
 
 def test_add_draft_version_already_existing_dataset():
-    draft_version = DraftVersion()  # type: ignore
+    draft_version = DraftVersion.model_validate(
+        local_storage.get_draft_version()
+    )
     with pytest.raises(ExistingDraftException) as e:
         draft_version.add(
             DataStructureUpdate(
@@ -127,7 +134,9 @@ def test_add_draft_version_already_existing_dataset():
 
 
 def test_draft_version_validate_bump_manifesto():
-    draft_version = DraftVersion()  # type: ignore
+    draft_version = DraftVersion.model_validate(
+        local_storage.get_draft_version()
+    )
 
     bump_manifesto = DatastoreVersion(**DRAFT_VERSION_IDENTICAL)
     assert draft_version.validate_bump_manifesto(bump_manifesto)
@@ -144,7 +153,9 @@ def test_draft_version_validate_bump_manifesto():
 
 
 def test_draft_version_release_pending():
-    draft_version = DraftVersion()  # type: ignore
+    draft_version = DraftVersion.model_validate(
+        local_storage.get_draft_version()
+    )
     release_time = draft_version.release_time
     version = draft_version.version
     updates, update_type = draft_version.release_pending()
@@ -167,7 +178,9 @@ def test_draft_version_release_pending():
 
 
 def test_set_draft_release_status():
-    draft_version = DraftVersion()  # type: ignore
+    draft_version = DraftVersion.model_validate(
+        local_storage.get_draft_version()
+    )
     release_time = draft_version.release_time
     version = draft_version.version
     draft_version.set_draft_release_status("UTDANNING", "PENDING_RELEASE")

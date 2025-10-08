@@ -6,7 +6,6 @@ from job_executor.adapter import job_service, local_storage
 from job_executor.config import environment
 from job_executor.config.log import initialize_logging_thread, setup_logging
 from job_executor.domain import rollback
-from job_executor.domain.datastore import Datastore
 from job_executor.exception import StartupException
 from job_executor.manager import Manager
 from job_executor.model.job import JobStatus
@@ -86,7 +85,6 @@ def main() -> None:
                 int(environment.get("MAX_GB_ALL_WORKERS"))
                 * 1024**3  # Covert from GB to bytes
             ),
-            this_datastore=Datastore(),
         )
 
         while True:

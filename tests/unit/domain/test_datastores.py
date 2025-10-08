@@ -2,12 +2,12 @@ import json
 import os
 import shutil
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.domain import datastore
-from job_executor.domain.datastore import Datastore
+from job_executor.domain import datastores
+from job_executor.domain.datastores import Datastore
 from job_executor.model import DatastoreVersion
 from tests.unit.test_util import get_dir_list_from_dir, get_file_list_from_dir
 
@@ -52,7 +52,7 @@ def test_patch_metadata(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "SIVSTAND"
     DESCRIPTION = "oppdaterte metadata"
-    datastore.patch_metadata(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.patch_metadata(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
@@ -94,7 +94,7 @@ def test_add(requests_mock: RequestsMocker):
         working_dir_metadata_draft_path(DATASET_NAME), encoding="utf-8"
     ) as f:
         foedested_metadata = json.load(f)
-    datastore.add(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.add(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
@@ -119,7 +119,7 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "INNTEKT"
     DESCRIPTION = "Ny variabel tidligere DELETED"
-    datastore.add(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.add(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(partitioned_draft_data_path(DATASET_NAME))
@@ -153,7 +153,7 @@ def test_change(requests_mock: RequestsMocker):
         working_dir_metadata_draft_path(DATASET_NAME), encoding="utf-8"
     ) as f:
         foedested_metadata = json.load(f)
-    datastore.change(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.change(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
@@ -177,7 +177,7 @@ def test_delete_draft(requests_mock: RequestsMocker):
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     DATASET_NAME = "UTDANNING"
-    datastore.delete_draft(
+    datastores.delete_draft(
         test_datastore, JOB_ID, DATASET_NAME, rollback_remove=False
     )
     assert len(requests_mock.request_history) == 2
@@ -202,7 +202,7 @@ def test_set_draft_release_status(requests_mock: RequestsMocker):
     DATASET_NAME = "FOEDESTED"
     DESCRIPTION = "første publisering"
     NEW_STATUS = "PENDING_RELEASE"
-    datastore.set_draft_release_status(
+    datastores.set_draft_release_status(
         test_datastore, JOB_ID, DATASET_NAME, NEW_STATUS
     )
     assert len(requests_mock.request_history) == 2
@@ -216,7 +216,7 @@ def test_set_draft_release_status(requests_mock: RequestsMocker):
         "releaseStatus": "PENDING_RELEASE",
     } in draft_version["dataStructureUpdates"]
     # Try again after a possible interrupt
-    datastore.set_draft_release_status(
+    datastores.set_draft_release_status(
         test_datastore, JOB_ID, DATASET_NAME, NEW_STATUS
     )
     assert len(requests_mock.request_history) == 4
@@ -243,7 +243,7 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
 
-    datastore.bump_version(
+    datastores.bump_version(
         test_datastore, JOB_ID, bump_manifesto, "description"
     )
     assert len(requests_mock.request_history) == 2
@@ -309,7 +309,7 @@ def test_remove(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "KJOENN"
     DESCRIPTION = "Fjernet variabel"
-    datastore.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
     assert len(requests_mock.request_history) == 2
 
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -328,13 +328,13 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    datastore.set_draft_release_status(
+    datastores.set_draft_release_status(
         test_datastore, JOB_ID, "FOEDSELSVEKT", "PENDING_RELEASE"
     )
     assert len(requests_mock.request_history) == 2
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
-    datastore.bump_version(
+    datastores.bump_version(
         test_datastore, JOB_ID, bump_manifesto, "description"
     )
     assert len(requests_mock.request_history) == 4
@@ -398,7 +398,7 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
         for draft in test_datastore.metadata_all_draft.data_structures
         if draft.name != DATASET_NAME
     ]
-    datastore.delete_draft(
+    datastores.delete_draft(
         test_datastore, JOB_ID, DATASET_NAME, rollback_remove=False
     )
     assert len(requests_mock.request_history) == 2
@@ -420,7 +420,7 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    datastore.set_draft_release_status(
+    datastores.set_draft_release_status(
         test_datastore, JOB_ID, "INNTEKT", "PENDING_RELEASE"
     )
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -431,7 +431,7 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
         for ds in bump_manifesto.data_structure_updates
         if ds.release_status == "DRAFT"
     ]
-    datastore.bump_version(
+    datastores.bump_version(
         test_datastore, JOB_ID, bump_manifesto, "description"
     )
     assert not os.path.exists(Path(DATASTORE_DIR) / "tmp")
@@ -444,14 +444,12 @@ def test_failed_bump(
     requests_mock.put(
         f"{JOB_SERVICE_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    test_datastore.refresh = MagicMock(return_value=None)
     test_datastore.latest_version_number = Mock(side_effect=Exception())
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
-    datastore.bump_version(
+    datastores.bump_version(
         test_datastore, JOB_ID, bump_manifesto, "description"
     )
-    test_datastore.refresh.assert_called_once()
 
 
 def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
@@ -461,8 +459,8 @@ def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "Setter til remove"
 
-    datastore.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
-    datastore.delete_draft(
+    datastores.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.delete_draft(
         test_datastore, JOB_ID, DATASET_NAME, rollback_remove=True
     )
     assert len(requests_mock.request_history) == 4
@@ -483,8 +481,8 @@ def test_no_rollback(requests_mock: RequestsMocker):
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "Setter til remove"
 
-    datastore.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
-    datastore.delete_draft(
+    datastores.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.delete_draft(
         test_datastore, JOB_ID, DATASET_NAME, rollback_remove=False
     )
     assert len(requests_mock.request_history) == 4
