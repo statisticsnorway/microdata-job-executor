@@ -1,3 +1,4 @@
+import json
 import os
 from dataclasses import dataclass
 
@@ -34,3 +35,19 @@ def _initialize_environment() -> Environment:
 
 
 environment = _initialize_environment()
+
+
+@dataclass
+class Secrets:
+    pseudonym_service_api_key: str
+
+
+def _initialize_secrets() -> Secrets:
+    with open(environment.secrets_file, encoding="utf-8") as f:
+        secrets_file = json.load(f)
+    return Secrets(
+        pseudonym_service_api_key=secrets_file["PSEUDONYM_SERVICE_API_KEY"]
+    )
+
+
+secrets = _initialize_secrets()
