@@ -6,8 +6,8 @@ import pyarrow
 import pytest
 from pyarrow import parquet
 
-from job_executor.exception import BuilderStepError
-from job_executor.worker.steps import dataset_partitioner
+from job_executor.common.exceptions import BuilderStepError
+from job_executor.domain.worker.steps import dataset_partitioner
 
 WORKING_DIR = Path("tests/resources/worker/steps/partitioner")
 JOB_ID_PARTITIONER = "321-321-321-321"

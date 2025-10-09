@@ -1,11 +1,11 @@
 import requests
 from microdata_tools.validation.model.metadata import UnitIdType
 
+from job_executor.common.exceptions import HttpResponseError
 from job_executor.config import environment, secrets
-from job_executor.exception import HttpResponseError
 
-PSEUDONYM_SERVICE_URL = environment.get("PSEUDONYM_SERVICE_URL")
-PSEUDONYM_SERVICE_API_KEY = secrets.get("PSEUDONYM_SERVICE_API_KEY")
+PSEUDONYM_SERVICE_URL = environment.pseudonym_service_url
+PSEUDONYM_SERVICE_API_KEY = secrets.pseudonym_service_api_key
 
 
 def pseudonymize(

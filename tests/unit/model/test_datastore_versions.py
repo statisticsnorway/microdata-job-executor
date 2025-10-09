@@ -3,7 +3,10 @@ import os
 import shutil
 
 from job_executor.adapter import local_storage
-from job_executor.model import DatastoreVersions, DataStructureUpdate
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersions,
+    DataStructureUpdate,
+)
 
 
 def load_json(file_path):

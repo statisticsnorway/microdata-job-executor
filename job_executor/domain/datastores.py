@@ -2,21 +2,27 @@ import logging
 
 from job_executor.adapter import datastore_api, local_storage
 from job_executor.adapter.datastore_api.models import JobStatus
-from job_executor.domain.rollback import (
-    rollback_bump,
-    rollback_manager_phase_import_job,
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersion,
+    DatastoreVersions,
+    DataStructureUpdate,
+    DraftVersion,
 )
-from job_executor.exception import (
+from job_executor.adapter.local_storage.models.metadata import (
+    Metadata,
+    MetadataAll,
+    MetadataAllDraft,
+)
+from job_executor.common.exceptions import (
     NoSuchDraftException,
     PatchingError,
     UnnecessaryUpdateException,
     VersioningException,
 )
-from job_executor.model.data_structure_update import DataStructureUpdate
-from job_executor.model.datastore_version import DatastoreVersion, DraftVersion
-from job_executor.model.datastore_versions import DatastoreVersions
-from job_executor.model.metadata import Metadata
-from job_executor.model.metadata_all import MetadataAll, MetadataAllDraft
+from job_executor.domain.rollback import (
+    rollback_bump,
+    rollback_manager_phase_import_job,
+)
 
 logger = logging.getLogger()
 

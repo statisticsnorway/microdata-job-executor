@@ -13,10 +13,10 @@ from job_executor.adapter.datastore_api.models import (
     MaintenanceStatus,
     Operation,
 )
+from job_executor.common.exceptions import HttpRequestError, HttpResponseError
 from job_executor.config import environment
-from job_executor.exception import HttpRequestError, HttpResponseError
 
-DATASTORE_API_URL = environment.get("DATASTORE_API_URL")
+DATASTORE_API_URL = environment.datastore_api_url
 DEFAULT_REQUESTS_TIMEOUT = (10, 60)  # (read timeout, connect timeout)
 
 logger = logging.getLogger()

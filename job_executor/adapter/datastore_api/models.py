@@ -3,8 +3,10 @@ from enum import StrEnum
 
 from pydantic import model_validator
 
-from job_executor.model import DatastoreVersion
-from job_executor.model.camelcase_model import CamelModel
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersion,
+)
+from job_executor.common.models import CamelModel
 
 
 class MaintenanceStatus(CamelModel):

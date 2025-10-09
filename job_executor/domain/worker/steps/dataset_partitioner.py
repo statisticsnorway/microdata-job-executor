@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pyarrow import dataset, parquet
 
-from job_executor.exception import BuilderStepError
+from job_executor.common.exceptions import BuilderStepError
 
 logger = logging.getLogger()
 

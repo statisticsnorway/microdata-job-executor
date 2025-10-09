@@ -2,7 +2,10 @@ import json
 import os
 import shutil
 
-from job_executor.model import Metadata, MetadataAll
+from job_executor.adapter.local_storage.models.metadata import (
+    Metadata,
+    MetadataAll,
+)
 
 
 def load_json(file_path):

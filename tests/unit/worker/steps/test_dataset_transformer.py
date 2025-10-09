@@ -1,6 +1,6 @@
 import pytest
 
-from job_executor.worker.steps import dataset_transformer
+from job_executor.domain.worker.steps import dataset_transformer
 from tests.resources.worker.steps import transformer as test_data
 
 

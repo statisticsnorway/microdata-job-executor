@@ -12,7 +12,7 @@ from job_executor.adapter.datastore_api.models import (
     ReleaseStatus,
     UserInfo,
 )
-from job_executor.exception import HttpResponseError
+from job_executor.common.exceptions import HttpResponseError
 
 DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
 JOB_ID = "123"

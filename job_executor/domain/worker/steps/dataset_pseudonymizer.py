@@ -8,8 +8,8 @@ from microdata_tools.validation.model.metadata import UnitIdType, UnitType
 from pyarrow import compute, dataset, parquet
 
 from job_executor.adapter import pseudonym_service
-from job_executor.exception import BuilderStepError
-from job_executor.model import Metadata
+from job_executor.adapter.local_storage.models.metadata import Metadata
+from job_executor.common.exceptions import BuilderStepError
 
 logger = logging.getLogger()
 

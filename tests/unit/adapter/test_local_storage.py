@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from job_executor.adapter import local_storage
-from job_executor.exception import LocalStorageError
+from job_executor.common.exceptions import LocalStorageError
 
 WORKING_DIR = os.environ["WORKING_DIR"]
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
