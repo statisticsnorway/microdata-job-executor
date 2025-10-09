@@ -10,7 +10,7 @@ from job_executor.adapter.local_storage.models.datastore_versions import (
     DataStructureUpdate,
     DraftVersion,
 )
-from job_executor.exception import (
+from job_executor.common.exceptions import (
     BumpException,
     ExistingDraftException,
     NoSuchDraftException,

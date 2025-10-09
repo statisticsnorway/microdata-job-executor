@@ -6,8 +6,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from job_executor.common.exceptions import LocalStorageError
 from job_executor.config import environment
-from job_executor.exception import LocalStorageError
 
 WORKING_DIR = Path(environment.working_dir)
 DATASTORE_DIR = Path(environment.datastore_dir)

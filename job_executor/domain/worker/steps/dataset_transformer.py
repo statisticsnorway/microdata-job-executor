@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from job_executor.adapter.local_storage.models.metadata import (
     DATA_TYPES_MAPPING,
 )
-from job_executor.exception import BuilderStepError
+from job_executor.common.exceptions import BuilderStepError
 
 logger = logging.getLogger()
 

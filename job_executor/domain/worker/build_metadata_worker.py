@@ -5,10 +5,10 @@ from time import perf_counter
 
 from job_executor.adapter import datastore_api, local_storage
 from job_executor.adapter.datastore_api.models import JobStatus
+from job_executor.common.exceptions import BuilderStepError, HttpResponseError
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
-from job_executor.exception import BuilderStepError, HttpResponseError
-from job_executor.worker.steps import (
+from job_executor.domain.worker.steps import (
     dataset_decryptor,
     dataset_transformer,
     dataset_validator,

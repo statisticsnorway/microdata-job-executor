@@ -13,15 +13,15 @@ from job_executor.adapter.local_storage.models.metadata import (
     MetadataAll,
     MetadataAllDraft,
 )
-from job_executor.domain.rollback import (
-    rollback_bump,
-    rollback_manager_phase_import_job,
-)
-from job_executor.exception import (
+from job_executor.common.exceptions import (
     NoSuchDraftException,
     PatchingError,
     UnnecessaryUpdateException,
     VersioningException,
+)
+from job_executor.domain.rollback import (
+    rollback_bump,
+    rollback_manager_phase_import_job,
 )
 
 logger = logging.getLogger()

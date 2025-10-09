@@ -4,12 +4,12 @@ from job_executor.adapter import local_storage
 from job_executor.adapter.local_storage.models.datastore_versions import (
     DatastoreVersion,
 )
-from job_executor.common.models import CamelModel
-from job_executor.exception import (
+from job_executor.common.exceptions import (
     BumpException,
     MetadataException,
     PatchingError,
 )
+from job_executor.common.models import CamelModel
 
 DATA_TYPES_MAPPING = {
     "STRING": "String",

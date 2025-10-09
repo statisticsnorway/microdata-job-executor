@@ -4,7 +4,7 @@ from pydantic import ValidationError
 from job_executor.adapter.local_storage.models.datastore_versions import (
     DataStructureUpdate,
 )
-from job_executor.exception import ReleaseStatusException
+from job_executor.common.exceptions import ReleaseStatusException
 
 DATA_STRUCTURE_ADD_UPDATE = {
     "name": "KJOENN",

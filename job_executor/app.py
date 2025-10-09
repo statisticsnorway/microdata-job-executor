@@ -4,11 +4,11 @@ from multiprocessing import Queue
 
 from job_executor.adapter import datastore_api, local_storage
 from job_executor.adapter.datastore_api.models import JobStatus
+from job_executor.common.exceptions import StartupException
 from job_executor.config import environment
 from job_executor.config.log import initialize_logging_thread, setup_logging
 from job_executor.domain import rollback
-from job_executor.exception import StartupException
-from job_executor.manager import Manager
+from job_executor.domain.manager import Manager
 
 logger = logging.getLogger()
 setup_logging()

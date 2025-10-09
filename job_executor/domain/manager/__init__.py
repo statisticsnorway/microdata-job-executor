@@ -5,8 +5,11 @@ from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import Job, JobStatus, Operation
 from job_executor.domain import datastores, rollback
 from job_executor.domain.datastores import Datastore
-from job_executor.worker import build_dataset_worker, build_metadata_worker
-from job_executor.worker.models import Worker
+from job_executor.domain.worker import (
+    build_dataset_worker,
+    build_metadata_worker,
+)
+from job_executor.domain.worker.models import Worker
 
 logger = logging.getLogger()
 

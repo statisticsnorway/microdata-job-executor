@@ -3,8 +3,8 @@ from microdata_tools.validation.model.metadata import UnitIdType
 from requests_mock import Mocker as RequestsMocker
 
 from job_executor.adapter import pseudonym_service
+from job_executor.common.exceptions import HttpResponseError
 from job_executor.config import environment, secrets
-from job_executor.exception import HttpResponseError
 
 JOB_ID = "123-123-123"
 PSEUDONYM_SERVICE_URL = environment.pseudonym_service_url

@@ -11,7 +11,7 @@ from job_executor.adapter.local_storage.models.datastore_versions import (
     dotted_to_underscored_version,
     underscored_to_dotted_version,
 )
-from job_executor.exception import (
+from job_executor.common.exceptions import (
     LocalStorageError,
     RollbackException,
     StartupException,

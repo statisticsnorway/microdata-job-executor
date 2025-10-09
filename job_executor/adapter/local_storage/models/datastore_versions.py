@@ -2,8 +2,7 @@ from datetime import UTC, datetime
 from typing import Iterator
 
 from job_executor.adapter import local_storage
-from job_executor.common.models import CamelModel
-from job_executor.exception import (
+from job_executor.common.exceptions import (
     BumpException,
     ExistingDraftException,
     NoSuchDraftException,
@@ -11,6 +10,7 @@ from job_executor.exception import (
     UnnecessaryUpdateException,
     VersioningException,
 )
+from job_executor.common.models import CamelModel
 
 
 class DataStructureUpdate(CamelModel, extra="forbid"):
