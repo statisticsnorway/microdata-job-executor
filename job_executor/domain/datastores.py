@@ -35,18 +35,12 @@ class Datastore:
     latest_version_number: str | None
 
     def __init__(self) -> None:
-        self.draft_version = DraftVersion.model_validate(
-            local_storage.get_draft_version()
-        )
-        self.datastore_versions = DatastoreVersions.model_validate(
-            local_storage.get_datastore_versions()
-        )
+        self.draft_version = local_storage.get_draft_version()
+        self.datastore_versions = local_storage.get_datastore_versions()
         self.latest_version_number = (
             self.datastore_versions.get_latest_version_number()
         )
-        self.metadata_all_draft = MetadataAllDraft.model_validate(
-            local_storage.get_metadata_all("DRAFT")
-        )
+        self.metadata_all_draft = local_storage.get_metadata_all_draft()
         if self.latest_version_number is None:
             self.metadata_all_latest = None
         else:
@@ -81,12 +75,10 @@ def _generate_new_metadata_all(
     ]
     new_metadata_all = MetadataAll(**new_metadata_all_dict)
     local_storage.write_metadata_all(
-        new_metadata_all.model_dump(by_alias=True, exclude_none=True),
+        new_metadata_all,
         new_version,
     )
-    datastore.metadata_all_latest = MetadataAll(
-        **local_storage.get_metadata_all(new_version)
-    )
+    datastore.metadata_all_latest = local_storage.get_metadata_all(new_version)
 
 
 def _version_pending_operations(
@@ -175,9 +167,7 @@ def patch_metadata(
                 "Can't patch metadata of dataset with status "
                 f"{dataset_release_status}"
             )
-        draft_metadata = Metadata(
-            **local_storage.get_working_dir_metadata(dataset_name)
-        )
+        draft_metadata = local_storage.get_working_dir_metadata(dataset_name)
         released_metadata = datastore.metadata_all_latest.get(dataset_name)
         if released_metadata is None:
             raise NoSuchDraftException(
@@ -240,9 +230,7 @@ def add(
                 release_status="DRAFT",
             )
         )
-        draft_metadata = Metadata(
-            **local_storage.get_working_dir_metadata(dataset_name)
-        )
+        draft_metadata = local_storage.get_working_dir_metadata(dataset_name)
         local_storage.make_dataset_dir(dataset_name)
         datastore.metadata_all_draft.add(draft_metadata)
         local_storage.move_working_dir_parquet_to_datastore(dataset_name)
@@ -279,9 +267,7 @@ def change(
                 "Can't change data for dataset with release status"
                 f"{dataset_release_status}"
             )
-        draft_metadata = Metadata(
-            **local_storage.get_working_dir_metadata(dataset_name)
-        )
+        draft_metadata = local_storage.get_working_dir_metadata(dataset_name)
         datastore.metadata_all_draft.update_one(dataset_name, draft_metadata)
         datastore.draft_version.add(
             DataStructureUpdate(
