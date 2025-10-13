@@ -59,19 +59,31 @@ def test_transform_codelist():
 
 def test_dataset_with_enumerated_valuedomain():
     actual_metadata = dataset_transformer.run(test_data.KREFTREG_DS_ENUMERATED)
-    assert actual_metadata == test_data.ENUMERATED_EXPECTED
+    assert (
+        actual_metadata.model_dump(by_alias=True, exclude_none=True)
+        == test_data.ENUMERATED_EXPECTED
+    )
 
 
 def test_dataset_with_described_valuedomain():
     actual_metadata = dataset_transformer.run(test_data.KREFTREG_DS_DESCRIBED)
-    assert actual_metadata == test_data.DESCRIBED_EXPECTED
+    assert (
+        actual_metadata.model_dump(by_alias=True, exclude_none=True)
+        == test_data.DESCRIBED_EXPECTED
+    )
 
 
 def test_dataset_with_status_type():
     actual_metadata = dataset_transformer.run(test_data.UTDANNING)
-    assert actual_metadata == test_data.STATUS_EXPECTED
+    assert (
+        actual_metadata.model_dump(by_alias=True, exclude_none=True)
+        == test_data.STATUS_EXPECTED
+    )
 
 
 def test_patch_dataset_with_status_type():
     actual_metadata = dataset_transformer.run(test_data.UTDANNING_PATCH)
-    assert actual_metadata == test_data.STATUS_PATCH_EXPECTED
+    assert (
+        actual_metadata.model_dump(by_alias=True, exclude_none=True)
+        == test_data.STATUS_PATCH_EXPECTED
+    )

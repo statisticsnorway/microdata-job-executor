@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from job_executor.adapter.local_storage.models.metadata import (
     DATA_TYPES_MAPPING,
+    Metadata,
 )
 from job_executor.common.exceptions import BuilderStepError
 
@@ -283,7 +284,7 @@ def _transform_temporal_end(temporal_end: dict) -> dict[str, str]:
     return temporal_end_result
 
 
-def _transform_metadata(metadata: dict) -> dict:
+def _transform_metadata(metadata: dict) -> Metadata:
     logger.info("Transforming metadata")
     # These values are found by going through the data file.
     # When we do transformation of metadata alone, we do not
@@ -326,10 +327,10 @@ def _transform_metadata(metadata: dict) -> dict:
             metadata["dataRevision"]["temporalEnd"]
         )
     logger.info("Finished transformation")
-    return transformed
+    return Metadata.model_validate(transformed)
 
 
-def run(metadata: dict) -> dict:
+def run(metadata: dict) -> Metadata:
     """
     Transforms a metadatafile from the input model to the SIKT
     metadata model that is stored in the datastore.

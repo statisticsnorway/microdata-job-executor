@@ -6,7 +6,6 @@ from time import perf_counter
 
 from job_executor.adapter import datastore_api, local_storage
 from job_executor.adapter.datastore_api.models import JobStatus
-from job_executor.adapter.local_storage.models.metadata import Metadata
 from job_executor.common.exceptions import BuilderStepError, HttpResponseError
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
@@ -77,12 +76,11 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
 
         local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
         datastore_api.update_job_status(job_id, JobStatus.TRANSFORMING)
-        transformed_metadata_json = dataset_transformer.run(input_metadata)
+        transformed_metadata = dataset_transformer.run(input_metadata)
         local_storage.write_working_dir_metadata(
-            dataset_name, transformed_metadata_json
+            dataset_name, transformed_metadata
         )
         local_storage.delete_working_dir_file(metadata_file_path)
-        transformed_metadata = Metadata(**transformed_metadata_json)
 
         temporality_type = transformed_metadata.temporality
         if _dataset_requires_pseudonymization(input_metadata):

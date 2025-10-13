@@ -180,7 +180,7 @@ class DraftVersion(DatastoreVersion):
         return pending_updates, update_type
 
     def _write_to_file(self) -> None:
-        local_storage.write_draft_version(self.model_dump(by_alias=True))
+        local_storage.write_draft_version(self)
 
     def set_draft_release_status(
         self, dataset_name: str, new_status: str
@@ -215,7 +215,7 @@ class DatastoreVersions(CamelModel, extra="forbid"):
     versions: list[DatastoreVersion]
 
     def _write_to_file(self) -> None:
-        local_storage.write_datastore_versions(self.model_dump(by_alias=True))
+        local_storage.write_datastore_versions(self)
 
     def _get_current_epoch_seconds(self) -> int:
         return int(

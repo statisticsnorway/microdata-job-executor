@@ -6,6 +6,15 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersions,
+    DraftVersion,
+)
+from job_executor.adapter.local_storage.models.metadata import (
+    Metadata,
+    MetadataAll,
+    MetadataAllDraft,
+)
 from job_executor.common.exceptions import LocalStorageError
 from job_executor.config import environment
 
@@ -104,88 +113,115 @@ def write_data_versions(data_versions: dict, version: str) -> None:
     )
 
 
-def get_draft_version() -> dict:
+def get_draft_version() -> DraftVersion:
     """
-    Returns the contents of the draft version json file as dict.
+    Reads the draft version file from the datastore.
     """
-    return _read_json(DRAFT_VERSION_PATH)
+    return DraftVersion.model_validate(_read_json(DRAFT_VERSION_PATH))
 
 
-def write_draft_version(draft_version: dict) -> None:
+def write_draft_version(draft_version: DraftVersion) -> None:
     """
-    Writes given dict to the draft version json file.
-
-    * draft_version: dict - draft version dict
+    Writes json representation of object to the draft version json file
+    by alias.
     """
-    _write_json(draft_version, DRAFT_VERSION_PATH, indent=2)
+    _write_json(
+        draft_version.model_dump(by_alias=True), DRAFT_VERSION_PATH, indent=2
+    )
 
 
-def get_datastore_versions() -> dict:
+def get_datastore_versions() -> DatastoreVersions:
     """
     Returns the contents of the datastore versions json file as dict.
     """
-    return _read_json(DATASTORE_VERSIONS_PATH)
+    return DatastoreVersions.model_validate(_read_json(DATASTORE_VERSIONS_PATH))
 
 
-def write_datastore_versions(datastore_versions: dict) -> None:
+def write_datastore_versions(datastore_versions: DatastoreVersions) -> None:
     """
-    Writes given dict to the datastore versions json file.
-
-    * datastore_versions: dict - datastore_versions dict
+    Writes json representation of object to the draft version json file
+    by alias.
     """
     _write_json(
-        datastore_versions,
+        datastore_versions.model_dump(by_alias=True),
         DATASTORE_VERSIONS_PATH,
         indent=2,
     )
 
 
-def get_metadata_all(version: str) -> dict:
+def get_metadata_all(version: str) -> MetadataAll:
     """
-    Returns the metadata all json file for the given version as a dict.
+    Returns the metadata all json file for the given version.
 
     * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
     """
-    return _read_json(DATASTORE_DIR / f"datastore/metadata_all__{version}.json")
+    return MetadataAll.model_validate(
+        _read_json(DATASTORE_DIR / f"datastore/metadata_all__{version}.json")
+    )
 
 
-def write_metadata_all(metadata_all: dict, version: str) -> None:
+def write_metadata_all(metadata_all: MetadataAll, version: str) -> None:
     """
-    Writes given dict to a metadata all json file to the appropriate
+    Writes given metadata all to the appropriate json file in the
     datastore directory named with the given version.
-    If supplied version is 'DRAFT' a tmp file will be written to first
+
+    * metadata_all: MetadataAll - A MetadataAll object
+    * version: str - '<MAJOR>_<MINOR>_<PATCH>'
+    """
+    _write_json(
+        metadata_all.model_dump(by_alias=True, exclude_none=True),
+        DATASTORE_DIR / f"datastore/metadata_all__{version}.json",
+    )
+
+
+def get_metadata_all_draft() -> MetadataAllDraft:
+    """
+    Returns the metadata all draft json file.
+    """
+    return MetadataAllDraft.model_validate(
+        _read_json(DATASTORE_DIR / "datastore/metadata_all__DRAFT.json")
+    )
+
+
+def write_metadata_all_draft(metadata_all: MetadataAllDraft) -> None:
+    """
+    Writes json representation of object to the metadata all draft json file
+    by alias. A tmp file will be written to first
     to avoid downtime in consuming services due to incomplete json while
     writing.
-    * metadata_all: dict - metadata all dict
-    * version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic version
-                     or 'DRAFT'
+
     """
-    file_path = DATASTORE_DIR / f"datastore/metadata_all__{version}.json"
-    if version == "DRAFT":
-        _write_json_with_tmp(metadata_all, file_path)
-    else:
-        _write_json(metadata_all, file_path)
+    _write_json_with_tmp(
+        metadata_all.model_dump(by_alias=True, exclude_none=True),
+        DATASTORE_DIR / "datastore/metadata_all__DRAFT.json",
+        indent=2,
+    )
 
 
-def write_working_dir_metadata(dataset_name: str, metadata: dict) -> None:
+def write_working_dir_metadata(dataset_name: str, metadata: Metadata) -> None:
     """
     Writes a json to a the working directory as the processed metadata file
     named: {dataset_name}__DRAFT.json
 
     * dataset_name: str - name of dataset
-    * metadata: dict - dictionary to write as json
+    * metadata: Metadata - Metadata to write as json
     """
-    _write_json(metadata, WORKING_DIR / f"{dataset_name}__DRAFT.json")
+    _write_json(
+        metadata.model_dump(by_alias=True, exclude_none=True),
+        WORKING_DIR / f"{dataset_name}__DRAFT.json",
+    )
 
 
-def get_working_dir_metadata(dataset_name: str) -> dict:
+def get_working_dir_metadata(dataset_name: str) -> Metadata:
     """
-    Returns the working dir metadata json file for given dataset_name.
+    Returns the working dir metadata json file for given dataset_name
+    as a Metadata object.
 
     * dataset_name: str - name of dataset
     """
-    return _read_json(WORKING_DIR / f"{dataset_name}__DRAFT.json")
+    return Metadata.model_validate(
+        _read_json(WORKING_DIR / f"{dataset_name}__DRAFT.json")
+    )
 
 
 def delete_working_dir_metadata(dataset_name: str) -> None:

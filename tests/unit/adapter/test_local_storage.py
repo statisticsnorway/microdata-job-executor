@@ -6,6 +6,13 @@ from pathlib import Path
 import pytest
 
 from job_executor.adapter import local_storage
+from job_executor.adapter.local_storage.models.datastore_versions import (
+    DatastoreVersions,
+    DraftVersion,
+)
+from job_executor.adapter.local_storage.models.metadata import (
+    MetadataAll,
+)
 from job_executor.common.exceptions import LocalStorageError
 
 WORKING_DIR = os.environ["WORKING_DIR"]
@@ -65,34 +72,36 @@ def test_write_data_versions():
 
 
 def test_get_draft_version():
-    assert local_storage.get_draft_version() == read_json(DRAFT_VERSION_PATH)
+    assert isinstance(local_storage.get_draft_version(), DraftVersion)
 
 
 def test_write_draft_version():
-    local_storage.write_draft_version({})
-    assert read_json(DRAFT_VERSION_PATH) == {}
+    draft_version = local_storage.get_draft_version()
+    draft_version.description = "updated"
+    local_storage.write_draft_version(draft_version)
+    assert local_storage.get_draft_version().description == "updated"
 
 
 def test_get_datastore_versions():
-    assert local_storage.get_datastore_versions() == read_json(
-        DATASTORE_VERSIONS_PATH
-    )
+    assert isinstance(local_storage.get_datastore_versions(), DatastoreVersions)
 
 
 def test_write_datastore_versions():
-    local_storage.write_datastore_versions({})
-    assert read_json(DATASTORE_VERSIONS_PATH) == {}
+    datastore_versions = local_storage.get_datastore_versions()
+    datastore_versions.description = "updated"
+    local_storage.write_datastore_versions(datastore_versions)
+    assert local_storage.get_datastore_versions().description == "updated"
 
 
 def test_get_metadata_all():
-    assert local_storage.get_metadata_all("1_0_0") == read_json(
-        METADATA_ALL_PATH
-    )
+    assert isinstance(local_storage.get_metadata_all("1_0_0"), MetadataAll)
 
 
 def test_write_metadata_all():
-    local_storage.write_metadata_all({}, "1_0_0")
-    assert read_json(METADATA_ALL_PATH) == {}
+    metadata_all = local_storage.get_metadata_all("1_0_0")
+    metadata_all.data_structures = []
+    local_storage.write_metadata_all(metadata_all, "1_0_0")
+    assert local_storage.get_metadata_all("1_0_0").data_structures == []
 
 
 def delete_parquet_draft():

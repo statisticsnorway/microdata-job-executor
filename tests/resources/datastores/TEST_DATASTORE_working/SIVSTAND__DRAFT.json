@@ -5,7 +5,7 @@
   "temporality": "EVENT",
   "sensitivityLevel": "PERSON_GENERAL",
   "subjectFields": ["Befolkning"],
-  "temporalCoverage": { "start": -18263, "stop": -6940 },
+  "temporalCoverage": {},
   "identifierVariables": [
     {
       "variableRole": "Identifier",
