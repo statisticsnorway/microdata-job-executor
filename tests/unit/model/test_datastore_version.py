@@ -103,6 +103,7 @@ def test_draft_version_delete_draft():
     release_time = draft_version.release_time
     version = draft_version.version
     draft_version.delete_draft("BRUTTO_INNTEKT")
+    local_storage.write_draft_version(draft_version)
     draft_version_file = load_json(DRAFT_VERSION_PATH)
     update_names = [
         update["name"] for update in draft_version_file["dataStructureUpdates"]

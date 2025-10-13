@@ -1,7 +1,6 @@
 from datetime import UTC, datetime
 from typing import Iterator
 
-from job_executor.adapter import local_storage
 from job_executor.common.exceptions import (
     BumpException,
     ExistingDraftException,
@@ -117,7 +116,6 @@ class DraftVersion(DatastoreVersion):
         self.data_structure_updates.append(data_structure_update)
         self._set_release_time()
         self._calculate_update_type()
-        self._write_to_file()
 
     def delete_draft(self, dataset_name: str) -> DataStructureUpdate:
         deleted_draft = next(
@@ -139,7 +137,6 @@ class DraftVersion(DatastoreVersion):
         ]
         self._set_release_time()
         self._calculate_update_type()
-        self._write_to_file()
         return deleted_draft
 
     def validate_bump_manifesto(
@@ -176,11 +173,7 @@ class DraftVersion(DatastoreVersion):
         self.data_structure_updates = draft_updates
         self._set_release_time()
         self._calculate_update_type()
-        self._write_to_file()
         return pending_updates, update_type
-
-    def _write_to_file(self) -> None:
-        local_storage.write_draft_version(self)
 
     def set_draft_release_status(
         self, dataset_name: str, new_status: str
@@ -199,7 +192,6 @@ class DraftVersion(DatastoreVersion):
         dataset_update.set_release_status(new_status)
         self._set_release_time()
         self._calculate_update_type()
-        self._write_to_file()
 
     def _set_release_time(self) -> None:
         self.release_time = self._get_current_epoch_seconds()
@@ -213,9 +205,6 @@ class DatastoreVersions(CamelModel, extra="forbid"):
     label: str
     description: str
     versions: list[DatastoreVersion]
-
-    def _write_to_file(self) -> None:
-        local_storage.write_datastore_versions(self)
 
     def _get_current_epoch_seconds(self) -> int:
         return int(
@@ -260,7 +249,6 @@ class DatastoreVersions(CamelModel, extra="forbid"):
             data_structure_updates=released_data_structure_updates,
         )
         self.versions = [new_release_version] + self.versions
-        self._write_to_file()
         return dotted_to_underscored_version(new_version_number)
 
     def get_dataset_release_status(self, dataset_name: str) -> str | None:
@@ -291,7 +279,12 @@ def bump_dotted_version_number(version: str, update_type: str) -> str:
         return ".".join([str(version_list[0] + 1), "0", "0", "0"])
     elif update_type == "MINOR":
         return ".".join(
-            [str(version_list[0]), str(version_list[1] + 1), "0", "0"]
+            [
+                str(version_list[0]),
+                str(version_list[1] + 1),
+                "0",
+                "0",
+            ]
         )
     elif update_type == "PATCH":
         return ".".join(
