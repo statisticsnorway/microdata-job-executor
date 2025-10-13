@@ -22,7 +22,7 @@ DATA_TYPES_SIKT_TO_SSB = {v: k for k, v in DATA_TYPES_MAPPING.items()}
 
 
 class TimePeriod(CamelModel):
-    start: int | None
+    start: int | None = None
     stop: int | None = None
 
     def __eq__(self, other: object) -> bool:
@@ -409,9 +409,7 @@ class MetadataAll(CamelModel):
 
 class MetadataAllDraft(MetadataAll):
     def _write_to_file(self) -> None:
-        local_storage.write_metadata_all(
-            self.model_dump(by_alias=True, exclude_none=True), "DRAFT"
-        )
+        local_storage.write_metadata_all_draft(self)
 
     def remove(self, dataset_name: str) -> None:
         self.data_structures = [
