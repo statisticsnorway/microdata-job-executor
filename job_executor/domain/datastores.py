@@ -387,7 +387,6 @@ def delete_draft(
         local_storage.write_metadata_all_draft(datastore.metadata_all_draft)
     if dataset_operation in ["ADD", "CHANGE"]:
         local_storage.delete_parquet_draft(dataset_name)
-        local_storage.write_metadata_all_draft(datastore.metadata_all_draft)
     datastore.draft_version.delete_draft(dataset_name)
     local_storage.write_draft_version(datastore.draft_version)
     datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
