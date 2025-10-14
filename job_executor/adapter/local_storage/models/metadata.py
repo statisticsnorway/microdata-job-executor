@@ -1,6 +1,5 @@
 from collections.abc import Iterator
 
-from job_executor.adapter import local_storage
 from job_executor.adapter.local_storage.models.datastore_versions import (
     DatastoreVersion,
 )
@@ -408,16 +407,12 @@ class MetadataAll(CamelModel):
 
 
 class MetadataAllDraft(MetadataAll):
-    def _write_to_file(self) -> None:
-        local_storage.write_metadata_all_draft(self)
-
     def remove(self, dataset_name: str) -> None:
         self.data_structures = [
             metadata
             for metadata in self.data_structures
             if metadata.name != dataset_name
         ]
-        self._write_to_file()
 
     def update_one(self, dataset_name: str, metadata: Metadata) -> None:
         self.data_structures = [
@@ -426,15 +421,12 @@ class MetadataAllDraft(MetadataAll):
             if metadata.name != dataset_name
         ]
         self.data_structures.append(metadata)
-        self._write_to_file()
 
     def remove_all(self) -> None:
         self.data_structures = []
-        self._write_to_file()
 
     def add(self, metadata: Metadata) -> None:
         self.data_structures.append(metadata)
-        self._write_to_file()
 
     def rebuild(
         self,
@@ -459,4 +451,3 @@ class MetadataAllDraft(MetadataAll):
                     )
                 new_data_structures[draft.name] = draft_metadata
         self.data_structures = list(new_data_structures.values())
-        self._write_to_file()
