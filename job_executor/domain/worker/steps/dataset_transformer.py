@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
-from job_executor.adapter.local_storage.models.metadata import (
+from job_executor.adapter.fs.models.metadata import (
     DATA_TYPES_MAPPING,
     Metadata,
 )
