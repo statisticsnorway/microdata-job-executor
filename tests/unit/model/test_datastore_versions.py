@@ -1,9 +1,10 @@
 import json
 import os
 import shutil
+from pathlib import Path
 
-from job_executor.adapter import local_storage
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs import LocalStorageAdapter
+from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersions,
     DataStructureUpdate,
 )
@@ -13,8 +14,10 @@ def load_json(file_path):
     return json.load(open(file_path, encoding="utf"))
 
 
-DATASTORE_DIR = f"{os.environ['DATASTORE_DIR']}/datastore"
-DATASTORE_VERSIONS_PATH = f"{DATASTORE_DIR}/datastore_versions.json"
+DATASTORE_DIR = f"{os.environ['DATASTORE_DIR']}"
+METADATA_DIR = f"{os.environ['DATASTORE_DIR']}/datastore"
+local_storage = LocalStorageAdapter(Path(DATASTORE_DIR))
+DATASTORE_VERSIONS_PATH = f"{METADATA_DIR}/datastore_versions.json"
 
 
 def setup_function():
@@ -31,7 +34,7 @@ def teardown_function():
 
 def test_datastore_versions():
     datastore_versions = DatastoreVersions.model_validate(
-        local_storage.get_datastore_versions()
+        local_storage.datastore_dir.get_datastore_versions()
     )
     assert datastore_versions.model_dump(
         by_alias=True, exclude_none=True
@@ -40,7 +43,7 @@ def test_datastore_versions():
 
 def test_add_new_release_version():
     datastore_versions = DatastoreVersions.model_validate(
-        local_storage.get_datastore_versions()
+        local_storage.datastore_dir.get_datastore_versions()
     )
     datastore_versions.add_new_release_version(
         [
@@ -59,7 +62,7 @@ def test_add_new_release_version():
 
 def test_get_dataset_release_status():
     datastore_versions = DatastoreVersions.model_validate(
-        local_storage.get_datastore_versions()
+        local_storage.datastore_dir.get_datastore_versions()
     )
     assert (
         datastore_versions.get_dataset_release_status("SIVSTAND") == "RELEASED"

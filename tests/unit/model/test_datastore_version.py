@@ -1,11 +1,12 @@
 import json
 import os
 import shutil
+from pathlib import Path
 
 import pytest
 
-from job_executor.adapter import local_storage
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs import LocalStorageAdapter
+from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
     DataStructureUpdate,
     DraftVersion,
@@ -15,6 +16,7 @@ from job_executor.common.exceptions import (
     ExistingDraftException,
     NoSuchDraftException,
 )
+from job_executor.config import environment
 
 
 def load_json(file_path):
@@ -29,7 +31,7 @@ DRAFT_VERSION_ONLY_PENDING = load_json(
 DRAFT_VERSION_ADDED_PENDING = load_json(
     f"{TEST_DIR}/draft_version_added_pending.json"
 )
-
+local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
 DATASTORE_DIR = f"{os.environ['DATASTORE_DIR']}/datastore"
 DRAFT_VERSION_PATH = f"{DATASTORE_DIR}/draft_version.json"
 DATASTORE_VERSION = {
@@ -89,7 +91,7 @@ def test_get_dataset_release_status():
 
 def test_draft_version():
     draft_version = DraftVersion.model_validate(
-        local_storage.get_draft_version()
+        local_storage.datastore_dir.get_draft_version()
     )
     assert draft_version.model_dump(
         by_alias=True, exclude_none=True
@@ -98,12 +100,12 @@ def test_draft_version():
 
 def test_draft_version_delete_draft():
     draft_version = DraftVersion.model_validate(
-        local_storage.get_draft_version()
+        local_storage.datastore_dir.get_draft_version()
     )
     release_time = draft_version.release_time
     version = draft_version.version
     draft_version.delete_draft("BRUTTO_INNTEKT")
-    local_storage.write_draft_version(draft_version)
+    local_storage.datastore_dir.write_draft_version(draft_version)
     draft_version_file = load_json(DRAFT_VERSION_PATH)
     update_names = [
         update["name"] for update in draft_version_file["dataStructureUpdates"]
@@ -120,7 +122,7 @@ def test_draft_version_delete_draft():
 
 def test_add_draft_version_already_existing_dataset():
     draft_version = DraftVersion.model_validate(
-        local_storage.get_draft_version()
+        local_storage.datastore_dir.get_draft_version()
     )
     with pytest.raises(ExistingDraftException) as e:
         draft_version.add(
@@ -136,7 +138,7 @@ def test_add_draft_version_already_existing_dataset():
 
 def test_draft_version_validate_bump_manifesto():
     draft_version = DraftVersion.model_validate(
-        local_storage.get_draft_version()
+        local_storage.datastore_dir.get_draft_version()
     )
 
     bump_manifesto = DatastoreVersion(**DRAFT_VERSION_IDENTICAL)
@@ -155,7 +157,7 @@ def test_draft_version_validate_bump_manifesto():
 
 def test_draft_version_release_pending():
     draft_version = DraftVersion.model_validate(
-        local_storage.get_draft_version()
+        local_storage.datastore_dir.get_draft_version()
     )
     release_time = draft_version.release_time
     version = draft_version.version
@@ -180,7 +182,7 @@ def test_draft_version_release_pending():
 
 def test_set_draft_release_status():
     draft_version = DraftVersion.model_validate(
-        local_storage.get_draft_version()
+        local_storage.datastore_dir.get_draft_version()
     )
     release_time = draft_version.release_time
     version = draft_version.version

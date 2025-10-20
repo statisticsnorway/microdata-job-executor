@@ -3,8 +3,11 @@ import os
 import shutil
 from pathlib import Path
 
-from job_executor.adapter.local_storage import DATASTORE_DIR, WORKING_DIR
+from job_executor.config import environment
 from job_executor.domain import rollback
+
+DATASTORE_DIR = environment.datastore_dir
+WORKING_DIR = DATASTORE_DIR + "_working"
 
 JOB_ID = "123-123-123-123"
 BUMP_MANIFESTO = {

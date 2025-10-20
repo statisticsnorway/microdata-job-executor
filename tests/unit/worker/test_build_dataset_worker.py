@@ -9,11 +9,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from microdata_tools import package_dataset
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.config import environment
 from job_executor.domain.worker.build_dataset_worker import run_worker
 
-RSA_KEYS_DIRECTORY = Path(environment.rsa_keys_directory)
+RSA_KEYS_DIRECTORY = Path(environment.datastore_dir) / "vault"
 
 
 PARTITIONED_DATASET_NAME = "INNTEKT"
@@ -21,7 +20,9 @@ DATASET_NAME = "BOSTED"
 NO_PSEUDONYM_DATASET_NAME = "KOMMUNE_FOLKETALL"
 NO_PSEUDONYM_FIXED_DATASET_NAME = "KOMMUNE_HOYESTE_PUNKT"
 JOB_ID = "1234-1234-1234-1234"
-WORKING_DIR = os.environ["WORKING_DIR"]
+DATASTORE_DIR = os.environ["DATASTORE_DIR"]
+WORKING_DIR = DATASTORE_DIR + "_working"
+INPUT_DIR = DATASTORE_DIR + "_input"
 INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
 DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
 PSEUDONYM_SERVICE_URL = os.environ["PSEUDONYM_SERVICE_URL"]
@@ -412,14 +413,11 @@ def _create_rsa_public_key(target_dir: Path):
     private_key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048, backend=default_backend()
     )
-
     public_key = private_key.public_key()
-
     microdata_public_key_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
-
     public_key_location = target_dir / "microdata_public_key.pem"
     with open(public_key_location, "wb") as file:
         file.write(microdata_public_key_pem)
