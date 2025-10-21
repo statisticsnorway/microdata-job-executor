@@ -116,7 +116,8 @@ class DatastoreDirectory:
 
     def get_datastore_versions(self) -> DatastoreVersions:
         """
-        Returns the contents of the datastore versions json file as dict.
+        Returns the contents of the datastore versions json file as
+        DatastoreVersions object.
         """
         file_path = self.datastore_versions_path
         with open(file_path, "r") as f:
