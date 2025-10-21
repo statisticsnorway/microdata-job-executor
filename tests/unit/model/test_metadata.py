@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 
-from job_executor.adapter.local_storage.models.metadata import (
+from job_executor.adapter.fs.models.metadata import (
     Metadata,
     MetadataAll,
 )

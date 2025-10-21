@@ -8,7 +8,7 @@ import pytest
 from pyarrow import dataset, parquet
 
 from job_executor.adapter import pseudonym_service
-from job_executor.adapter.local_storage.models.metadata import Metadata
+from job_executor.adapter.fs.models.metadata import Metadata
 from job_executor.common.exceptions import BuilderStepError
 from job_executor.domain.worker.steps import dataset_pseudonymizer
 
@@ -103,12 +103,11 @@ EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED = pyarrow.Table.from_pydict(
 
 WORKING_DIR = Path("tests/resources/worker/steps/pseudonymizer")
 INPUT_PARQUET_PATH = WORKING_DIR / "input.parquet"
-OUTPUT_PARQUET_PATH = WORKING_DIR / "input_pseudonymized.parquet"
+OUTPUT_PARQUET_FILE_NAME = "input_pseudonymized.parquet"
 
 INPUT_PARQUET_PATH_START_YEAR = WORKING_DIR / "input_start_year.parquet"
-OUTPUT_PARQUET_PATH_START_YEAR = (
-    WORKING_DIR / "input_start_year_pseudonymized.parquet"
-)
+OUTPUT_PARQUET_FILE_START_YEAR = "input_start_year_pseudonymized.parquet"
+
 
 JOB_ID = "123-123-123-123"
 PSEUDONYM_DICT = {f"i{count}": count for count in range(TABLE_SIZE)}
@@ -128,11 +127,6 @@ with open(
     encoding="utf-8",
 ) as file:
     PSEUDONYMIZE_ONLY_VALUE_METADATA = Metadata(**json.load(file))
-
-
-@pytest.fixture(autouse=True)
-def set_working_dir(monkeypatch):
-    monkeypatch.setenv("WORKING_DIR", str(WORKING_DIR))
 
 
 def setup_function():
@@ -156,9 +150,11 @@ def test_pseudonymizer(mocker):
     )
     assert str(
         dataset_pseudonymizer.run(INPUT_PARQUET_PATH, METADATA, JOB_ID)
-    ) == str(OUTPUT_PARQUET_PATH)
+    ) == str(OUTPUT_PARQUET_FILE_NAME)
 
-    actual_table = dataset.dataset(OUTPUT_PARQUET_PATH).to_table()
+    actual_table = dataset.dataset(
+        WORKING_DIR / OUTPUT_PARQUET_FILE_NAME
+    ).to_table()
     _validate_content(actual_table, EXPECTED_TABLE)
 
     expected_types = {
@@ -169,7 +165,9 @@ def test_pseudonymizer(mocker):
     }
 
     # Checking the parquet schema is what we expect
-    _verify_parquet_schema(OUTPUT_PARQUET_PATH, expected_types)
+    _verify_parquet_schema(
+        WORKING_DIR / OUTPUT_PARQUET_FILE_NAME, expected_types
+    )
 
 
 def test_pseudonymizer_unit_id_and_value(mocker):
@@ -178,12 +176,14 @@ def test_pseudonymizer_unit_id_and_value(mocker):
     )
 
     # Pseudonymize
-    pseudonymized_output_path = dataset_pseudonymizer.run(
+    pseudonymized_output_file = dataset_pseudonymizer.run(
         INPUT_PARQUET_PATH,
         PSEUDONYMIZE_UNIT_ID_AND_VALUE_METADATA,
         JOB_ID,
     )
-    actual_table = dataset.dataset(pseudonymized_output_path).to_table()
+    actual_table = dataset.dataset(
+        WORKING_DIR / pseudonymized_output_file
+    ).to_table()
     _validate_content(actual_table, EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED)
 
     expected_types = {
@@ -194,7 +194,9 @@ def test_pseudonymizer_unit_id_and_value(mocker):
     }
 
     # Checking the parquet schema is what we expect
-    _verify_parquet_schema(OUTPUT_PARQUET_PATH, expected_types)
+    _verify_parquet_schema(
+        WORKING_DIR / OUTPUT_PARQUET_FILE_NAME, expected_types
+    )
 
 
 def test_pseudonymizer_only_value(mocker):
@@ -203,12 +205,14 @@ def test_pseudonymizer_only_value(mocker):
     )
 
     # Pseudonymize
-    pseudonymized_output_path = dataset_pseudonymizer.run(
+    pseudonymized_output_file = dataset_pseudonymizer.run(
         INPUT_PARQUET_PATH,
         PSEUDONYMIZE_ONLY_VALUE_METADATA,
         JOB_ID,
     )
-    actual_table = dataset.dataset(pseudonymized_output_path).to_table()
+    actual_table = dataset.dataset(
+        WORKING_DIR / pseudonymized_output_file
+    ).to_table()
     _validate_content(
         actual_table, EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED
     )
@@ -221,7 +225,9 @@ def test_pseudonymizer_only_value(mocker):
     }
 
     # Checking the parquet schema is what we expect
-    _verify_parquet_schema(OUTPUT_PARQUET_PATH, expected_types)
+    _verify_parquet_schema(
+        WORKING_DIR / OUTPUT_PARQUET_FILE_NAME, expected_types
+    )
 
 
 def test_pseudonymizer_start_year(mocker):
@@ -232,9 +238,11 @@ def test_pseudonymizer_start_year(mocker):
         dataset_pseudonymizer.run(
             INPUT_PARQUET_PATH_START_YEAR, METADATA, JOB_ID
         )
-    ) == str(OUTPUT_PARQUET_PATH_START_YEAR)
+    ) == str(OUTPUT_PARQUET_FILE_START_YEAR)
 
-    actual_table = dataset.dataset(OUTPUT_PARQUET_PATH_START_YEAR).to_table()
+    actual_table = dataset.dataset(
+        WORKING_DIR / OUTPUT_PARQUET_FILE_START_YEAR
+    ).to_table()
     _validate_content(actual_table, EXPECTED_TABLE_START_YEAR)
 
     expected_types = {
@@ -246,7 +254,9 @@ def test_pseudonymizer_start_year(mocker):
     }
 
     # Checking the parquet schema is what we expect
-    _verify_parquet_schema(OUTPUT_PARQUET_PATH_START_YEAR, expected_types)
+    _verify_parquet_schema(
+        WORKING_DIR / OUTPUT_PARQUET_FILE_START_YEAR, expected_types
+    )
 
 
 def test_pseudonymizer_adapter_failure():

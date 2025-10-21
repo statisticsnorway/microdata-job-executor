@@ -3,10 +3,10 @@ import os
 import shutil
 from pathlib import Path
 
-from job_executor.adapter import datastore_api, local_storage
+from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import Job, JobStatus
-from job_executor.adapter.local_storage import WORKING_DIR
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs import LocalStorageAdapter
+from job_executor.adapter.fs.models.datastore_versions import (
     bump_dotted_version_number,
     dotted_to_underscored_version,
     underscored_to_dotted_version,
@@ -16,15 +16,19 @@ from job_executor.common.exceptions import (
     RollbackException,
     StartupException,
 )
+from job_executor.config import environment
 
-WORKING_DIR_PATH = Path(WORKING_DIR)
+WORKING_DIR_PATH = Path(environment.datastore_dir + "_working")
 logger = logging.getLogger()
 
 
 def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
+    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     try:
         logger.info(f"{job_id}: Restoring files from temporary backup")
-        restored_version_number = local_storage.restore_from_temporary_backup()
+        restored_version_number = (
+            local_storage.datastore_dir.restore_from_temporary_backup()
+        )
         update_type = bump_manifesto["updateType"]
         bumped_version_number = (
             "1.0.0.0"
@@ -53,8 +57,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
         )
 
         logger.info(f"{job_id}: Removing generated datastore files")
-        datastore_dir = Path(local_storage.DATASTORE_DIR)
-        datastore_info_dir = datastore_dir / "datastore"
+        datastore_info_dir = local_storage.datastore_dir.metadata_dir
 
         # No new data version has been built if update type was PATCH
         if update_type in ["MAJOR", "MINOR"]:
@@ -84,7 +87,9 @@ def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
                     f"{job_id}: Update type is {update_type}. "
                     f"Reverting {dataset} data file to DRAFT"
                 )
-                dataset_data_dir: Path = datastore_dir / "data" / dataset
+                dataset_data_dir: Path = (
+                    local_storage.datastore_dir.data_dir / dataset
+                )
                 partitioned_data_path: Path = (
                     dataset_data_dir / f"{dataset}__{bumped_version_data}"
                 )
@@ -111,7 +116,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
                             dataset_data_dir / f"{dataset}__DRAFT.parquet",
                         )
         logger.info(f"{job_id}: Deleting temporary backup")
-        local_storage.archive_temporary_backup()
+        local_storage.datastore_dir.archive_temporary_backup()
     except LocalStorageError as e:
         logger.error(f"{job_id}: LocalStorageError when rolling back job")
         logger.exception(e)
@@ -124,6 +129,7 @@ def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
 def rollback_worker_phase_import_job(
     job_id: str, operation: str, dataset_name: str
 ) -> None:
+    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     logger.warning(
         f"{job_id}: Rolling back worker job "
         f'with target: "{dataset_name}" and operation "{operation}"'
@@ -141,7 +147,7 @@ def rollback_worker_phase_import_job(
     generated_data_directory = f"{dataset_name}__DRAFT"
 
     for file in generated_metadata_files:
-        filepath = WORKING_DIR_PATH / file
+        filepath = local_storage.working_dir.path / file
         if filepath.exists():
             logger.info(f'{job_id}: Deleting metadata file "{filepath}"')
             os.remove(filepath)
@@ -174,18 +180,19 @@ def rollback_manager_phase_import_job(
     Exceptions are not handled here on purpose. It is a catastrophic thing
     if a rollback fails.
     """
+    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     logger.warning(
         f"{job_id}: Rolling back import job "
         f'with target: "{dataset_name}" and operation "{operation}"'
     )
     logger.info(f"{job_id}: Restoring files from temporary backup")
-    local_storage.restore_from_temporary_backup()
+    local_storage.datastore_dir.restore_from_temporary_backup()
 
     if operation in ["ADD", "CHANGE"]:
         logger.info(f"{job_id}: Deleting data file/directory")
-        local_storage.delete_parquet_draft(dataset_name)
+        local_storage.datastore_dir.delete_parquet_draft(dataset_name)
     logger.info(f"{job_id}: Deleting temporary backup")
-    local_storage.archive_temporary_backup()
+    local_storage.datastore_dir.archive_temporary_backup()
 
 
 def fix_interrupted_jobs() -> None:

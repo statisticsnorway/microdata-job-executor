@@ -8,7 +8,7 @@ from microdata_tools.validation.model.metadata import UnitIdType, UnitType
 from pyarrow import compute, dataset, parquet
 
 from job_executor.adapter import pseudonym_service
-from job_executor.adapter.local_storage.models.metadata import Metadata
+from job_executor.adapter.fs.models.metadata import Metadata
 from job_executor.common.exceptions import BuilderStepError
 
 logger = logging.getLogger()
@@ -134,7 +134,7 @@ def _pseudonymize(
     return pseudonymized_table
 
 
-def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
+def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> str:
     """
     Pseudonymizes the identifier & measure column of the dataset if.
 
@@ -172,15 +172,13 @@ def run(input_parquet_path: Path, metadata: Metadata, job_id: str) -> Path:
             measure_unit_id_type,
             job_id,
         )
-        output_path = (
-            input_parquet_path.parent
-            / f"{input_parquet_path.stem}_pseudonymized.parquet"
-        )
+        output_file_name = f"{input_parquet_path.stem}_pseudonymized.parquet"
+        output_path = input_parquet_path.parent / output_file_name
 
         parquet.write_table(pseudonymized_table, output_path)
 
         logger.info(f"Pseudonymization step done {output_path}")
-        return output_path
+        return output_file_name
     except UnregisteredUnitTypeError as e:
         raise BuilderStepError(
             f"Failed to pseudonymize, UnregisteredUnitType: {str(e)}"

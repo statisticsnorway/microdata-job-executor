@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs.models.datastore_versions import (
     DataStructureUpdate,
 )
 from job_executor.common.exceptions import ReleaseStatusException

@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import model_validator
 
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
 )
 from job_executor.common.models import CamelModel

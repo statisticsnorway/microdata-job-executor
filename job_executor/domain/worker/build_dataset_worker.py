@@ -4,8 +4,9 @@ from multiprocessing import Queue
 from pathlib import Path
 from time import perf_counter
 
-from job_executor.adapter import datastore_api, local_storage
+from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import JobStatus
+from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.common.exceptions import BuilderStepError, HttpResponseError
 from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
@@ -17,21 +18,18 @@ from job_executor.domain.worker.steps import (
     dataset_validator,
 )
 
-WORKING_DIR = Path(environment.working_dir)
+DATASTORE_DIR = Path(environment.datastore_dir)
+WORKING_DIR = Path(environment.datastore_dir + "_working")
 
 
 def _clean_working_dir(dataset_name: str) -> None:
-    generated_files = [
-        WORKING_DIR / f"{dataset_name}.json",
-        WORKING_DIR / f"{dataset_name}.parquet",
-        WORKING_DIR / f"{dataset_name}_pseudonymized.parquet",
-        WORKING_DIR / dataset_name,
-    ]
-    for file_path in generated_files:
-        if file_path.is_dir():
-            local_storage.delete_working_dir_dir(file_path)
-        else:
-            local_storage.delete_working_dir_file(file_path)
+    local_storage = LocalStorageAdapter(DATASTORE_DIR)  # TODO
+    local_storage.working_dir.delete_metadata(dataset_name)
+    local_storage.working_dir.delete_file(f"{dataset_name}.parquet")
+    local_storage.working_dir.delete_file(
+        f"{dataset_name}_pseudonymized.parquet"
+    )
+    local_storage.working_dir.delete_sub_directory(dataset_name)
 
 
 def _dataset_requires_pseudonymization(input_metadata: dict) -> bool:
@@ -57,51 +55,60 @@ def run_worker(job_id: str, dataset_name: str, logging_queue: Queue) -> None:
             f"Starting dataset worker for dataset "
             f"{dataset_name} and job {job_id}"
         )
-
-        local_storage.archive_input_files(dataset_name)
-
+        local_storage = LocalStorageAdapter(DATASTORE_DIR)  # TODO
+        local_storage.input_dir.archive_importable(dataset_name)
         datastore_api.update_job_status(job_id, JobStatus.DECRYPTING)
-        dataset_decryptor.unpackage(dataset_name)
-
+        dataset_decryptor.unpackage(
+            dataset_name,
+            local_storage.input_dir.path,
+            local_storage.working_dir.path,
+            local_storage.datastore_dir.vault_dir,
+        )
         datastore_api.update_job_status(job_id, JobStatus.VALIDATING)
-        (
-            data_path,
-            metadata_file_path,
-        ) = dataset_validator.run_for_dataset(dataset_name)
-        input_metadata = local_storage.get_working_dir_input_metadata(
+        (data_file_name, _) = dataset_validator.run_for_dataset(
+            dataset_name, local_storage.working_dir.path
+        )
+        input_metadata = local_storage.working_dir.get_input_metadata(
             dataset_name
         )
         description = input_metadata["dataRevision"]["description"][0]["value"]
         datastore_api.update_description(job_id, description)
 
-        local_storage.delete_working_dir_dir(WORKING_DIR / f"{dataset_name}")
+        local_storage.working_dir.delete_sub_directory(dataset_name)
         datastore_api.update_job_status(job_id, JobStatus.TRANSFORMING)
         transformed_metadata = dataset_transformer.run(input_metadata)
-        local_storage.write_working_dir_metadata(
+        local_storage.working_dir.write_metadata(
             dataset_name, transformed_metadata
         )
-        local_storage.delete_working_dir_file(metadata_file_path)
+        local_storage.working_dir.delete_input_metadata(dataset_name)
 
         temporality_type = transformed_metadata.temporality
         if _dataset_requires_pseudonymization(input_metadata):
             datastore_api.update_job_status(job_id, JobStatus.PSEUDONYMIZING)
-            pre_pseudonymized_data_path = data_path
-            data_path = dataset_pseudonymizer.run(
-                data_path, transformed_metadata, job_id
+            pre_pseudo_data_file_name = data_file_name
+            data_file_name = dataset_pseudonymizer.run(
+                local_storage.working_dir.path / data_file_name,
+                transformed_metadata,
+                job_id,
             )
-            local_storage.delete_working_dir_file(pre_pseudonymized_data_path)
+            local_storage.working_dir.delete_file(pre_pseudo_data_file_name)
 
         datastore_api.update_job_status(job_id, JobStatus.PARTITIONING)
         if temporality_type in ["STATUS", "ACCUMULATED"]:
-            dataset_partitioner.run(data_path, dataset_name)
-            local_storage.delete_working_dir_file(data_path)
-        else:
-            target_path = os.path.join(
-                os.path.dirname(data_path),
-                f"{dataset_name}__DRAFT.parquet",
+            dataset_partitioner.run(
+                local_storage.working_dir.path / data_file_name, dataset_name
             )
-            os.rename(data_path, target_path)
-        local_storage.delete_archived_input(dataset_name)
+            local_storage.working_dir.delete_file(data_file_name)
+        else:
+            target_path = (
+                local_storage.working_dir.path
+                / f"{dataset_name}__DRAFT.parquet"
+            )
+            os.rename(
+                local_storage.working_dir.path / data_file_name,
+                target_path,
+            )
+        local_storage.input_dir.delete_archived_importable(dataset_name)
         datastore_api.update_job_status(job_id, JobStatus.BUILT)
         logger.info("Dataset built successfully")
     except BuilderStepError as e:

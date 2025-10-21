@@ -5,7 +5,7 @@ from pathlib import Path
 
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
 )
 from job_executor.domain import datastores

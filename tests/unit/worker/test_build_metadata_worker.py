@@ -7,16 +7,17 @@ from pathlib import Path
 from microdata_tools import package_dataset
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.adapter.local_storage import INPUT_DIR
 from job_executor.config import environment
 from job_executor.domain.worker.build_metadata_worker import run_worker
 from tests.unit.worker.test_build_dataset_worker import _create_rsa_public_key
 
-RSA_KEYS_DIRECTORY = Path(environment.rsa_keys_directory)
+RSA_KEYS_DIRECTORY = Path(environment.datastore_dir) / "vault"
 
 DATASET_NAME = "KJOENN"
 JOB_ID = "1234-1234-1234-1234"
-WORKING_DIR = os.environ["WORKING_DIR"]
+DATASTORE_DIR = os.environ["DATASTORE_DIR"]
+WORKING_DIR = DATASTORE_DIR + "_working"
+INPUT_DIR = DATASTORE_DIR + "_input"
 INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
 EXPECTED_DIR = "tests/resources/worker/build_metadata/expected"
 DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
@@ -73,7 +74,6 @@ def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-
     run_worker(JOB_ID, DATASET_NAME, Queue())
     with open(
         f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.json", "r", encoding="utf-8"

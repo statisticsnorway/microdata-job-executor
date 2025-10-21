@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from requests_mock import Mocker as RequestsMocker
 
-from job_executor.adapter.local_storage.models.datastore_versions import (
+from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
 )
 from job_executor.domain import datastores
@@ -17,7 +17,7 @@ test_datastore = Datastore()
 DATASTORE_API_URL = os.getenv("DATASTORE_API_URL")
 JOB_ID = "123-123-123-123"
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
-WORKING_DIR = os.environ["WORKING_DIR"]
+WORKING_DIR = DATASTORE_DIR + "_working"
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
 DATASTORE_METADATA_DIR = f"{DATASTORE_DIR}/metadata"
 DATASTORE_INFO_DIR = f"{DATASTORE_DIR}/datastore"
