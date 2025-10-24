@@ -90,6 +90,7 @@ class Log(CamelModel, extra="forbid"):
 
 class Job(CamelModel, use_enum_values=True):
     job_id: str
+    datastore_rdn: str
     status: JobStatus
     parameters: JobParameters
     log: list[Log] | None = []

@@ -2,6 +2,7 @@ import os
 import shutil
 from multiprocessing import Queue
 from pathlib import Path
+from types import SimpleNamespace
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -11,6 +12,7 @@ from requests_mock import Mocker as RequestsMocker
 
 from job_executor.config import environment
 from job_executor.domain.worker.build_dataset_worker import run_worker
+from tests.unit.adapter.test_datastore_api import DATASTORE_RDN
 
 RSA_KEYS_DIRECTORY = Path(environment.datastore_dir) / "vault"
 
@@ -244,6 +246,7 @@ EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM = [
     if request["json"] != {"status": "pseudonymizing"}
     and "mock.pseudonym.service" not in request["url"]
 ]
+JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_RDN)
 
 
 def setup_function():
@@ -274,7 +277,7 @@ def test_build_partitioned_dataset(requests_mock: RequestsMocker):
         f"{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}",
         json=PSEUDONYM_DICT,
     )
-    run_worker(JOB_ID, PARTITIONED_DATASET_NAME, Queue())
+    run_worker(JOB, PARTITIONED_DATASET_NAME, Queue())  # type: ignore
     assert not os.path.exists(f"{INPUT_DIR}/{PARTITIONED_DATASET_NAME}")
     assert os.path.isdir(f"{WORKING_DIR}/{PARTITIONED_DATASET_NAME}__DRAFT")
     assert os.path.isfile(
@@ -300,7 +303,7 @@ def test_import(requests_mock: RequestsMocker):
         json=PSEUDONYM_DICT,
     )
 
-    run_worker(JOB_ID, DATASET_NAME, Queue())
+    run_worker(JOB, DATASET_NAME, Queue())  # type: ignore
     assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}.tar")
     assert not os.path.exists(f"{INPUT_DIR}/{DATASET_NAME}")
     assert not os.path.exists(f"{WORKING_DIR}/{DATASET_NAME}")
@@ -326,7 +329,7 @@ def test_import_no_pseudonymization(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    run_worker(JOB_ID, NO_PSEUDONYM_DATASET_NAME, Queue())
+    run_worker(JOB, NO_PSEUDONYM_DATASET_NAME, Queue())  # type: ignore
     assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}.tar")
     assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
     assert not os.path.exists(f"{WORKING_DIR}/{NO_PSEUDONYM_DATASET_NAME}")
@@ -356,7 +359,7 @@ def test_import_no_pseudonymization_no_partitioning(
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    run_worker(JOB_ID, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())
+    run_worker(JOB, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())  # type: ignore
     assert not os.path.exists(
         f"{INPUT_DIR}/{NO_PSEUDONYM_FIXED_DATASET_NAME}.tar"
     )

@@ -2,10 +2,12 @@ import json
 import os
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 from requests_mock import Mocker as RequestsMocker
 
+from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
 )
@@ -13,10 +15,12 @@ from job_executor.domain import datastores
 from job_executor.domain.datastores import Datastore
 from tests.unit.test_util import get_dir_list_from_dir, get_file_list_from_dir
 
-test_datastore = Datastore()
 DATASTORE_API_URL = os.getenv("DATASTORE_API_URL")
+DATASTORE_RDN = os.getenv("DATASTORE_RDN")
 JOB_ID = "123-123-123-123"
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
+local_storage = LocalStorageAdapter(Path(DATASTORE_DIR))
+test_datastore = Datastore(local_storage)
 WORKING_DIR = DATASTORE_DIR + "_working"
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
 DATASTORE_METADATA_DIR = f"{DATASTORE_DIR}/metadata"
@@ -25,6 +29,8 @@ DATA_VERSIONS = f"{DATASTORE_INFO_DIR}/datastore_versions.json"
 DRAFT_VERSION = f"{DATASTORE_INFO_DIR}/draft_version.json"
 METADATA_ALL_DRAFT = f"{DATASTORE_INFO_DIR}/metadata_all__DRAFT.json"
 DATASTORE_ARCHIVE_DIR = f"{DATASTORE_DIR}/archive"
+
+JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_RDN)
 
 
 def working_dir_metadata_draft_path(name: str):
@@ -54,7 +60,9 @@ def test_patch_metadata(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "SIVSTAND"
     DESCRIPTION = "oppdaterte metadata"
-    datastores.patch_metadata(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.patch_metadata(
+        test_datastore, local_storage, JOB, DATASET_NAME, DESCRIPTION
+    )  # type: ignore
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
@@ -96,7 +104,13 @@ def test_add(requests_mock: RequestsMocker):
         working_dir_metadata_draft_path(DATASET_NAME), encoding="utf-8"
     ) as f:
         foedested_metadata = json.load(f)
-    datastores.add(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.add(
+        test_datastore,
+        local_storage,
+        JOB,
+        DATASET_NAME,
+        DESCRIPTION,  # type: ignore
+    )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
@@ -121,7 +135,13 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "INNTEKT"
     DESCRIPTION = "Ny variabel tidligere DELETED"
-    datastores.add(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.add(
+        test_datastore,
+        local_storage,
+        JOB,
+        DATASET_NAME,
+        DESCRIPTION,  # type: ignore
+    )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(partitioned_draft_data_path(DATASET_NAME))
@@ -155,7 +175,13 @@ def test_change(requests_mock: RequestsMocker):
         working_dir_metadata_draft_path(DATASET_NAME), encoding="utf-8"
     ) as f:
         foedested_metadata = json.load(f)
-    datastores.change(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.change(
+        test_datastore,
+        local_storage,
+        JOB,
+        DATASET_NAME,
+        DESCRIPTION,  # type: ignore
+    )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     assert os.path.exists(draft_data_path(DATASET_NAME))
@@ -180,7 +206,11 @@ def test_delete_draft(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "UTDANNING"
     datastores.delete_draft(
-        test_datastore, JOB_ID, DATASET_NAME, rollback_remove=False
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        rollback_remove=False,
     )
     assert len(requests_mock.request_history) == 2
 
@@ -205,7 +235,11 @@ def test_set_draft_release_status(requests_mock: RequestsMocker):
     DESCRIPTION = "første publisering"
     NEW_STATUS = "PENDING_RELEASE"
     datastores.set_draft_release_status(
-        test_datastore, JOB_ID, DATASET_NAME, NEW_STATUS
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        NEW_STATUS,
     )
     assert len(requests_mock.request_history) == 2
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -219,7 +253,11 @@ def test_set_draft_release_status(requests_mock: RequestsMocker):
     } in draft_version["dataStructureUpdates"]
     # Try again after a possible interrupt
     datastores.set_draft_release_status(
-        test_datastore, JOB_ID, DATASET_NAME, NEW_STATUS
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        NEW_STATUS,
     )
     assert len(requests_mock.request_history) == 4
     assert requests_mock.request_history[3].json() == {
@@ -246,7 +284,11 @@ def test_bump_datastore_minor(requests_mock: RequestsMocker):
         bump_manifesto = DatastoreVersion(**json.load(f))
 
     datastores.bump_version(
-        test_datastore, JOB_ID, bump_manifesto, "description"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        bump_manifesto,
+        "description",
     )
     assert len(requests_mock.request_history) == 2
 
@@ -311,7 +353,13 @@ def test_remove(requests_mock: RequestsMocker):
     )
     DATASET_NAME = "KJOENN"
     DESCRIPTION = "Fjernet variabel"
-    datastores.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.remove(
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        DESCRIPTION,
+    )
     assert len(requests_mock.request_history) == 2
 
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -331,13 +379,21 @@ def test_bump_datastore_major(requests_mock: RequestsMocker):
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     datastores.set_draft_release_status(
-        test_datastore, JOB_ID, "FOEDSELSVEKT", "PENDING_RELEASE"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        "FOEDSELSVEKT",
+        "PENDING_RELEASE",
     )
     assert len(requests_mock.request_history) == 2
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
     datastores.bump_version(
-        test_datastore, JOB_ID, bump_manifesto, "description"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        bump_manifesto,
+        "description",
     )
     assert len(requests_mock.request_history) == 4
 
@@ -401,7 +457,11 @@ def test_delete_draft_after_interrupt(requests_mock: RequestsMocker):
         if draft.name != DATASET_NAME
     ]
     datastores.delete_draft(
-        test_datastore, JOB_ID, DATASET_NAME, rollback_remove=False
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        rollback_remove=False,
     )
     assert len(requests_mock.request_history) == 2
     assert requests_mock.request_history[1].json() == {"status": "completed"}
@@ -423,7 +483,11 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
     datastores.set_draft_release_status(
-        test_datastore, JOB_ID, "INNTEKT", "PENDING_RELEASE"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        "INNTEKT",
+        "PENDING_RELEASE",
     )
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
@@ -434,7 +498,11 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
         if ds.release_status == "DRAFT"
     ]
     datastores.bump_version(
-        test_datastore, JOB_ID, bump_manifesto, "description"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        bump_manifesto,
+        "description",
     )
     assert not os.path.exists(Path(DATASTORE_DIR) / "tmp")
     assert len(get_dir_list_from_dir(Path(DATASTORE_ARCHIVE_DIR))) == 3
@@ -450,7 +518,11 @@ def test_failed_bump(
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
     datastores.bump_version(
-        test_datastore, JOB_ID, bump_manifesto, "description"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        bump_manifesto,
+        "description",
     )
 
 
@@ -461,9 +533,19 @@ def test_rollback_of_remove_operation(requests_mock: RequestsMocker):
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "Setter til remove"
 
-    datastores.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.remove(
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        DESCRIPTION,
+    )
     datastores.delete_draft(
-        test_datastore, JOB_ID, DATASET_NAME, rollback_remove=True
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        rollback_remove=True,
     )
     assert len(requests_mock.request_history) == 4
     with open(DRAFT_VERSION, encoding="utf-8") as f:
@@ -483,9 +565,19 @@ def test_no_rollback(requests_mock: RequestsMocker):
     DATASET_NAME = "FOEDSELSVEKT"
     DESCRIPTION = "Setter til remove"
 
-    datastores.remove(test_datastore, JOB_ID, DATASET_NAME, DESCRIPTION)
+    datastores.remove(
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        DESCRIPTION,
+    )
     datastores.delete_draft(
-        test_datastore, JOB_ID, DATASET_NAME, rollback_remove=False
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        rollback_remove=False,
     )
     assert len(requests_mock.request_history) == 4
     with open(DRAFT_VERSION, encoding="utf-8") as f:

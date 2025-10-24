@@ -1,8 +1,7 @@
 import logging
-from pathlib import Path
 
 from job_executor.adapter import datastore_api
-from job_executor.adapter.datastore_api.models import JobStatus
+from job_executor.adapter.datastore_api.models import Job, JobStatus
 from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
@@ -21,7 +20,6 @@ from job_executor.common.exceptions import (
     UnnecessaryUpdateException,
     VersioningException,
 )
-from job_executor.config import environment
 from job_executor.domain.rollback import (
     rollback_bump,
     rollback_manager_phase_import_job,
@@ -37,8 +35,7 @@ class Datastore:
     draft_version: DraftVersion
     latest_version_number: str | None
 
-    def __init__(self) -> None:
-        local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+    def __init__(self, local_storage: LocalStorageAdapter) -> None:
         self.draft_version = local_storage.datastore_dir.get_draft_version()
         self.datastore_versions = (
             local_storage.datastore_dir.get_datastore_versions()
@@ -73,9 +70,11 @@ def _get_release_status(datastore: Datastore, dataset_name: str) -> str | None:
 
 
 def _generate_new_metadata_all(
-    datastore: Datastore, new_version: str, new_version_metadata: list[Metadata]
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    new_version: str,
+    new_version_metadata: list[Metadata],
 ) -> None:
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     new_metadata_all_dict = datastore.metadata_all_draft.model_dump(
         by_alias=True, exclude_none=True
     )
@@ -96,19 +95,19 @@ def _generate_new_metadata_all(
 
 def _version_pending_operations(
     datastore: Datastore,
-    job_id: str,
+    local_storage: LocalStorageAdapter,
+    job: Job,
     release_updates: list[DataStructureUpdate],
     new_version: str,
 ) -> tuple[list[Metadata], dict]:
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
-    logger.info(f"{job_id}: Generating new metadata_all")
+    logger.info(f"{job.job_id}: Generating new metadata_all")
     new_metadata_datasets = (
         []
         if datastore.metadata_all_latest is None
         else [ds for ds in datastore.metadata_all_latest]
     )
 
-    logger.info(f"{job_id}: Generating new data_versions")
+    logger.info(f"{job.job_id}: Generating new data_versions")
     latest_data_versions = local_storage.datastore_dir.get_data_versions(
         datastore.latest_version_number
     )
@@ -116,27 +115,28 @@ def _version_pending_operations(
         dataset_name: path
         for dataset_name, path in latest_data_versions.items()
     }
-    logger.info(f"{job_id}: Versioning each pending operation in BUMP")
+    logger.info(f"{job.job_id}: Versioning each pending operation in BUMP")
     for release_update in release_updates:
         operation = release_update.operation
         dataset_name = release_update.name
         logger.info(
-            f"{job_id}: Versioning {dataset_name} with operation {operation}"
+            f"{job.job_id}: Versioning {dataset_name} "
+            f"with operation {operation}"
         )
 
         if operation == "REMOVE":
-            logger.info(f"{job_id}: Removing from metadata_all")
+            logger.info(f"{job.job_id}: Removing from metadata_all")
             new_metadata_datasets = [
                 dataset
                 for dataset in new_metadata_datasets
                 if dataset.name != dataset_name
             ]
-            logger.info(f"{job_id}: Removing from data_versions")
+            logger.info(f"{job.job_id}: Removing from data_versions")
             del new_data_versions[dataset_name]
 
         if operation in ["PATCH_METADATA", "CHANGE", "ADD"]:
-            logger.info(f"{job_id}: Renaming metadata file")
-            logger.info(f"{job_id}: Updating metadata into metadata_all")
+            logger.info(f"{job.job_id}: Renaming metadata file")
+            logger.info(f"{job.job_id}: Updating metadata into metadata_all")
             new_metadata_datasets = [
                 dataset
                 for dataset in new_metadata_datasets
@@ -151,7 +151,7 @@ def _version_pending_operations(
             new_metadata_datasets.append(updated_dataset)
         if operation in ["ADD", "CHANGE"]:
             logger.info(
-                f"{job_id}: Renaming data file and updating data_versions"
+                f"{job.job_id}: Renaming data file and updating data_versions"
             )
             new_data_versions[dataset_name] = (
                 local_storage.datastore_dir.rename_parquet_draft_to_release(
@@ -162,20 +162,23 @@ def _version_pending_operations(
 
 
 def patch_metadata(
-    datastore: Datastore, job_id: str, dataset_name: str, description: str
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    job: Job,
+    dataset_name: str,
+    description: str,
 ) -> None:
     """
     Patch metadata for a released dataset with updated metadata
     file.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     if datastore.metadata_all_latest is None:
         raise NoSuchDraftException("There are no released versions to patch")
-    logger.info(f"{job_id}: Saving temporary backup")
+    logger.info(f"{job.job_id}: Saving temporary backup")
     local_storage.datastore_dir.save_temporary_backup()
     try:
-        logger.info(f"{job_id}: importing")
-        datastore_api.update_job_status(job_id, JobStatus.IMPORTING)
+        logger.info(f"{job.job_id}: importing")
+        datastore_api.update_job_status(job.job_id, JobStatus.IMPORTING)
         dataset_release_status = _get_release_status(datastore, dataset_name)
         if dataset_release_status != "RELEASED":
             raise VersioningException(
@@ -202,41 +205,44 @@ def patch_metadata(
             )
         )
         local_storage.datastore_dir.write_draft_version(datastore.draft_version)
-        logger.info(f"{job_id}: completed")
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
-        logger.info(f"{job_id}: Deleting temporary backup")
+        logger.info(f"{job.job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+        logger.info(f"{job.job_id}: Deleting temporary backup")
         local_storage.datastore_dir.delete_temporary_backup()
         local_storage.working_dir.delete_metadata(dataset_name)
         local_storage.input_dir.delete_archived_importable(dataset_name)
     except PatchingError as e:
-        logger.error(f"{job_id}: Patching error occured")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
+        logger.error(f"{job.job_id}: Patching error occured")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
         rollback_manager_phase_import_job(
-            job_id, "PATCH_METADATA", dataset_name
+            job.job_id, "PATCH_METADATA", dataset_name
         )
-        datastore_api.update_job_status(job_id, JobStatus.FAILED, str(e))
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED, str(e))
     except Exception as e:
-        logger.error(f"{job_id}: An unexpected error occured")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
+        logger.error(f"{job.job_id}: An unexpected error occured")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
         rollback_manager_phase_import_job(
-            job_id, "PATCH_METADATA", dataset_name
+            job.job_id, "PATCH_METADATA", dataset_name
         )
-        datastore_api.update_job_status(job_id, JobStatus.FAILED)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
 def add(
-    datastore: Datastore, job_id: str, dataset_name: str, description: str
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    job: Job,
+    dataset_name: str,
+    description: str,
 ) -> None:
     """
     Import metadata and data as draft for a new dataset that
     has not been released in a previous versions.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
-    logger.info(f"{job_id}: Saving temporary backup")
+    logger.info(f"{job.job_id}: Saving temporary backup")
     local_storage.datastore_dir.save_temporary_backup()
     try:
-        logger.info(f"{job_id}: importing")
-        datastore_api.update_job_status(job_id, JobStatus.IMPORTING)
+        logger.info(f"{job.job_id}: importing")
+        datastore_api.update_job_status(job.job_id, JobStatus.IMPORTING)
         dataset_release_status = _get_release_status(datastore, dataset_name)
         if dataset_release_status not in [None, "DELETED"]:
             raise VersioningException(
@@ -258,34 +264,37 @@ def add(
             datastore.metadata_all_draft
         )
         local_storage.move_working_dir_parquet_to_datastore(dataset_name)
-        logger.info(f"{job_id}: completed")
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
-        logger.info(f"{job_id}: Deleting temporary backup")
+        logger.info(f"{job.job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+        logger.info(f"{job.job_id}: Deleting temporary backup")
         local_storage.datastore_dir.delete_temporary_backup()
         local_storage.working_dir.delete_metadata(dataset_name)
         local_storage.input_dir.delete_archived_importable(dataset_name)
     except Exception as e:
-        logger.error(f"{job_id}: An unexpected error occured")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(job_id, "ADD", dataset_name)
-        datastore_api.update_job_status(job_id, JobStatus.FAILED)
+        logger.error(f"{job.job_id}: An unexpected error occured")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
+        rollback_manager_phase_import_job(job.job_id, "ADD", dataset_name)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
 def change(
-    datastore: Datastore, job_id: str, dataset_name: str, description: str
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    job: Job,
+    dataset_name: str,
+    description: str,
 ) -> None:
     """
     Import metadata and data as draft for as an update
     for a dataset that has already been released in a
     previous version.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     try:
-        logger.info(f"{job_id}: Saving temporary backup")
+        logger.info(f"{job.job_id}: Saving temporary backup")
         local_storage.datastore_dir.save_temporary_backup()
 
-        logger.info(f"{job_id}: importing")
-        datastore_api.update_job_status(job_id, JobStatus.IMPORTING)
+        logger.info(f"{job.job_id}: importing")
+        datastore_api.update_job_status(job.job_id, JobStatus.IMPORTING)
         dataset_release_status = _get_release_status(datastore, dataset_name)
         if dataset_release_status != "RELEASED":
             raise VersioningException(
@@ -307,29 +316,32 @@ def change(
         )
         local_storage.datastore_dir.write_draft_version(datastore.draft_version)
         local_storage.move_working_dir_parquet_to_datastore(dataset_name)
-        logger.info(f"{job_id}: completed")
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
-        logger.info(f"{job_id}: Deleting temporary backup")
+        logger.info(f"{job.job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+        logger.info(f"{job.job_id}: Deleting temporary backup")
         local_storage.datastore_dir.delete_temporary_backup()
         local_storage.working_dir.delete_metadata(dataset_name)
         local_storage.input_dir.delete_archived_importable(dataset_name)
     except Exception as e:
-        logger.error(f"{job_id}: An unexpected error occured")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(job_id, "CHANGE", dataset_name)
-        datastore_api.update_job_status(job_id, JobStatus.FAILED)
+        logger.error(f"{job.job_id}: An unexpected error occured")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
+        rollback_manager_phase_import_job(job.job_id, "CHANGE", dataset_name)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
 def remove(
-    datastore: Datastore, job_id: str, dataset_name: str, description: str
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    job: Job,
+    dataset_name: str,
+    description: str,
 ) -> None:
     """
     Remove a released dataset that has been released in
     a previous version from future versions of the datastore.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
-    logger.info(f"{job_id}: initiated")
-    datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+    logger.info(f"{job.job_id}: initiated")
+    datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
     dataset_release_status = _get_release_status(datastore, dataset_name)
     dataset_is_draft = datastore.draft_version.contains(dataset_name)
     dataset_operation = datastore.draft_version.get_dataset_operation(
@@ -341,17 +353,19 @@ def remove(
             datastore.metadata_all_draft
         )
         log_message = "Dataset already in draft with operation REMOVE."
-        logger.info(f"{job_id}: {log_message}")
+        logger.info(f"{job.job_id}: {log_message}")
         datastore_api.update_job_status(
-            job_id, JobStatus.COMPLETED, log_message
+            job.job_id, JobStatus.COMPLETED, log_message
         )
-        logger.info(f"{job_id}: completed")
+        logger.info(f"{job.job_id}: completed")
     elif dataset_release_status != "RELEASED":
         log_message = (
             f"Can't remove dataset with release status {dataset_release_status}"
         )
-        logger.error(f"{job_id}: {log_message}")
-        datastore_api.update_job_status(job_id, JobStatus.FAILED, log_message)
+        logger.error(f"{job.job_id}: {log_message}")
+        datastore_api.update_job_status(
+            job.job_id, JobStatus.FAILED, log_message
+        )
     else:
         datastore.metadata_all_draft.remove(dataset_name)
         local_storage.datastore_dir.write_metadata_all_draft(
@@ -366,34 +380,41 @@ def remove(
             )
         )
         local_storage.datastore_dir.write_draft_version(datastore.draft_version)
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
-        logger.info(f"{job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+        logger.info(f"{job.job_id}: completed")
 
 
 def delete_draft(
-    datastore: Datastore, job_id: str, dataset_name: str, rollback_remove: bool
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    job: Job,
+    dataset_name: str,
+    rollback_remove: bool,
 ) -> None:
     """
     Delete a dataset from the draft version of the datastore.
     """
-    logger.info(f"{job_id}: initiated")
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
-    datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+    logger.info(f"{job.job_id}: initiated")
+    datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
     dataset_is_draft = datastore.draft_version.contains(dataset_name)
     dataset_operation = datastore.draft_version.get_dataset_operation(
         dataset_name
     )
     if dataset_operation != "REMOVE" and rollback_remove:
         log_message = f"{dataset_name} is not scheduled for removal"
-        logger.error(f"{job_id}: {log_message}")
-        datastore_api.update_job_status(job_id, JobStatus.FAILED, log_message)
+        logger.error(f"{job.job_id}: {log_message}")
+        datastore_api.update_job_status(
+            job.job_id, JobStatus.FAILED, log_message
+        )
         return
     if (not dataset_is_draft) or (
         dataset_operation == "REMOVE" and not rollback_remove
     ):
         log_message = f'Draft not found for dataset name: "{dataset_name}"'
-        logger.error(f"{job_id}: {log_message}")
-        datastore_api.update_job_status(job_id, JobStatus.FAILED, log_message)
+        logger.error(f"{job.job_id}: {log_message}")
+        datastore_api.update_job_status(
+            job.job_id, JobStatus.FAILED, log_message
+        )
         return
     # If dataset has previously released data/metadata that needs to
     # be restored
@@ -406,7 +427,7 @@ def delete_draft(
                 f"Can't find released metadata for {dataset_name} "
                 "when attempting to delete draft."
             )
-            logger.error(f"{job_id}: {log_message}")
+            logger.error(f"{job.job_id}: {log_message}")
             raise VersioningException(log_message)
         datastore.metadata_all_draft.remove(dataset_name)
         datastore.metadata_all_draft.add(released_metadata)
@@ -422,37 +443,41 @@ def delete_draft(
         local_storage.datastore_dir.delete_parquet_draft(dataset_name)
     datastore.draft_version.delete_draft(dataset_name)
     local_storage.datastore_dir.write_draft_version(datastore.draft_version)
-    datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
+    datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
 
 
 def set_draft_release_status(
-    datastore: Datastore, job_id: str, dataset_name: str, new_status: str
+    datastore: Datastore,
+    local_storage: LocalStorageAdapter,
+    job: Job,
+    dataset_name: str,
+    new_status: str,
 ) -> None:
     """
     Set a new release status for a dataset in the draft version.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     try:
-        logger.info(f"{job_id}: initiated")
-        datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+        logger.info(f"{job.job_id}: initiated")
+        datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
         datastore.draft_version.set_draft_release_status(
             dataset_name, new_status
         )
         local_storage.datastore_dir.write_draft_version(datastore.draft_version)
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
-        logger.info(f"{job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+        logger.info(f"{job.job_id}: completed")
     except UnnecessaryUpdateException as e:
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED, f"{e}")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
-        logger.info(f"{job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED, f"{e}")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
+        logger.info(f"{job.job_id}: completed")
     except NoSuchDraftException as e:
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
-        datastore_api.update_job_status(job_id, JobStatus.FAILED, f"{e}")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED, f"{e}")
 
 
 def bump_version(
     datastore: Datastore,
-    job_id: str,
+    local_storage: LocalStorageAdapter,
+    job: Job,
     bump_manifesto: DatastoreVersion,
     description: str,
 ) -> None:
@@ -460,33 +485,34 @@ def bump_version(
     Release a new version of the datastore with the pending
     operations in the draft version of the datastore.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
-    logger.info(f"{job_id}: Saving temporary backup")
+    logger.info(f"{job.job_id}: Saving temporary backup")
     local_storage.datastore_dir.save_temporary_backup()
 
     try:
-        logger.info(f"{job_id}: initiated")
-        datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+        logger.info(f"{job.job_id}: initiated")
+        datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
 
-        logger.info(f"{job_id}: Validating bump manifesto")
+        logger.info(f"{job.job_id}: Validating bump manifesto")
         if not datastore.draft_version.validate_bump_manifesto(bump_manifesto):
             log_message = (
                 "Changes were made to the datastore after bump was requested"
             )
-            logger.error(f"{job_id}: {log_message}")
+            logger.error(f"{job.job_id}: {log_message}")
             datastore_api.update_job_status(
-                job_id, JobStatus.FAILED, log_message
+                job.job_id, JobStatus.FAILED, log_message
             )
-            logger.info(f"{job_id}: Archiving temporary backup")
+            logger.info(f"{job.job_id}: Archiving temporary backup")
             local_storage.datastore_dir.archive_temporary_backup()
             return
 
-        logger.info(f"{job_id}: Archiving draft version")
+        logger.info(f"{job.job_id}: Archiving draft version")
         local_storage.datastore_dir.archive_draft_version(
             datastore.latest_version_number or "0.0.0.0"
         )
 
-        logger.info(f"{job_id}: Release pending operations from draft_version")
+        logger.info(
+            f"{job.job_id}: Release pending operations from draft_version"
+        )
         release_updates, update_type = datastore.draft_version.release_pending()
         local_storage.datastore_dir.write_draft_version(datastore.draft_version)
         # If there are no released versions update type is MAJOR
@@ -499,7 +525,7 @@ def bump_version(
             datastore.datastore_versions
         )
         logger.info(
-            f"{job_id}: "
+            f"{job.job_id}: "
             f"Bumping from {datastore.latest_version_number} => {new_version}"
             f"({update_type})",
         )
@@ -507,22 +533,22 @@ def bump_version(
             new_metadata_datasets,
             new_data_versions,
         ) = _version_pending_operations(
-            datastore, job_id, release_updates, new_version
+            datastore, local_storage, job, release_updates, new_version
         )
         if update_type in ["MINOR", "MAJOR"]:
-            logger.info(f"{job_id}: Writing new data_versions to file")
+            logger.info(f"{job.job_id}: Writing new data_versions to file")
             local_storage.datastore_dir.write_data_versions(
                 new_data_versions, new_version
             )
 
-        logger.info(f"{job_id}: Writing new metadata_all to file")
+        logger.info(f"{job.job_id}: Writing new metadata_all to file")
         _generate_new_metadata_all(
-            datastore, new_version, new_metadata_datasets
+            datastore, local_storage, new_version, new_metadata_datasets
         )
         datastore.latest_version_number = new_version
         assert datastore.metadata_all_latest is not None
 
-        logger.info(f"{job_id}: Rebuilding metadata_all_DRAFT")
+        logger.info(f"{job.job_id}: Rebuilding metadata_all_DRAFT")
         datastore.metadata_all_draft.rebuild(
             datastore.metadata_all_latest.data_structures,
             datastore.draft_version,
@@ -530,31 +556,33 @@ def bump_version(
         local_storage.datastore_dir.write_metadata_all_draft(
             datastore.metadata_all_draft
         )
-        logger.info(f"{job_id}: completed BUMP")
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
-        logger.info(f"{job_id}: Archiving temporary backup")
+        logger.info(f"{job.job_id}: completed BUMP")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+        logger.info(f"{job.job_id}: Archiving temporary backup")
         local_storage.datastore_dir.archive_temporary_backup()
     except Exception as e:
-        logger.error(f"{job_id}: An unexpected error occured")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
+        logger.error(f"{job.job_id}: An unexpected error occured")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
         rollback_bump(
-            job_id,
+            job.job_id,
             bump_manifesto.model_dump(by_alias=True, exclude_none=True),
         )
-        datastore_api.update_job_status(job_id, JobStatus.FAILED)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
-def delete_archived_input(job_id: str, dataset_name: str) -> None:
+def delete_archived_input(job: Job, dataset_name: str) -> None:
     """
     Delete the archived dataset from archive directory.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+    local_storage = LocalStorageAdapter(
+        datastore_api.get_datastore_directory(job.datastore_rdn)
+    )
     try:
-        logger.info(f"{job_id}: initiated")
-        datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+        logger.info(f"{job.job_id}: initiated")
+        datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
         local_storage.input_dir.delete_archived_importable(dataset_name)
-        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
     except Exception as e:
-        logger.error(f"{job_id}: An unexpected error occured")
-        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
-        datastore_api.update_job_status(job_id, JobStatus.FAILED)
+        logger.error(f"{job.job_id}: An unexpected error occured")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED)

@@ -3,6 +3,7 @@ import os
 import shutil
 from multiprocessing import Queue
 from pathlib import Path
+from types import SimpleNamespace
 
 from microdata_tools import package_dataset
 from requests_mock import Mocker as RequestsMocker
@@ -48,6 +49,8 @@ EXPECTED_REQUESTS = [
         "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
 ]
+DATASTORE_RDN = os.environ["DATASTORE_RDN"]
+JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_RDN)
 
 
 def setup_function():
@@ -74,7 +77,7 @@ def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    run_worker(JOB_ID, DATASET_NAME, Queue())
+    run_worker(JOB, DATASET_NAME, Queue())  # type: ignore
     with open(
         f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.json", "r", encoding="utf-8"
     ) as f:

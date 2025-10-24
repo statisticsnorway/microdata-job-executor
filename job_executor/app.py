@@ -29,7 +29,6 @@ def initialize_app() -> None:
 def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
     job_query_result = datastore_api.query_for_jobs()
     manager.clean_up_after_dead_workers()
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
     if job_query_result.available_jobs_count:
         logger.info(
             f"Found {len(job_query_result.queued_worker_jobs)}"
@@ -39,6 +38,9 @@ def handle_jobs(manager: Manager, logging_queue: Queue) -> None:
         )
 
     for job in job_query_result.queued_worker_jobs:
+        local_storage = LocalStorageAdapter(
+            datastore_api.get_datastore_directory(job.datastore_rdn)
+        )
         job_size = local_storage.input_dir.get_importable_tar_size_in_bytes(
             job.parameters.target
         )

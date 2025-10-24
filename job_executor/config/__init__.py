@@ -6,6 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class Environment:
     datastore_dir: str
+    datastore_rdn: str
     secrets_file: str
     pseudonym_service_url: str
     datastore_api_url: str
@@ -18,6 +19,7 @@ class Environment:
 def _initialize_environment() -> Environment:
     return Environment(
         datastore_dir=os.environ["DATASTORE_DIR"],
+        datastore_rdn=os.environ["DATASTORE_RDN"],
         secrets_file=os.environ["SECRETS_FILE"],
         pseudonym_service_url=os.environ["PSEUDONYM_SERVICE_URL"],
         datastore_api_url=os.environ["DATASTORE_API_URL"],
