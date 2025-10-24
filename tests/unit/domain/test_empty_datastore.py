@@ -2,9 +2,11 @@ import json
 import os
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 from requests_mock import Mocker as RequestsMocker
 
+from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import (
     DatastoreVersion,
 )
@@ -12,6 +14,7 @@ from job_executor.domain import datastores
 from job_executor.domain.datastores import Datastore
 
 DATASTORE_API_URL = os.getenv("DATASTORE_API_URL")
+DATASTORE_RDN = os.getenv("DATASTORE_RDN")
 JOB_ID = "123-123-123-123"
 DATASTORE_DIR = Path(os.getenv("DATASTORE_DIR"))  # type: ignore
 UTDANNING_DATA_DIR = DATASTORE_DIR / "data" / "UTDANNING"
@@ -21,6 +24,9 @@ DRAFT_VERSION = DATASTORE_INFO_DIR / "draft_version.json"
 METADATA_ALL_DRAFT = DATASTORE_INFO_DIR / "metadata_all__DRAFT.json"
 METADATA_ALL_RELEASED = DATASTORE_INFO_DIR / "metadata_all__1_0_0.json"
 DATA_VERSIONS_RELEASED = DATASTORE_INFO_DIR / "data_versions__1_0.json"
+
+
+JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_RDN)
 
 
 def setup_module():
@@ -38,14 +44,19 @@ def teardown_module():
 
 
 def test_bump_empty_datastore(requests_mock: RequestsMocker):
+    local_storage = LocalStorageAdapter(Path(DATASTORE_DIR))
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
-    test_datastore = Datastore()
+    test_datastore = Datastore(local_storage)
     with open(DRAFT_VERSION, encoding="utf-8") as f:
         bump_manifesto = DatastoreVersion(**json.load(f))
     datastores.bump_version(
-        test_datastore, JOB_ID, bump_manifesto, "description"
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        bump_manifesto,
+        "description",
     )
     assert len(requests_mock.request_history) == 2
     # check draft version after bump
