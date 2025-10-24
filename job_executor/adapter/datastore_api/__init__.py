@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from urllib.error import HTTPError
 
 import requests
@@ -20,56 +21,6 @@ DATASTORE_API_URL = environment.datastore_api_url
 DEFAULT_REQUESTS_TIMEOUT = (10, 60)  # (read timeout, connect timeout)
 
 logger = logging.getLogger()
-
-
-def get_jobs(
-    job_status: JobStatus | None = None,
-    operations: list[Operation] | None = None,
-    ignore_completed: bool | None = None,
-) -> list[Job]:
-    query_fields = []
-    if job_status is not None:
-        query_fields.append(f"status={job_status}")
-    if operations is not None:
-        query_fields.append(f"operation={','.join(operations)}")
-    if ignore_completed is not None:
-        query_fields.append(f"ignoreCompleted={str(ignore_completed).lower()}")
-
-    request_url = f"{DATASTORE_API_URL}/jobs"
-    if query_fields:
-        request_url += f"?{'&'.join(query_fields)}"
-
-    response = execute_request("GET", request_url, True)
-    return [Job(**job) for job in response.json()]
-
-
-def update_job_status(
-    job_id: str, new_status: JobStatus, log: str | None = None
-) -> None:
-    payload: dict[str, JobStatus | str] = {"status": str(new_status)}
-    if log is not None:
-        payload.update({"log": log})
-    execute_request("PUT", f"{DATASTORE_API_URL}/jobs/{job_id}", json=payload)
-
-
-def update_description(job_id: str, new_description: str) -> None:
-    execute_request(
-        "PUT",
-        f"{DATASTORE_API_URL}/jobs/{job_id}",
-        json={"description": new_description},
-    )
-
-
-def get_maintenance_status() -> MaintenanceStatus:
-    request_url = f"{DATASTORE_API_URL}/maintenance-statuses/latest"
-    response = execute_request("GET", request_url, True)
-    return MaintenanceStatus(**response.json())
-
-
-def is_system_paused() -> bool:
-    """Return True if the system is paused, otherwise False."""
-    maintenance_status = get_maintenance_status()
-    return maintenance_status.paused
 
 
 def execute_request(
@@ -101,6 +52,63 @@ def execute_request(
         return response
     except (RequestException, HTTPError) as e:
         raise HttpRequestError(e) from e
+
+
+def get_jobs(
+    job_status: JobStatus | None = None,
+    operations: list[Operation] | None = None,
+    ignore_completed: bool | None = None,
+) -> list[Job]:
+    query_fields = []
+    if job_status is not None:
+        query_fields.append(f"status={job_status}")
+    if operations is not None:
+        query_fields.append(f"operation={','.join(operations)}")
+    if ignore_completed is not None:
+        query_fields.append(f"ignoreCompleted={str(ignore_completed).lower()}")
+
+    request_url = f"{DATASTORE_API_URL}/jobs"
+    if query_fields:
+        request_url += f"?{'&'.join(query_fields)}"
+
+    response = execute_request("GET", request_url, True)
+    return [
+        Job.model_validate({"datastoreRdn": environment.datastore_rdn, **job})
+        for job in response.json()
+    ]
+
+
+def update_job_status(
+    job_id: str, new_status: JobStatus, log: str | None = None
+) -> None:
+    payload: dict[str, JobStatus | str] = {"status": str(new_status)}
+    if log is not None:
+        payload.update({"log": log})
+    execute_request("PUT", f"{DATASTORE_API_URL}/jobs/{job_id}", json=payload)
+
+
+def update_description(job_id: str, new_description: str) -> None:
+    execute_request(
+        "PUT",
+        f"{DATASTORE_API_URL}/jobs/{job_id}",
+        json={"description": new_description},
+    )
+
+
+def get_maintenance_status() -> MaintenanceStatus:
+    request_url = f"{DATASTORE_API_URL}/maintenance-statuses/latest"
+    response = execute_request("GET", request_url, True)
+    return MaintenanceStatus(**response.json())
+
+
+def is_system_paused() -> bool:
+    """Return True if the system is paused, otherwise False."""
+    maintenance_status = get_maintenance_status()
+    return maintenance_status.paused
+
+
+def get_datastore_directory(rdn: str) -> Path:
+    return Path(environment.datastore_dir)
 
 
 def query_for_jobs() -> JobQueryResult:
