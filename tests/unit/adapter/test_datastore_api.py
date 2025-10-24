@@ -15,10 +15,12 @@ from job_executor.adapter.datastore_api.models import (
 from job_executor.common.exceptions import HttpResponseError
 
 DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
+DATASTORE_RDN = os.environ["DATASTORE_RDN"]
 JOB_ID = "123"
 JOB_LIST = [
     Job(
         job_id=JOB_ID,
+        datastore_rdn=DATASTORE_RDN,
         status=JobStatus.QUEUED,
         parameters=JobParameters(target="INNTEKT", operation=Operation.CHANGE),
         log=[],
@@ -29,6 +31,7 @@ JOB_LIST = [
     ),
     Job(
         job_id=JOB_ID,
+        datastore_rdn=DATASTORE_RDN,
         status=JobStatus.QUEUED,
         parameters=JobParameters(
             operation=Operation.SET_STATUS,
