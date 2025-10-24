@@ -3,6 +3,7 @@ from multiprocessing import Process, Queue
 
 from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import Job, JobStatus, Operation
+from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.domain import datastores, rollback
 from job_executor.domain.datastores import Datastore
 from job_executor.domain.worker import (
@@ -97,44 +98,43 @@ class Manager:
         logging_queue: Queue,
     ) -> None:
         dataset_name = job.parameters.target
-        job_id = job.job_id
         operation = job.parameters.operation
         if operation in ["ADD", "CHANGE"]:
             worker = Worker(
                 process=Process(
                     target=build_dataset_worker.run_worker,
                     args=(
-                        job_id,
+                        job,
                         dataset_name,
                         logging_queue,
                     ),
                 ),
-                job_id=job_id,
+                job_id=job.job_id,
                 job_size=job_size,
             )
             self.workers.append(worker)
-            datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+            datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
             worker.start()
         elif operation == "PATCH_METADATA":
             worker = Worker(
                 process=Process(
                     target=build_metadata_worker.run_worker,
                     args=(
-                        job_id,
+                        job,
                         dataset_name,
                         logging_queue,
                     ),
                 ),
-                job_id=job_id,
+                job_id=job.job_id,
                 job_size=job_size,
             )
             self.workers.append(worker)
-            datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+            datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
             worker.start()
         else:
             logger.error(f'Unknown operation "{operation}"')
             datastore_api.update_job_status(
-                job_id,
+                job.job_id,
                 JobStatus.FAILED,
                 log=f"Unknown operation type {operation}",
             )
@@ -142,7 +142,10 @@ class Manager:
     def handle_manager_job(self, job: Job) -> None:
         job_id = job.job_id
         operation = job.parameters.operation
-        datastore = Datastore()
+        local_storage = LocalStorageAdapter(
+            datastore_api.get_datastore_directory(job.datastore_rdn)
+        )
+        datastore = Datastore(local_storage)
         self.unregister_worker(
             job_id
         )  # Filter out job from worker jobs if built
@@ -151,61 +154,69 @@ class Manager:
         if operation == Operation.BUMP:
             datastores.bump_version(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.bump_manifesto,  # type: ignore
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.PATCH_METADATA:
             datastores.patch_metadata(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.SET_STATUS:
             datastores.set_draft_release_status(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 job.parameters.release_status,  # type: ignore
             )
         elif operation == Operation.ADD:
             datastores.add(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.CHANGE:
             datastores.change(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.REMOVE:
             datastores.remove(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 job.parameters.description,  # type: ignore
             )
         elif operation == Operation.ROLLBACK_REMOVE:
             datastores.delete_draft(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 rollback_remove=True,
             )
         elif operation == Operation.DELETE_DRAFT:
             datastores.delete_draft(
                 datastore,
-                job_id,
+                local_storage,
+                job,
                 job.parameters.target,
                 rollback_remove=False,
             )
         elif operation == Operation.DELETE_ARCHIVE:
-            datastores.delete_archived_input(job_id, job.parameters.target)
+            datastores.delete_archived_input(job, job.parameters.target)
         else:
             datastore_api.update_job_status(
                 job.job_id, JobStatus.FAILED, log="Unknown operation for job"
