@@ -15,6 +15,7 @@ from tests.unit.worker.test_build_dataset_worker import _create_rsa_public_key
 RSA_KEYS_DIRECTORY = Path(environment.datastore_dir) / "vault"
 
 DATASET_NAME = "KJOENN"
+DATASTORE_RDN = os.environ["DATASTORE_RDN"]
 JOB_ID = "1234-1234-1234-1234"
 DATASTORE_DIR = os.environ["DATASTORE_DIR"]
 WORKING_DIR = DATASTORE_DIR + "_working"
@@ -23,6 +24,11 @@ INPUT_DIR_ARCHIVE = f"{INPUT_DIR}/archive"
 EXPECTED_DIR = "tests/resources/worker/build_metadata/expected"
 DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
 EXPECTED_REQUESTS = [
+    {
+        "json": None,
+        "method": "GET",
+        "url": f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+    },
     {
         "json": {"status": "decrypting"},
         "method": "PUT",
@@ -49,8 +55,15 @@ EXPECTED_REQUESTS = [
         "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
     },
 ]
-DATASTORE_RDN = os.environ["DATASTORE_RDN"]
 JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_RDN)
+DATASTORE_RESPONSE = {
+    "datastore_id": 1,
+    "rdn": DATASTORE_RDN,
+    "name": "",
+    "description": "",
+    "bump_enabled": True,
+    "directory": DATASTORE_DIR,
+}
 
 
 def setup_function():
@@ -77,6 +90,10 @@ def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
+    requests_mock.get(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+        json=DATASTORE_RESPONSE,
+    )
     run_worker(JOB, DATASET_NAME, Queue())  # type: ignore
     with open(
         f"{WORKING_DIR}/{DATASET_NAME}__DRAFT.json", "r", encoding="utf-8"
@@ -89,7 +106,11 @@ def test_import(requests_mock: RequestsMocker):
 
     assert actual_metadata == expected_metadata
     requests_made = [
-        {"method": req.method, "json": req.json(), "url": req.url}
+        {
+            "method": req.method,
+            "json": req.json() if req.method != "GET" else None,
+            "url": req.url,
+        }
         for req in requests_mock.request_history
     ]
     assert requests_made == EXPECTED_REQUESTS
