@@ -92,6 +92,11 @@ PSEUDONYM_DICT = {
 
 EXPECTED_REQUESTS_PARTITIONED = [
     {
+        "json": None,
+        "method": "GET",
+        "url": f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+    },
+    {
         "json": {"status": "decrypting"},
         "method": "PUT",
         "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
@@ -187,6 +192,11 @@ EXPECTED_REQUESTS_PARTITIONED = [
 
 EXPECTED_REQUESTS_IMPORT = [
     {
+        "json": None,
+        "method": "GET",
+        "url": f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+    },
+    {
         "json": {"status": "decrypting"},
         "method": "PUT",
         "url": f"{DATASTORE_API_URL}/jobs/{JOB_ID}",
@@ -247,6 +257,14 @@ EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM = [
     and "mock.pseudonym.service" not in request["url"]
 ]
 JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_RDN)
+DATASTORE_RESPONSE = {
+    "datastore_id": 1,
+    "rdn": DATASTORE_RDN,
+    "name": "",
+    "description": "",
+    "bump_enabled": True,
+    "directory": DATASTORE_DIR,
+}
 
 
 def setup_function():
@@ -273,6 +291,10 @@ def test_build_partitioned_dataset(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )
+    requests_mock.get(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+        json=DATASTORE_RESPONSE,
+    )
     requests_mock.post(
         f"{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}",
         json=PSEUDONYM_DICT,
@@ -284,7 +306,11 @@ def test_build_partitioned_dataset(requests_mock: RequestsMocker):
         f"{WORKING_DIR}/{PARTITIONED_DATASET_NAME}__DRAFT.json"
     )
     requests_made = [
-        {"method": req.method, "json": req.json(), "url": req.url}
+        {
+            "method": req.method,
+            "json": req.json() if req.method != "GET" else None,
+            "url": req.url,
+        }
         for req in requests_mock.request_history
     ]
     assert len(requests_made) == len(EXPECTED_REQUESTS_PARTITIONED)
@@ -297,6 +323,10 @@ def test_build_partitioned_dataset(requests_mock: RequestsMocker):
 def test_import(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    requests_mock.get(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+        json=DATASTORE_RESPONSE,
     )
     requests_mock.post(
         f"{PSEUDONYM_SERVICE_URL}?unit_id_type=FNR&job_id={JOB_ID}",
@@ -315,7 +345,11 @@ def test_import(requests_mock: RequestsMocker):
         Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{DATASET_NAME}.tar"
     ).exists()
     requests_made = [
-        {"method": req.method, "json": req.json(), "url": req.url}
+        {
+            "method": req.method,
+            "json": req.json() if req.method != "GET" else None,
+            "url": req.url,
+        }
         for req in requests_mock.request_history
     ]
     assert len(requests_made) == len(EXPECTED_REQUESTS_IMPORT)
@@ -328,6 +362,10 @@ def test_import(requests_mock: RequestsMocker):
 def test_import_no_pseudonymization(requests_mock: RequestsMocker):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    requests_mock.get(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+        json=DATASTORE_RESPONSE,
     )
     run_worker(JOB, NO_PSEUDONYM_DATASET_NAME, Queue())  # type: ignore
     assert not os.path.exists(f"{INPUT_DIR}/{NO_PSEUDONYM_DATASET_NAME}.tar")
@@ -343,7 +381,11 @@ def test_import_no_pseudonymization(requests_mock: RequestsMocker):
         Path(INPUT_DIR_ARCHIVE) / f"unpackaged/{NO_PSEUDONYM_DATASET_NAME}.tar"
     ).exists()
     requests_made = [
-        {"method": req.method, "json": req.json(), "url": req.url}
+        {
+            "method": req.method,
+            "json": req.json() if req.method != "GET" else None,
+            "url": req.url,
+        }
         for req in requests_mock.request_history
     ]
     assert len(requests_made) == len(EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM)
@@ -358,6 +400,10 @@ def test_import_no_pseudonymization_no_partitioning(
 ):
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
+    )
+    requests_mock.get(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}",
+        json=DATASTORE_RESPONSE,
     )
     run_worker(JOB, NO_PSEUDONYM_FIXED_DATASET_NAME, Queue())  # type: ignore
     assert not os.path.exists(
@@ -384,7 +430,11 @@ def test_import_no_pseudonymization_no_partitioning(
         / f"unpackaged/{NO_PSEUDONYM_FIXED_DATASET_NAME}.tar"
     ).exists()
     requests_made = [
-        {"method": req.method, "json": req.json(), "url": req.url}
+        {
+            "method": req.method,
+            "json": req.json() if req.method != "GET" else None,
+            "url": req.url,
+        }
         for req in requests_mock.request_history
     ]
     assert len(requests_made) == len(EXPECTED_REQUESTS_IMPORT_NO_PSEUDONYM)

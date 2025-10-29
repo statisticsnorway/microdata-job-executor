@@ -9,6 +9,15 @@ from job_executor.adapter.fs.models.datastore_versions import (
 from job_executor.common.models import CamelModel
 
 
+class DatastoreResponse(CamelModel):
+    datastore_id: int
+    name: str
+    rdn: str
+    description: str
+    directory: str
+    bump_enabled: bool
+
+
 class MaintenanceStatus(CamelModel):
     paused: bool
     msg: str

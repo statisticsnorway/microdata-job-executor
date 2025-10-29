@@ -8,6 +8,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from job_executor.adapter.datastore_api.models import (
+    DatastoreResponse,
     Job,
     JobQueryResult,
     JobStatus,
@@ -72,10 +73,7 @@ def get_jobs(
         request_url += f"?{'&'.join(query_fields)}"
 
     response = execute_request("GET", request_url, True)
-    return [
-        Job.model_validate({"datastoreRdn": environment.datastore_rdn, **job})
-        for job in response.json()
-    ]
+    return [Job.model_validate(job) for job in response.json()]
 
 
 def update_job_status(
@@ -108,7 +106,9 @@ def is_system_paused() -> bool:
 
 
 def get_datastore_directory(rdn: str) -> Path:
-    return Path(environment.datastore_dir)
+    request_url = f"{DATASTORE_API_URL}/datastores/{rdn}"
+    response = execute_request("GET", request_url, True)
+    return Path(DatastoreResponse.model_validate(response.json()).directory)
 
 
 def query_for_jobs() -> JobQueryResult:
