@@ -16,20 +16,21 @@ from job_executor.common.exceptions import (
     RollbackException,
     StartupException,
 )
-from job_executor.config import environment
 
-WORKING_DIR_PATH = Path(environment.datastore_dir + "_working")
 logger = logging.getLogger()
 
 
-def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+def rollback_bump(job: Job, bump_manifesto: dict) -> None:
+    job_id = job.job_id
+    local_storage = LocalStorageAdapter(
+        datastore_api.get_datastore_directory(job.datastore_rdn)
+    )
     try:
         logger.info(f"{job_id}: Restoring files from temporary backup")
         restored_version_number = (
             local_storage.datastore_dir.restore_from_temporary_backup()
         )
-        update_type = bump_manifesto["updateType"]
+        update_type = bump_manifesto["update_type"]
         bumped_version_number = (
             "1.0.0.0"
             if restored_version_number is None
@@ -48,8 +49,8 @@ def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
         bumped_version_data = "_".join(bumped_version_metadata.split("_")[:-1])
         manifesto_datasets = [
             dataset["name"]
-            for dataset in bump_manifesto["dataStructureUpdates"]
-            if dataset["releaseStatus"] != "DRAFT"
+            for dataset in bump_manifesto["data_structure_updates"]
+            if dataset["release_status"] != "DRAFT"
         ]
         logger.info(
             f"{job_id}: Found {len(manifesto_datasets)} "
@@ -127,9 +128,12 @@ def rollback_bump(job_id: str, bump_manifesto: dict) -> None:
 
 
 def rollback_worker_phase_import_job(
-    job_id: str, operation: str, dataset_name: str
+    job: Job, operation: str, dataset_name: str
 ) -> None:
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+    job_id = job.job_id
+    local_storage = LocalStorageAdapter(
+        datastore_api.get_datastore_directory(job.datastore_rdn)
+    )
     logger.warning(
         f"{job_id}: Rolling back worker job "
         f'with target: "{dataset_name}" and operation "{operation}"'
@@ -154,17 +158,19 @@ def rollback_worker_phase_import_job(
 
     if operation in ["ADD", "CHANGE"]:
         for file in generated_data_files:
-            filepath = WORKING_DIR_PATH / file
+            filepath = local_storage.working_dir.path / file
             if filepath.exists():
                 logger.info(f'{job_id}: Deleting data file "{filepath}"')
                 os.remove(filepath)
-        parquet_directory = WORKING_DIR_PATH / generated_data_directory
+        parquet_directory = (
+            local_storage.working_dir.path / generated_data_directory
+        )
         if parquet_directory.exists() and os.path.isdir(parquet_directory):
             logger.info(
                 f'{job_id}: Deleting data directory "{parquet_directory}"'
             )
             shutil.rmtree(parquet_directory)
-        dataset_directory = WORKING_DIR_PATH / dataset_name
+        dataset_directory = local_storage.working_dir.path / dataset_name
         if dataset_directory.exists() and os.path.isdir(dataset_directory):
             logger.info(
                 f'{job_id}: Deleting dataset directory "{dataset_directory}"'
@@ -173,14 +179,17 @@ def rollback_worker_phase_import_job(
 
 
 def rollback_manager_phase_import_job(
-    job_id: str, operation: str, dataset_name: str
+    job: Job, operation: str, dataset_name: str
 ) -> None:
     """
     Rolls back manager phase import job.
     Exceptions are not handled here on purpose. It is a catastrophic thing
     if a rollback fails.
     """
-    local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+    job_id = job.job_id
+    local_storage = LocalStorageAdapter(
+        datastore_api.get_datastore_directory(job.datastore_rdn)
+    )
     logger.warning(
         f"{job_id}: Rolling back import job "
         f'with target: "{dataset_name}" and operation "{operation}"'
@@ -218,7 +227,7 @@ def fix_interrupted_job(job: Job) -> None:
     if job_operation in ["ADD", "CHANGE", "PATCH_METADATA"]:
         if job.status == "importing":
             rollback_manager_phase_import_job(
-                job.job_id, job_operation, job.parameters.target
+                job, job_operation, job.parameters.target
             )
             logger.info(
                 f"{job.job_id}: Rolled back importing of job with "
@@ -232,7 +241,7 @@ def fix_interrupted_job(job: Job) -> None:
             )
         else:
             rollback_worker_phase_import_job(
-                job.job_id, job_operation, job.parameters.target
+                job, job_operation, job.parameters.target
             )
             logger.info(
                 f'{job.job_id}: Setting status to "failed" for interrupted job'
@@ -262,7 +271,7 @@ def fix_interrupted_job(job: Job) -> None:
             bump_manifesto = job.parameters.bump_manifesto
             if bump_manifesto is None:
                 raise RollbackException("No bump manifesto available")
-            rollback_bump(job.job_id, bump_manifesto.model_dump())
+            rollback_bump(job, bump_manifesto.model_dump())
         except Exception as exc:
             error_message = f"Failed rollback for {job.job_id}"
             logger.exception(error_message, exc_info=exc)

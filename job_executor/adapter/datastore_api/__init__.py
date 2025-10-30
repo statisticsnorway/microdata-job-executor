@@ -105,6 +105,12 @@ def is_system_paused() -> bool:
     return maintenance_status.paused
 
 
+def get_datastores() -> list[str]:
+    """Get a list of all datastore rdns on this tenant"""
+    request_url = f"{DATASTORE_API_URL}/datastores"
+    return execute_request("GET", request_url, True).json()
+
+
 def get_datastore_directory(rdn: str) -> Path:
     request_url = f"{DATASTORE_API_URL}/datastores/{rdn}"
     response = execute_request("GET", request_url, True)

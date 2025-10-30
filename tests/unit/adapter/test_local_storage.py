@@ -140,12 +140,11 @@ def test_move_working_dir_parquet_to_datastore():
 
 
 def test_make_temp_directory():
-    datastore_content = os.listdir(DATASTORE_DIR)
+    datastore_content = os.listdir(Path(DATASTORE_DIR) / "datastore")
     local_storage.datastore_dir.save_temporary_backup()
-    datastore_content_backup = os.listdir(DATASTORE_DIR)
-    assert len(datastore_content) == 3
-    assert len(datastore_content_backup) == 4
-    tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    datastore_content_backup = os.listdir(Path(DATASTORE_DIR) / "datastore")
+    assert len(datastore_content_backup) == len(datastore_content) + 1
+    tmp_dir = Path(DATASTORE_DIR) / "datastore" / "tmp"
     assert os.path.isdir(tmp_dir)
     tmp_actual_content = os.listdir(tmp_dir)
     tmp_expected_content = [
@@ -160,7 +159,7 @@ def test_make_temp_directory():
 
 def test_make_temp_directory_already_exists():
     local_storage.datastore_dir.save_temporary_backup()
-    datastore_content = os.listdir(DATASTORE_DIR)
+    datastore_content = os.listdir(Path(DATASTORE_DIR) / "datastore")
     assert "tmp" in datastore_content
     with pytest.raises(LocalStorageError) as e:
         local_storage.datastore_dir.save_temporary_backup()
@@ -169,21 +168,16 @@ def test_make_temp_directory_already_exists():
 
 def test_archive_temp_directory():
     local_storage.datastore_dir.save_temporary_backup()
-    datastore_content = os.listdir(DATASTORE_DIR)
+    datastore_content = os.listdir(Path(DATASTORE_DIR) / "datastore")
     local_storage.datastore_dir.archive_temporary_backup()
-    datastore_content_archived = os.listdir(DATASTORE_DIR)
-    for dir in ["datastore", "data", "tmp", "vault"]:
-        assert dir in datastore_content
-    for dir in ["datastore", "data", "archive", "vault"]:
-        assert dir in datastore_content_archived
-    assert len(datastore_content) == 4
-    assert len(datastore_content_archived) == 4
-    assert not os.path.isdir(Path(DATASTORE_DIR) / "tmp")
+    datastore_content_archived = os.listdir(Path(DATASTORE_DIR) / "datastore")
+    assert len(datastore_content) == len(datastore_content_archived) + 1
+    assert not os.path.isdir(Path(DATASTORE_DIR) / "datastore" / "tmp")
 
 
 def test_archived_temp_directory_unrecognized_files():
     local_storage.datastore_dir.save_temporary_backup()
-    tmp_dir = Path(DATASTORE_DIR) / "tmp"
+    tmp_dir = Path(DATASTORE_DIR) / "datastore" / "tmp"
     assert os.path.isdir(tmp_dir)
     (tmp_dir / "newfile.txt").touch()
 
