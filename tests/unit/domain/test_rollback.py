@@ -12,33 +12,35 @@ DATASTORE_DIR = Path(environment.datastore_dir)
 WORKING_DIR = environment.datastore_dir + "_working"
 
 JOB_ID = "123-123-123-123"
-BUMP_MANIFESTO = DatastoreVersion.model_validate({
-    "version": "0.0.0.1635299291",
-    "description": "Draft",
-    "release_time": 1635299291,
-    "language_code": "no",
-    "data_structure_updates": [
-        {
-            "name": "FOEDSELSVEKT",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "release_status": "PENDING_RELEASE",
-        },
-        {
-            "name": "BRUTTO_INNTEKT",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "release_status": "PENDING_RELEASE",
-        },
-        {
-            "name": "KJOENN",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "release_status": "PENDING_RELEASE",
-        },
-    ],
-    "update_type": "MINOR",
-})
+BUMP_MANIFESTO = DatastoreVersion.model_validate(
+    {
+        "version": "0.0.0.1635299291",
+        "description": "Draft",
+        "release_time": 1635299291,
+        "language_code": "no",
+        "data_structure_updates": [
+            {
+                "name": "FOEDSELSVEKT",
+                "description": "Første publisering",
+                "operation": "ADD",
+                "release_status": "PENDING_RELEASE",
+            },
+            {
+                "name": "BRUTTO_INNTEKT",
+                "description": "Første publisering",
+                "operation": "ADD",
+                "release_status": "PENDING_RELEASE",
+            },
+            {
+                "name": "KJOENN",
+                "description": "Første publisering",
+                "operation": "ADD",
+                "release_status": "PENDING_RELEASE",
+            },
+        ],
+        "update_type": "MINOR",
+    }
+)
 
 BUMP_MANIFESTO_PATCH = {
     "version": "0.0.0.1635299291",
@@ -166,7 +168,9 @@ def test_rollback_interrupted_worker(mocker):
     )
     pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     rollback.rollback_worker_phase_import_job(
-        JOB, "PATCH_METADATA", "SIVSTAND"  # type: ignore
+        JOB,
+        "PATCH_METADATA",
+        "SIVSTAND",  # type: ignore
     )
     post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     assert len(pre_rollback_working_dir) - len(post_rollback_working_dir) == 2

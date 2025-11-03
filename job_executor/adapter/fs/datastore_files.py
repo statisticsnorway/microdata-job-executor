@@ -312,9 +312,7 @@ class DatastoreDirectory:
                     "directory. Aborting tmp archiving."
                 )
         timestamp = datetime.now(UTC).replace(tzinfo=None)
-        shutil.move(
-            tmp_dir, self.archive_dir / f"tmp_{timestamp}"
-        )
+        shutil.move(tmp_dir, self.archive_dir / f"tmp_{timestamp}")
 
     def delete_temporary_backup(self) -> None:
         """

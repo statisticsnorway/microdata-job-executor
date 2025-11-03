@@ -214,16 +214,12 @@ def patch_metadata(
     except PatchingError as e:
         logger.error(f"{job.job_id}: Patching error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(
-            job, "PATCH_METADATA", dataset_name
-        )
+        rollback_manager_phase_import_job(job, "PATCH_METADATA", dataset_name)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED, str(e))
     except Exception as e:
         logger.error(f"{job.job_id}: An unexpected error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(
-            job, "PATCH_METADATA", dataset_name
-        )
+        rollback_manager_phase_import_job(job, "PATCH_METADATA", dataset_name)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
