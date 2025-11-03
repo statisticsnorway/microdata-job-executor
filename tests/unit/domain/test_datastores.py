@@ -61,8 +61,12 @@ def test_patch_metadata(requests_mock: RequestsMocker):
     DATASET_NAME = "SIVSTAND"
     DESCRIPTION = "oppdaterte metadata"
     datastores.patch_metadata(
-        test_datastore, local_storage, JOB, DATASET_NAME, DESCRIPTION
-    )  # type: ignore
+        test_datastore,
+        local_storage,
+        JOB,  # type: ignore
+        DATASET_NAME,
+        DESCRIPTION,
+    )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
     with open(METADATA_ALL_DRAFT, encoding="utf-8") as f:
@@ -107,9 +111,9 @@ def test_add(requests_mock: RequestsMocker):
     datastores.add(
         test_datastore,
         local_storage,
-        JOB,
+        JOB,  # type: ignore
         DATASET_NAME,
-        DESCRIPTION,  # type: ignore
+        DESCRIPTION,
     )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
@@ -138,9 +142,9 @@ def test_add_previously_deleted(requests_mock: RequestsMocker):
     datastores.add(
         test_datastore,
         local_storage,
-        JOB,
+        JOB,  # type: ignore
         DATASET_NAME,
-        DESCRIPTION,  # type: ignore
+        DESCRIPTION,
     )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
@@ -178,9 +182,9 @@ def test_change(requests_mock: RequestsMocker):
     datastores.change(
         test_datastore,
         local_storage,
-        JOB,
+        JOB,  # type: ignore
         DATASET_NAME,
-        DESCRIPTION,  # type: ignore
+        DESCRIPTION,
     )
     assert len(requests_mock.request_history) == 2
     assert not os.path.exists(working_dir_metadata_draft_path(DATASET_NAME))
@@ -509,8 +513,13 @@ def test_invalid_bump_manifesto_archived_tmp_dir(
 
 
 def test_failed_bump(
+    mocker,
     requests_mock: RequestsMocker,
 ):
+    mocker.patch(
+        "job_executor.adapter.datastore_api.get_datastore_directory",
+        return_value=Path(DATASTORE_DIR),
+    )
     requests_mock.put(
         f"{DATASTORE_API_URL}/jobs/{JOB_ID}", json={"message": "OK"}
     )

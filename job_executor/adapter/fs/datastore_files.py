@@ -240,7 +240,7 @@ class DatastoreDirectory:
             draft_version = json.load(f)
         with open(self.draft_metadata_all_path, encoding="utf-8") as f:
             metadata_all_draft = json.load(f)
-        tmp_dir = self.root_dir / "tmp"
+        tmp_dir = self.metadata_dir / "tmp"
         if os.path.isdir(tmp_dir):
             raise LocalStorageError("tmp directory already exists")
         os.mkdir(tmp_dir)
@@ -263,7 +263,7 @@ class DatastoreDirectory:
         Returns None if no released version in backup, else returns the
         latest release version number as dotted four part version.
         """
-        tmp_dir = Path(self.root_dir) / "tmp"
+        tmp_dir = self.metadata_dir / "tmp"
         draft_version_backup = tmp_dir / "draft_version.json"
         metadata_all_draft_backup = tmp_dir / "metadata_all__DRAFT.json"
         datastore_versions_backup = tmp_dir / "datastore_versions.json"
@@ -294,10 +294,10 @@ class DatastoreDirectory:
         exists. Raises `LocalStorageError` if there are any unrecognized files
         in the directory.
         """
-        tmp_dir = Path(self.root_dir) / "tmp"
+        tmp_dir = self.metadata_dir / "tmp"
         os.makedirs(self.archive_dir, exist_ok=True)
 
-        if not os.path.isdir(Path(self.root_dir) / "tmp"):
+        if not os.path.isdir(tmp_dir):
             raise LocalStorageError(
                 "Could not find a tmp directory to archive."
             )
@@ -312,9 +312,7 @@ class DatastoreDirectory:
                     "directory. Aborting tmp archiving."
                 )
         timestamp = datetime.now(UTC).replace(tzinfo=None)
-        shutil.move(
-            self.root_dir / "tmp", self.archive_dir / f"tmp_{timestamp}"
-        )
+        shutil.move(tmp_dir, self.archive_dir / f"tmp_{timestamp}")
 
     def delete_temporary_backup(self) -> None:
         """
@@ -322,10 +320,10 @@ class DatastoreDirectory:
         exists. Raises `LocalStorageError` if there are any unrecognized files
         in the directory.
         """
-        tmp_dir = Path(self.root_dir) / "tmp"
+        tmp_dir = self.metadata_dir / "tmp"
         os.makedirs(self.archive_dir, exist_ok=True)
 
-        if not os.path.isdir(Path(self.root_dir) / "tmp"):
+        if not os.path.isdir(tmp_dir):
             raise LocalStorageError("Could not find a tmp directory to delete.")
         for content in os.listdir(tmp_dir):
             if content not in [
@@ -337,13 +335,13 @@ class DatastoreDirectory:
                     "Found unrecognized files and/or directories in the tmp "
                     "directory. Aborting tmp deleting."
                 )
-        shutil.rmtree(self.root_dir / "tmp")
+        shutil.rmtree(tmp_dir)
 
     def temporary_backup_exists(self) -> bool:
         """
         Returns a boolean representing if the tmp directory exists.
         """
-        tmp_dir = self.root_dir / "tmp"
+        tmp_dir = self.metadata_dir / "tmp"
         return os.path.isdir(tmp_dir)
 
     def archive_draft_version(self, version: str) -> None:

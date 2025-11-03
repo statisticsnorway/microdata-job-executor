@@ -214,16 +214,12 @@ def patch_metadata(
     except PatchingError as e:
         logger.error(f"{job.job_id}: Patching error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(
-            job.job_id, "PATCH_METADATA", dataset_name
-        )
+        rollback_manager_phase_import_job(job, "PATCH_METADATA", dataset_name)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED, str(e))
     except Exception as e:
         logger.error(f"{job.job_id}: An unexpected error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(
-            job.job_id, "PATCH_METADATA", dataset_name
-        )
+        rollback_manager_phase_import_job(job, "PATCH_METADATA", dataset_name)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
@@ -273,7 +269,7 @@ def add(
     except Exception as e:
         logger.error(f"{job.job_id}: An unexpected error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(job.job_id, "ADD", dataset_name)
+        rollback_manager_phase_import_job(job, "ADD", dataset_name)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
@@ -325,7 +321,7 @@ def change(
     except Exception as e:
         logger.error(f"{job.job_id}: An unexpected error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
-        rollback_manager_phase_import_job(job.job_id, "CHANGE", dataset_name)
+        rollback_manager_phase_import_job(job, "CHANGE", dataset_name)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
 
@@ -564,8 +560,8 @@ def bump_version(
         logger.error(f"{job.job_id}: An unexpected error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
         rollback_bump(
-            job.job_id,
-            bump_manifesto.model_dump(by_alias=True, exclude_none=True),
+            job,
+            bump_manifesto,
         )
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 

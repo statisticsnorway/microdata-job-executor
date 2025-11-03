@@ -2,57 +2,62 @@ import json
 import os
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
+from job_executor.adapter.fs.models.datastore_versions import DatastoreVersion
 from job_executor.config import environment
 from job_executor.domain import rollback
 
-DATASTORE_DIR = environment.datastore_dir
-WORKING_DIR = DATASTORE_DIR + "_working"
+DATASTORE_DIR = Path(environment.datastore_dir)
+WORKING_DIR = environment.datastore_dir + "_working"
 
 JOB_ID = "123-123-123-123"
-BUMP_MANIFESTO = {
-    "version": "0.0.0.1635299291",
-    "description": "Draft",
-    "releaseTime": 1635299291,
-    "languageCode": "no",
-    "dataStructureUpdates": [
-        {
-            "name": "FOEDSELSVEKT",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "releaseStatus": "PENDING_RELEASE",
-        },
-        {
-            "name": "BRUTTO_INNTEKT",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "releaseStatus": "PENDING_RELEASE",
-        },
-        {
-            "name": "KJOENN",
-            "description": "Første publisering",
-            "operation": "ADD",
-            "releaseStatus": "PENDING_RELEASE",
-        },
-    ],
-    "updateType": "MINOR",
-}
+BUMP_MANIFESTO = DatastoreVersion.model_validate(
+    {
+        "version": "0.0.0.1635299291",
+        "description": "Draft",
+        "release_time": 1635299291,
+        "language_code": "no",
+        "data_structure_updates": [
+            {
+                "name": "FOEDSELSVEKT",
+                "description": "Første publisering",
+                "operation": "ADD",
+                "release_status": "PENDING_RELEASE",
+            },
+            {
+                "name": "BRUTTO_INNTEKT",
+                "description": "Første publisering",
+                "operation": "ADD",
+                "release_status": "PENDING_RELEASE",
+            },
+            {
+                "name": "KJOENN",
+                "description": "Første publisering",
+                "operation": "ADD",
+                "release_status": "PENDING_RELEASE",
+            },
+        ],
+        "update_type": "MINOR",
+    }
+)
 
 BUMP_MANIFESTO_PATCH = {
     "version": "0.0.0.1635299291",
     "description": "Draft",
-    "releaseTime": 1635299291,
-    "languageCode": "no",
-    "dataStructureUpdates": [
+    "release_time": 1635299291,
+    "language_code": "no",
+    "data_structure_updates": [
         {
             "name": "FOEDSELSVEKT",
             "description": "Første publisering",
             "operation": "PATCH_METADATA",
-            "releaseStatus": "PENDING_RELEASE",
+            "release_status": "PENDING_RELEASE",
         }
     ],
-    "updateType": "PATCH",
+    "update_type": "PATCH",
 }
+JOB = SimpleNamespace(job_id=JOB_ID, datastore_rdn=DATASTORE_DIR)
 
 
 def _read_json(file_path: Path) -> dict:
@@ -63,7 +68,7 @@ def _read_json(file_path: Path) -> dict:
 DATASTORE_INFO_DIR = Path(DATASTORE_DIR) / "datastore"
 DATASTORE_DATA_DIR = Path(DATASTORE_DIR) / "data"
 DATASTORE_METADATA_DIR = Path(DATASTORE_DIR) / "metadata"
-DATASTORE_TEMP_DIR = Path(DATASTORE_DIR) / "tmp"
+DATASTORE_TEMP_DIR = Path(DATASTORE_DIR) / "datastore" / "tmp"
 WORKING_DIR_PATH = Path(WORKING_DIR)
 
 
@@ -83,7 +88,11 @@ def teardown_function():
     shutil.move("tests/resources_backup", "tests/resources")
 
 
-def test_rollback_interrupted_bump():
+def test_rollback_interrupted_bump(mocker):
+    mocker.patch(
+        "job_executor.adapter.datastore_api.get_datastore_directory",
+        return_value=DATASTORE_DIR,
+    )
     draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     metadata_all_draft_backup = _read_json(
         DATASTORE_TEMP_DIR / "metadata_all__DRAFT.json"
@@ -91,7 +100,7 @@ def test_rollback_interrupted_bump():
     datastore_versions_backup = _read_json(
         DATASTORE_TEMP_DIR / "datastore_versions.json"
     )
-    rollback.rollback_bump(JOB_ID, BUMP_MANIFESTO)
+    rollback.rollback_bump(JOB, BUMP_MANIFESTO)  # type: ignore
 
     restored_draft_version = _read_json(
         DATASTORE_INFO_DIR / "draft_version.json"
@@ -120,14 +129,18 @@ def test_rollback_interrupted_bump():
     ]
 
 
-def test_rollback_interrupted_bump_patch():
+def test_rollback_interrupted_bump_patch(mocker):
+    mocker.patch(
+        "job_executor.adapter.datastore_api.get_datastore_directory",
+        return_value=DATASTORE_DIR,
+    )
     shutil.rmtree("tests/resources/datastores/TEST_DATASTORE")
     shutil.move(
         "tests/resources/datastores/ROLLBACK_DATASTORE_PATCH",
         "tests/resources/datastores/TEST_DATASTORE",
     )
     draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
-    rollback.rollback_bump(JOB_ID, BUMP_MANIFESTO_PATCH)
+    rollback.rollback_bump(JOB, BUMP_MANIFESTO_PATCH)  # type: ignore
 
     restored_draft_version = _read_json(
         DATASTORE_INFO_DIR / "draft_version.json"
@@ -148,10 +161,16 @@ def test_rollback_interrupted_bump_patch():
     assert os.path.exists(f"{DATASTORE_INFO_DIR}/data_versions__1_0.json")
 
 
-def test_rollback_interrupted_worker():
+def test_rollback_interrupted_worker(mocker):
+    mocker.patch(
+        "job_executor.adapter.datastore_api.get_datastore_directory",
+        return_value=DATASTORE_DIR,
+    )
     pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     rollback.rollback_worker_phase_import_job(
-        JOB_ID, "PATCH_METADATA", "SIVSTAND"
+        JOB,
+        "PATCH_METADATA",
+        "SIVSTAND",  # type: ignore
     )
     post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     assert len(pre_rollback_working_dir) - len(post_rollback_working_dir) == 2
@@ -166,7 +185,7 @@ def test_rollback_interrupted_worker():
         "FOEDESTED__DRAFT.parquet",
     ]
     pre_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
-    rollback.rollback_worker_phase_import_job(JOB_ID, "ADD", "FOEDESTED")
+    rollback.rollback_worker_phase_import_job(JOB, "ADD", "FOEDESTED")  # type: ignore
     post_rollback_working_dir = os.listdir(WORKING_DIR_PATH)
     assert len(pre_rollback_working_dir) - len(
         generated_files_foedested
@@ -175,7 +194,11 @@ def test_rollback_interrupted_worker():
         assert not os.path.isfile(WORKING_DIR_PATH / generated_file)
 
 
-def test_rollback_interrupted_import():
+def test_rollback_interrupted_import(mocker):
+    mocker.patch(
+        "job_executor.adapter.datastore_api.get_datastore_directory",
+        return_value=DATASTORE_DIR,
+    )
     draft_version_backup = _read_json(DATASTORE_TEMP_DIR / "draft_version.json")
     metadata_all_draft_backup = _read_json(
         DATASTORE_TEMP_DIR / "metadata_all__DRAFT.json"
@@ -183,7 +206,7 @@ def test_rollback_interrupted_import():
     datastore_versions_backup = _read_json(
         DATASTORE_TEMP_DIR / "datastore_versions.json"
     )
-    rollback.rollback_manager_phase_import_job(JOB_ID, "ADD", "SIVSTAND")
+    rollback.rollback_manager_phase_import_job(JOB, "ADD", "SIVSTAND")  # type: ignore
 
     restored_draft_version = _read_json(
         DATASTORE_INFO_DIR / "draft_version.json"

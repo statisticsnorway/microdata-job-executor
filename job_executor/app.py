@@ -18,10 +18,12 @@ setup_logging()
 
 def initialize_app() -> None:
     try:
-        local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
         rollback.fix_interrupted_jobs()
-        if local_storage.datastore_dir.temporary_backup_exists():
-            raise StartupException("tmp directory exists")
+        rdns = datastore_api.get_datastores()
+        for rdn in rdns:
+            local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+            if local_storage.datastore_dir.temporary_backup_exists():
+                raise StartupException(f"tmp directory exists for {rdn}")
     except Exception as e:
         raise StartupException("Exception when initializing") from e
 
