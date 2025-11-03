@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
+from job_executor.adapter.fs.models.datastore_versions import DatastoreVersion
 from job_executor.config import environment
 from job_executor.domain import rollback
 
@@ -11,7 +12,7 @@ DATASTORE_DIR = Path(environment.datastore_dir)
 WORKING_DIR = environment.datastore_dir + "_working"
 
 JOB_ID = "123-123-123-123"
-BUMP_MANIFESTO = {
+BUMP_MANIFESTO = DatastoreVersion.model_validate({
     "version": "0.0.0.1635299291",
     "description": "Draft",
     "release_time": 1635299291,
@@ -37,7 +38,7 @@ BUMP_MANIFESTO = {
         },
     ],
     "update_type": "MINOR",
-}
+})
 
 BUMP_MANIFESTO_PATCH = {
     "version": "0.0.0.1635299291",

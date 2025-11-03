@@ -4,7 +4,11 @@ import shutil
 from pathlib import Path
 
 from job_executor.adapter import datastore_api
-from job_executor.adapter.datastore_api.models import Job, JobStatus
+from job_executor.adapter.datastore_api.models import (
+    DatastoreVersion,
+    Job,
+    JobStatus,
+)
 from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import (
     bump_dotted_version_number,
@@ -20,7 +24,7 @@ from job_executor.common.exceptions import (
 logger = logging.getLogger()
 
 
-def rollback_bump(job: Job, bump_manifesto: dict) -> None:
+def rollback_bump(job: Job, bump_manifesto: DatastoreVersion) -> None:
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
         datastore_api.get_datastore_directory(job.datastore_rdn)
@@ -30,15 +34,16 @@ def rollback_bump(job: Job, bump_manifesto: dict) -> None:
         restored_version_number = (
             local_storage.datastore_dir.restore_from_temporary_backup()
         )
-        update_type = bump_manifesto["update_type"]
-        bumped_version_number = (
-            "1.0.0.0"
-            if restored_version_number is None
-            else bump_dotted_version_number(
+        bumped_version_number = "1.0.0.0"
+        update_type = bump_manifesto.update_type
+        if restored_version_number is not None:
+            assert update_type is not None
+            bumped_version_number = bump_dotted_version_number(
                 underscored_to_dotted_version(restored_version_number),
                 update_type,
             )
-        )
+        else:
+            update_type = "MAJOR"
         logger.warning(
             f"{job_id}: Rolling back to {restored_version_number} "
             f"from bump to {bumped_version_number}"
@@ -48,9 +53,9 @@ def rollback_bump(job: Job, bump_manifesto: dict) -> None:
         )
         bumped_version_data = "_".join(bumped_version_metadata.split("_")[:-1])
         manifesto_datasets = [
-            dataset["name"]
-            for dataset in bump_manifesto["data_structure_updates"]
-            if dataset["release_status"] != "DRAFT"
+            dataset.name
+            for dataset in bump_manifesto.data_structure_updates
+            if dataset.release_status != "DRAFT"
         ]
         logger.info(
             f"{job_id}: Found {len(manifesto_datasets)} "
@@ -271,7 +276,7 @@ def fix_interrupted_job(job: Job) -> None:
             bump_manifesto = job.parameters.bump_manifesto
             if bump_manifesto is None:
                 raise RollbackException("No bump manifesto available")
-            rollback_bump(job, bump_manifesto.model_dump())
+            rollback_bump(job, bump_manifesto)
         except Exception as exc:
             error_message = f"Failed rollback for {job.job_id}"
             logger.exception(error_message, exc_info=exc)

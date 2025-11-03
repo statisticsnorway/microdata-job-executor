@@ -565,7 +565,7 @@ def bump_version(
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
         rollback_bump(
             job,
-            bump_manifesto.model_dump(by_alias=True, exclude_none=True),
+            bump_manifesto,
         )
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
 
