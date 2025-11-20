@@ -1,0 +1,72 @@
+{
+  "name": "DATASET_NAME",
+  "populationDescription": "mock",
+  "languageCode": "no",
+  "temporality": "FIXED",
+  "sensitivityLevel": "PERSON_GENERAL",
+  "subjectFields": ["mock"],
+  "temporalCoverage": { "start": 0, "stop": 1 },
+  "identifierVariables": [{
+    "variableRole": "Identifier",
+    "name": "PERSON",
+    "label": "mock",
+    "notPseudonym": false,
+    "dataType": "String",
+    "representedVariables": [{
+      "description": "Identifikator for person i Microdata",
+      "validPeriod": { "start": 0, "stop": 1 },
+      "valueDomain": {
+        "description": "Pseudonymisert personnummer",
+        "unitOfMeasure": "N/A"
+      }
+    }],
+    "format": "RandomUInt48",
+    "keyType": {
+      "name": "PERSON",
+      "label": "Person",
+      "description": "Statistisk enhet er person (individ, enkeltmenenske)"
+    }
+  }],
+  "measureVariable": {
+    "variableRole": "Measure",
+    "name": "DATASET_NAME",
+    "label": "label",
+    "notPseudonym": true,
+    "dataType": "String",
+    "representedVariables": [{
+      "description": "mock",
+      "validPeriod": { "start": 0, "stop": 1 },
+      "valueDomain": { "description": "mock", "unitOfMeasure": "N/A"}
+    }]
+  },
+  "attributeVariables": [{
+    "variableRole": "Start",
+    "name": "START",
+    "label": "Startdato",
+    "notPseudonym": true,
+    "dataType": "Instant",
+    "representedVariables": [{
+      "description": "Startdato/måletidspunktet for hendelsen",
+      "validPeriod": { "start": 0, "stop": 1 },
+      "valueDomain": {
+        "description": "Dato oppgitt i dager siden 1970-01-01",
+        "unitOfMeasure": "N/A"
+      }
+    }]
+  },
+  {
+    "variableRole": "Stop",
+    "name": "STOP",
+    "label": "Stoppdato",
+    "notPseudonym": true,
+    "dataType": "Instant",
+    "representedVariables": [{
+      "description": "Stoppdato/sluttdato for hendelsen",
+      "validPeriod": { "start": 0, "stop": 1},
+      "valueDomain": {
+        "description": "Dato oppgitt i dager siden 1970-01-01",
+        "unitOfMeasure": "N/A"
+      }
+    }]
+  }]
+}
