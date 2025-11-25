@@ -91,12 +91,26 @@ def recover_resources_from_backup():
 
 
 def prepare_datastore(datastore_dir: str, *, package_to_input: bool = False):
+    """
+    Prepare a datastore directory for tests by:
+    - Expanding the metadata files using the template.
+    - Optionally package datasets into the input directory with a newly
+      generated set of keys in the datastore's vault.
+    """
     if package_to_input:
         _package_to_input(datastore_dir)
     _render_metadata_files(Path(f"{datastore_dir}_working"))
-    _render_metadata_all(
-        Path(f"{datastore_dir}/datastore/metadata_all__1_0_0.json")
-    )
-    _render_metadata_all(
-        Path(f"{datastore_dir}/datastore/metadata_all__DRAFT.json")
-    )
+    metadata_dir = f"{datastore_dir}/datastore"
+    for filename in os.listdir(metadata_dir):
+        if "metadata_all" in filename:
+            _render_metadata_all(
+                Path(f"{metadata_dir}/{filename}")
+            )
+    tmp_dir = f"{datastore_dir}/datastore/tmp"
+    if not os.path.exists(tmp_dir):
+        return
+    for filename in os.listdir(tmp_dir):
+        if "metadata_all" in filename:
+            _render_metadata_all(
+                Path(f"{tmp_dir}/{filename}")
+            )
