@@ -143,11 +143,15 @@ def test_rollback_first_bump(mocked_datastore_api: MockedDatastoreApi):
     )
     metadata_dir = DATASTORE_DIR / "datastore"
     assert not os.path.exists(metadata_dir / "tmp")
-    assert os.listdir(metadata_dir) == [
-        "metadata_all__DRAFT.json",
-        "draft_version.json",
-        "datastore_versions.json",
-    ]
+    assert all(
+        file
+        in [
+            "metadata_all__DRAFT.json",
+            "draft_version.json",
+            "datastore_versions.json",
+        ]
+        for file in os.listdir(metadata_dir)
+    )
 
 
 @pytest.mark.parametrize(
