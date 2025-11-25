@@ -103,14 +103,10 @@ def prepare_datastore(datastore_dir: str, *, package_to_input: bool = False):
     metadata_dir = f"{datastore_dir}/datastore"
     for filename in os.listdir(metadata_dir):
         if "metadata_all" in filename:
-            _render_metadata_all(
-                Path(f"{metadata_dir}/{filename}")
-            )
+            _render_metadata_all(Path(f"{metadata_dir}/{filename}"))
     tmp_dir = f"{datastore_dir}/datastore/tmp"
     if not os.path.exists(tmp_dir):
         return
     for filename in os.listdir(tmp_dir):
         if "metadata_all" in filename:
-            _render_metadata_all(
-                Path(f"{tmp_dir}/{filename}")
-            )
+            _render_metadata_all(Path(f"{tmp_dir}/{filename}"))
