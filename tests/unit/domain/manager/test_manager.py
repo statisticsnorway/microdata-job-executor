@@ -1,13 +1,19 @@
-import time
+from dataclasses import dataclass
 from multiprocessing import Process
 
 from job_executor.domain.manager import Manager
 from job_executor.domain.worker.models import Worker
 
 
-def dummy():
-    time.sleep(10)
-    print("hello")  # noqa
+@dataclass
+class MockedWorker:
+    job_id: str
+    job_size: int
+
+    def is_alive(self) -> bool:
+        return True
+
+    def start(self) -> None: ...
 
 
 def test_initial_state():
@@ -18,6 +24,7 @@ def test_initial_state():
 
     assert manager.current_total_size == 0
     assert len(manager.workers) == 0
+    manager.close_logging_thread()
 
 
 def test_can_spawn_worker():
@@ -28,6 +35,7 @@ def test_can_spawn_worker():
 
     can_spawn = manager.can_spawn_new_worker(new_job_size=1)
     assert can_spawn is True
+    manager.close_logging_thread()
 
 
 def test_cannot_spawn_worker_too_many_workers():
@@ -38,16 +46,16 @@ def test_cannot_spawn_worker_too_many_workers():
 
     # Register 4 jobs
     for i in range(4):
-        worker = Worker(
-            process=Process(target=dummy),
+        worker = MockedWorker(
             job_id=f"job_{i}",
             job_size=1024,
         )
-        manager.workers.append(worker)
+        manager.workers.append(worker)  # type: ignore
         worker.start()
 
     can_spawn = manager.can_spawn_new_worker(new_job_size=1024)
     assert can_spawn is False
+    manager.close_logging_thread()
 
 
 def test_cannot_spawn_worker_size_limit_reached():
@@ -57,17 +65,17 @@ def test_cannot_spawn_worker_size_limit_reached():
         max_bytes_all_workers=TWENTY_GB,
     )
 
-    large_job = Worker(
-        process=Process(target=dummy),
+    large_job = MockedWorker(
         job_id="job_large",
         job_size=TWENTY_GB,
     )
-    manager.workers.append(large_job)
+    manager.workers.append(large_job)  # type: ignore
     large_job.start()
 
     # Only one job active but size limit is reached cannot spawn new job
     can_spawn = manager.can_spawn_new_worker(new_job_size=1024)
     assert can_spawn is False
+    manager.close_logging_thread()
 
 
 def test_oversized_jobs():
@@ -86,13 +94,13 @@ def test_oversized_jobs():
     can_spawn = manager.can_spawn_new_worker(new_job_size=TEN_GB)
     assert can_spawn is True
     if can_spawn:
-        worker = Worker(
-            process=Process(target=dummy),
+        worker = MockedWorker(
             job_id="job_2",
             job_size=TEN_GB,
         )
-        manager.workers.append(worker)
+        manager.workers.append(worker)  # type: ignore
         worker.start()
+    manager.close_logging_thread()
 
 
 def test_unregister_job():
@@ -103,12 +111,11 @@ def test_unregister_job():
 
     # Register 4 jobs
     for i in range(4):
-        worker = Worker(
-            process=Process(target=dummy),
+        worker = MockedWorker(
             job_id=f"job_{i}",
             job_size=1024,
         )
-        manager.workers.append(worker)
+        manager.workers.append(worker)  # type: ignore
         worker.start()
 
     can_spawn = manager.can_spawn_new_worker(new_job_size=1024)
@@ -117,3 +124,4 @@ def test_unregister_job():
     manager.unregister_worker("job_1")
     can_spawn = manager.can_spawn_new_worker(new_job_size=1024)
     assert can_spawn is True
+    manager.close_logging_thread()
