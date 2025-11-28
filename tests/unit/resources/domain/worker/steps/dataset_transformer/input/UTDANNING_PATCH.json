@@ -1,0 +1,131 @@
+{
+    "temporalityType": "STATUS",
+    "sensitivityLevel": "PERSON_GENERAL",
+    "populationDescription": [
+        {
+            "languageCode": "no",
+            "value": "Personer med utdannelse i Norge"
+        }
+    ],
+    "spatialCoverageDescription": [
+        {
+            "languageCode": "no",
+            "value": "Norge"
+        }
+    ],
+    "subjectFields": [
+        [
+            {
+                "languageCode": "no",
+                "value": "BEFOLKNING"
+            }
+        ],
+        [
+            {
+                "languageCode": "no",
+                "value": "SAMFUNN"
+            }
+        ]
+    ],
+    "dataRevision": {
+        "description": [
+            {
+                "languageCode": "no",
+                "value": "Første publisering."
+            }
+        ],
+        "temporalEnd": {
+            "description": [
+                {
+                    "languageCode": "no",
+                    "value": "Variabelen blir ikke lenger oppdatert"
+                }
+            ],
+            "successors": [
+                "UTDANNING_1",
+                "UTDANNING_2"
+            ]
+        }
+    },
+    "measureVariables": [
+        {
+            "name": [
+                {
+                    "languageCode": "no",
+                    "value": "Utdanning"
+                }
+            ],
+            "description": [
+                {
+                    "languageCode": "no",
+                    "value": "Utdanningsnivå for person"
+                }
+            ],
+            "subjectFields": [
+                [
+                    {
+                        "languageCode": "no",
+                        "value": "Testdata"
+                    }
+                ]
+            ],
+            "dataType": "STRING",
+            "valueDomain": {
+                "codeList": [
+                    {
+                        "code": "1",
+                        "categoryTitle": [
+                            {
+                                "languageCode": "no",
+                                "value": "Grunnskole"
+                            }
+                        ],
+                        "validFrom": "1926-01-01"
+                    },
+                    {
+                        "code": "2",
+                        "categoryTitle": [
+                            {
+                                "languageCode": "no",
+                                "value": "Videregående skole"
+                            }
+                        ],
+                        "validFrom": "1926-01-01"
+                    },
+                    {
+                        "code": "3",
+                        "categoryTitle": [
+                            {
+                                "languageCode": "no",
+                                "value": "Bachelorgrad"
+                            }
+                        ],
+                        "validFrom": "1926-01-01"
+                    },
+                    {
+                        "code": "4",
+                        "categoryTitle": [
+                            {
+                                "languageCode": "no",
+                                "value": "Mastergrad"
+                            }
+                        ],
+                        "validFrom": "1926-01-01"
+                    },
+                    {
+                        "code": "5",
+                        "categoryTitle": [
+                            {
+                                "languageCode": "no",
+                                "value": "Doktorgrad"
+                            }
+                        ],
+                        "validFrom": "1926-01-01"
+                    }
+                ]
+            },
+            "shortName": "UTDANNING"
+        }
+    ],
+    "shortName": "UTDANNING"
+}
