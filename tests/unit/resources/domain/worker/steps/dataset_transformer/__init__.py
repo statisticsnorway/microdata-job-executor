@@ -18,9 +18,7 @@ BK_HELSTASJONSKONSULTASJON_IDENTIFIER = unit_type_variables.get(
     "BK_HELSESTASJONSKONSULTASJON"
 )
 
-KREFTREG_DS_DESCRIBED = json.load(
-    open(INPUT_DATA_PATH / "DESCRIBED.json")
-)
+KREFTREG_DS_DESCRIBED = json.load(open(INPUT_DATA_PATH / "DESCRIBED.json"))
 KREFTREG_DS_DESCRIBED["identifierVariables"] = [
     unit_type_variables.get("PERSON")
 ]
@@ -29,9 +27,7 @@ KREFTREG_DS_DESCRIBED["attributeVariables"] = [
     temporal_attributes.generate_stop_time_attribute("STATUS"),
 ]
 
-KREFTREG_DS_ENUMERATED = json.load(
-    open(INPUT_DATA_PATH / "ENUMERATED.json")
-)
+KREFTREG_DS_ENUMERATED = json.load(open(INPUT_DATA_PATH / "ENUMERATED.json"))
 KREFTREG_DS_ENUMERATED["identifierVariables"] = [
     unit_type_variables.get("PERSON")
 ]
@@ -54,16 +50,12 @@ UTDANNING["attributeVariables"] = [
     temporal_attributes.generate_stop_time_attribute("STATUS"),
 ]
 
-DESCRIBED_EXPECTED = json.load(
-    open(EXPECTED_DATA_PATH / "DESCRIBED.json")
-)
+DESCRIBED_EXPECTED = json.load(open(EXPECTED_DATA_PATH / "DESCRIBED.json"))
 STATUS_EXPECTED = json.load(open(EXPECTED_DATA_PATH / "UTDANNING.json"))
 STATUS_PATCH_EXPECTED = json.load(
     open(EXPECTED_DATA_PATH / "UTDANNING_PATCH.json")
 )
-ENUMERATED_EXPECTED = json.load(
-    open(EXPECTED_DATA_PATH / "ENUMERATED.json")
-)
+ENUMERATED_EXPECTED = json.load(open(EXPECTED_DATA_PATH / "ENUMERATED.json"))
 
 CODELIST = [
     {

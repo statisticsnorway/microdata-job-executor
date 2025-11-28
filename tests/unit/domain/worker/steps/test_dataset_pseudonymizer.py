@@ -16,73 +16,89 @@ TABLE_SIZE = 1000
 UNIT_ID_INPUT = [f"i{count}" for count in range(TABLE_SIZE)]
 UNIT_ID_PSEUDONYMIZED = [count for count in range(TABLE_SIZE)]
 
-INPUT_TABLE = pyarrow.Table.from_pydict({
-    "unit_id": UNIT_ID_INPUT,
-    "value": UNIT_ID_INPUT,
-    "start_epoch_days": pyarrow.array(
-        [18200] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "stop_epoch_days": pyarrow.array(
-        [18201] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-})
+INPUT_TABLE = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_INPUT,
+        "value": UNIT_ID_INPUT,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+    }
+)
 
-INPUT_TABLE_START_YEAR = pyarrow.Table.from_pydict({
-    "unit_id": UNIT_ID_INPUT,
-    "value": UNIT_ID_INPUT,
-    "start_epoch_days": pyarrow.array(
-        [18200] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "stop_epoch_days": pyarrow.array(
-        [18201] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "start_year": pyarrow.array([str(year) for year in [2020] * TABLE_SIZE]),
-})
+INPUT_TABLE_START_YEAR = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_INPUT,
+        "value": UNIT_ID_INPUT,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "start_year": pyarrow.array(
+            [str(year) for year in [2020] * TABLE_SIZE]
+        ),
+    }
+)
 
-EXPECTED_TABLE = pyarrow.Table.from_pydict({
-    "unit_id": UNIT_ID_PSEUDONYMIZED,
-    "value": UNIT_ID_INPUT,
-    "start_epoch_days": pyarrow.array(
-        [18200] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "stop_epoch_days": pyarrow.array(
-        [18201] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-})
+EXPECTED_TABLE = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_PSEUDONYMIZED,
+        "value": UNIT_ID_INPUT,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+    }
+)
 
-EXPECTED_TABLE_START_YEAR = pyarrow.Table.from_pydict({
-    "unit_id": UNIT_ID_PSEUDONYMIZED,
-    "value": UNIT_ID_INPUT,
-    "start_epoch_days": pyarrow.array(
-        [18200] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "stop_epoch_days": pyarrow.array(
-        [18201] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "start_year": pyarrow.array([str(year) for year in [2020] * TABLE_SIZE]),
-})
+EXPECTED_TABLE_START_YEAR = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_PSEUDONYMIZED,
+        "value": UNIT_ID_INPUT,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "start_year": pyarrow.array(
+            [str(year) for year in [2020] * TABLE_SIZE]
+        ),
+    }
+)
 
-EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED = pyarrow.Table.from_pydict({
-    "unit_id": UNIT_ID_PSEUDONYMIZED,
-    "value": UNIT_ID_PSEUDONYMIZED,
-    "start_epoch_days": pyarrow.array(
-        [18200] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "stop_epoch_days": pyarrow.array(
-        [18201] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-})
+EXPECTED_TABLE_WITH_BOTH_PSEUDONYMIZED = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_PSEUDONYMIZED,
+        "value": UNIT_ID_PSEUDONYMIZED,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+    }
+)
 
-EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED = pyarrow.Table.from_pydict({
-    "unit_id": UNIT_ID_INPUT,
-    "value": UNIT_ID_PSEUDONYMIZED,
-    "start_epoch_days": pyarrow.array(
-        [18200] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-    "stop_epoch_days": pyarrow.array(
-        [18201] * TABLE_SIZE, type=pyarrow.int16()
-    ),
-})
+EXPECTED_TABLE_WITH_ONLY_VALUE_PSEUDONYMIZED = pyarrow.Table.from_pydict(
+    {
+        "unit_id": UNIT_ID_INPUT,
+        "value": UNIT_ID_PSEUDONYMIZED,
+        "start_epoch_days": pyarrow.array(
+            [18200] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+        "stop_epoch_days": pyarrow.array(
+            [18201] * TABLE_SIZE, type=pyarrow.int16()
+        ),
+    }
+)
 
 
 WORKING_DIR = Path(

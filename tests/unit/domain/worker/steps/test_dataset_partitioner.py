@@ -9,7 +9,9 @@ from pyarrow import parquet
 from job_executor.common.exceptions import BuilderStepError
 from job_executor.domain.worker.steps import dataset_partitioner
 
-WORKING_DIR = Path("tests/unit/resources/domain/worker/steps/dataset_partitioner")
+WORKING_DIR = Path(
+    "tests/unit/resources/domain/worker/steps/dataset_partitioner"
+)
 JOB_ID_PARTITIONER = "321-321-321-321"
 
 TABLE_SIZE = 3000

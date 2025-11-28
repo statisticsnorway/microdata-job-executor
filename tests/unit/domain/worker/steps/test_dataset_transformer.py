@@ -1,7 +1,9 @@
 import pytest
 
 from job_executor.domain.worker.steps import dataset_transformer
-from tests.unit.resources.domain.worker.steps import dataset_transformer as test_data
+from tests.unit.resources.domain.worker.steps import (
+    dataset_transformer as test_data,
+)
 
 
 def test_transform_identifier():
