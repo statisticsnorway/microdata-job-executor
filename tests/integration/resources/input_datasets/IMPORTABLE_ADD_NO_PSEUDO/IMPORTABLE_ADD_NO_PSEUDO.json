@@ -1,0 +1,19 @@
+{
+  "temporalityType": "FIXED",
+  "sensitivityLevel": "PERSON_GENERAL",
+  "subjectFields": [[{"value": "field","languageCode": "no"}]],
+  "populationDescription": [{"languageCode": "no", "value": "description"}],
+  "spatialCoverageDescription": [{"languageCode": "no", "value": "Norge"}],
+  "dataRevision": {
+    "description": [{"languageCode": "no", "value": "Første publisering."}]
+  },
+  "identifierVariables": [{"unitType": "KOMMUNE"}],
+  "measureVariables": [{
+    "name": [{"languageCode": "no", "value": "name"}],
+    "description": [{"languageCode": "no", "value": "description"}],
+    "dataType": "STRING",
+    "valueDomain": {
+      "description": [{"languageCode": "no", "value": "description"}]
+    }
+  }]
+}

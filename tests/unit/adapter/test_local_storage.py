@@ -15,7 +15,7 @@ from job_executor.adapter.fs.models.metadata import (
 )
 from job_executor.common.exceptions import LocalStorageError
 
-DATASTORE_DIR = os.environ["DATASTORE_DIR"]
+DATASTORE_DIR = "tests/unit/resources/adapter/local_storage/TEST_DATASTORE"
 WORKING_DIR = DATASTORE_DIR + "_working"
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
 
@@ -42,14 +42,14 @@ MOVED_WORKING_DIR_DATASET_DATA_PATH = (
 
 
 def setup_function():
-    if os.path.isdir("tests/resources_backup"):
-        shutil.rmtree("tests/resources_backup")
-    shutil.copytree("tests/resources", "tests/resources_backup")
+    if os.path.isdir("tests/unit/resources_backup"):
+        shutil.rmtree("tests/unit/resources_backup")
+    shutil.copytree("tests/unit/resources", "tests/unit/resources_backup")
 
 
 def teardown_function():
-    shutil.rmtree("tests/resources")
-    shutil.move("tests/resources_backup", "tests/resources")
+    shutil.rmtree("tests/unit/resources")
+    shutil.move("tests/unit/resources_backup", "tests/unit/resources")
 
 
 def read_json(file_path: str) -> dict:

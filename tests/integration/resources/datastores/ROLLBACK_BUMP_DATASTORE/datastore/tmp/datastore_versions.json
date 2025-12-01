@@ -1,0 +1,23 @@
+{
+    "name": "no.ssb.dev",
+    "label": "Integration testing datastore",
+    "description": "Mock data for testing job-executor",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "description": "Første release",
+        "releaseTime": 1635299291,
+        "languageCode": "no",
+        "dataStructureUpdates": [
+          {
+            "name": "RELEASED_DATASET",
+            "description": "Første publisering",
+            "operation": "ADD",
+            "releaseStatus": "RELEASED"
+          }
+         ],
+        "updateType": "MAJOR"
+      }    
+    ]
+}
+ 
