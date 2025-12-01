@@ -91,13 +91,12 @@ def test_oversized_jobs():
     # This job will be accepted
     can_spawn = manager.can_spawn_new_worker(new_job_size=TEN_GB)
     assert can_spawn is True
-    if can_spawn:
-        worker = MockedWorker(
-            job_id="job_2",
-            job_size=TEN_GB,
-        )
-        manager.workers.append(worker)  # type: ignore
-        worker.start()
+    worker = MockedWorker(
+        job_id="job_2",
+        job_size=TEN_GB,
+    )
+    manager.workers.append(worker)  # type: ignore
+    worker.start()
     manager.close_logging_thread()
 
 

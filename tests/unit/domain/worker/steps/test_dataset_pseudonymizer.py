@@ -270,7 +270,7 @@ def test_pseudonymizer_adapter_failure():
 def test_pseudonymizer_invalid_unit_id_type():
     with pytest.raises(BuilderStepError) as e:
         dataset_pseudonymizer.run(INPUT_PARQUET_PATH, INVALID_METADATA, JOB_ID)
-    assert f"Failed to pseudonymize, UnregisteredUnitType: {str(e)}"
+    assert "Failed to pseudonymize dataset" in str(e)
 
 
 # In Parquet, the physical type refers to how the data is stored.
