@@ -1,8 +1,6 @@
 from dataclasses import dataclass
-from multiprocessing import Process
 
 from job_executor.domain.manager import Manager
-from job_executor.domain.worker.models import Worker
 
 
 @dataclass
