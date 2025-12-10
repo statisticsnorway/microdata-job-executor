@@ -15,7 +15,7 @@ from job_executor.adapter.fs.models.metadata import (
 )
 from job_executor.common.exceptions import LocalStorageError
 
-DATASTORE_DIR = "tests/unit/resources/adapter/local_storage/TEST_DATASTORE"
+DATASTORE_DIR = "tests/unit/resources/adapter/fs/TEST_DATASTORE"
 WORKING_DIR = DATASTORE_DIR + "_working"
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
 
