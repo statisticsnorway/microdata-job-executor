@@ -1,7 +1,6 @@
 import logging
 import time
 from multiprocessing import Queue
-from pathlib import Path
 
 from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import JobStatus
@@ -21,7 +20,9 @@ def initialize_app() -> None:
         rollback.fix_interrupted_jobs()
         rdns = datastore_api.get_datastores()
         for rdn in rdns:
-            local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+            local_storage = LocalStorageAdapter(
+                datastore_api.get_datastore_directory(rdn)
+            )
             if local_storage.datastore_dir.temporary_backup_exists():
                 raise StartupException(f"tmp directory exists for {rdn}")
     except Exception as e:
