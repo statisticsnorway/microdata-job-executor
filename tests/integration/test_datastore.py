@@ -16,6 +16,7 @@ from job_executor.adapter.datastore_api.models import (
 )
 from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import DatastoreVersion
+from job_executor.adapter.fs.models.metadata import Metadata
 from job_executor.domain import datastores
 from job_executor.domain.models import JobContext
 from tests.integration.common import (
@@ -112,13 +113,27 @@ def generate_job_context(
     )
 
 
+def _get_metadata_from_draft(
+    job_context: JobContext, dataset_name: str
+) -> Metadata:
+    datastore_dir = job_context.local_storage.datastore_dir
+    return next(
+        ds
+        for ds in datastore_dir.get_metadata_all_draft().data_structures
+        if ds.name == dataset_name
+    )
+
+
 def test_import_built_patch(mocked_datastore_api: MockedDatastoreApi):
     DATASET_NAME = "BUILT_PATCH_METADATA"
     job_context = generate_job_context(
         operation=Operation.PATCH_METADATA,
         target=DATASET_NAME,
     )
+    released_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
     datastores.patch_metadata(job_context)
+    patched_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
+    assert released_metadata != patched_metadata
     assert mocked_datastore_api.update_job_status.call_count == 2
     metadata_all_draft = (
         job_context.local_storage.datastore_dir.get_metadata_all_draft()
@@ -137,12 +152,7 @@ def test_import_built_add(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.add(job_context)
     assert mocked_datastore_api.update_job_status.call_count == 2
-    metadata_all_draft = (
-        job_context.local_storage.datastore_dir.get_metadata_all_draft()
-    )
-    assert DATASET_NAME in [
-        ds.name for ds in metadata_all_draft.data_structures
-    ]
+    assert _get_metadata_from_draft(job_context, DATASET_NAME)
     assert not os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
     assert not os.path.exists(
         DATASTORE_DIR / f"data/{DATASET_NAME}__DRAFT.parquet"
@@ -156,7 +166,10 @@ def test_import_built_change(mocked_datastore_api: MockedDatastoreApi):
         operation=Operation.CHANGE,
         target=DATASET_NAME,
     )
+    released_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
     datastores.change(job_context)
+    changed_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
+    assert changed_metadata != released_metadata
     assert mocked_datastore_api.update_job_status.call_count == 2
     metadata_all_draft = (
         job_context.local_storage.datastore_dir.get_metadata_all_draft()
