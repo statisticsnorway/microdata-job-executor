@@ -1,0 +1,6 @@
+{
+    "name": "no.ssb.dev",
+    "label": "Integration testing datastore",
+    "description": "Mock data for testing job-executor",
+    "versions": []
+}

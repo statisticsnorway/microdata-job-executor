@@ -1,0 +1,27 @@
+{
+  "version": "0.0.0.1234567891",
+  "description": "Draft",
+  "releaseTime": 1234567891,
+  "languageCode": "no",
+  "dataStructureUpdates": [
+    {
+      "name": "DRAFT_ADD",
+      "description": "Første publisering",
+      "operation": "ADD",
+      "releaseStatus": "DRAFT"
+    },
+    {
+      "name": "DRAFT_CHANGE",
+      "description": "Andre publisering",
+      "operation": "PATCH_METADATA",
+      "releaseStatus": "DRAFT"
+    },
+    {
+      "name": "DRAFT_PATCH_METADATA",
+      "description": "Andre publisering",
+      "operation": "PATCH_METADATA",
+      "releaseStatus": "DRAFT"
+    }
+  ],
+  "updateType": null
+}

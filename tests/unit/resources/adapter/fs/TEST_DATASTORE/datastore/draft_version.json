@@ -1,0 +1,15 @@
+{
+  "version": "0.0.0.1765363652",
+  "description": "Draft",
+  "releaseTime": 1765363652,
+  "languageCode": "no",
+  "updateType": "MINOR",
+  "dataStructureUpdates": [
+    {
+      "name": "BRUTTO_INNTEKT",
+      "description": "F\u00f8rste publisering",
+      "operation": "ADD",
+      "releaseStatus": "PENDING_RELEASE"
+    }
+  ]
+}
