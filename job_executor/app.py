@@ -1,6 +1,5 @@
 import logging
 import time
-from pathlib import Path
 
 from job_executor.adapter import datastore_api
 from job_executor.adapter.fs import LocalStorageAdapter
@@ -24,7 +23,9 @@ def initialize_app() -> Manager:
     try:
         rollback.fix_interrupted_jobs()
         for rdn in datastore_api.get_datastores():
-            local_storage = LocalStorageAdapter(Path(environment.datastore_dir))
+            local_storage = LocalStorageAdapter(
+                datastore_api.get_datastore_directory(rdn)
+            )
             if local_storage.datastore_dir.temporary_backup_exists():
                 raise StartupException(f"tmp directory exists for {rdn}")
         return Manager(
