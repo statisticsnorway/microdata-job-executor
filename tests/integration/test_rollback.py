@@ -160,11 +160,7 @@ def test_rollback_first_bump(mocked_datastore_api: MockedDatastoreApi):
         for file in os.listdir(metadata_dir)
     )
     assert not any(
-        file
-        in [
-            "metadata_all__1_0_0.json",
-            "data_versions__1_0.json"
-        ]
+        file in ["metadata_all__1_0_0.json", "data_versions__1_0.json"]
         for file in os.listdir(metadata_dir)
     )
 
