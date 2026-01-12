@@ -61,6 +61,13 @@ def selected_datastore(request):
 
 @pytest.fixture(autouse=True)
 def set_up_resources(selected_datastore):
+    """
+    As we want to set up a different datastore directory
+    for each test. We parameterize this autouse fixture with
+    a "selected_datastore" parameter.
+    We always move the selected datastore to the DATASTORE_DIR
+    when setting up tests so this global can be reused.
+    """
     assert selected_datastore
     backup_resources()
     if selected_datastore != DATASTORE_DIR:
@@ -130,8 +137,8 @@ def test_rollback_first_bump(mocked_datastore_api: MockedDatastoreApi):
             target="DATASTORE",
             bump_manifesto=bump_manifesto,
             description="some description",
-            bump_from_version="1.0.0",
-            bump_to_version="2.0.0",
+            bump_from_version="0.0.0",
+            bump_to_version="1.0.0",
         ),
     )
     rollback.fix_interrupted_job(job)
@@ -150,6 +157,10 @@ def test_rollback_first_bump(mocked_datastore_api: MockedDatastoreApi):
             "draft_version.json",
             "datastore_versions.json",
         ]
+        for file in os.listdir(metadata_dir)
+    )
+    assert not any(
+        file in ["metadata_all__1_0_0.json", "data_versions__1_0.json"]
         for file in os.listdir(metadata_dir)
     )
 

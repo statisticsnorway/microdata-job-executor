@@ -16,6 +16,7 @@ from job_executor.adapter.datastore_api.models import (
 )
 from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import DatastoreVersion
+from job_executor.adapter.fs.models.metadata import Metadata
 from job_executor.domain import datastores
 from job_executor.domain.models import JobContext
 from tests.integration.common import (
@@ -68,11 +69,20 @@ def generate_job_context(
     ) -> JobParameters:
         match operation:
             case Operation.BUMP:
+                if bump_manifesto is None:
+                    raise AssertionError(
+                        "Could not generate job without a bump manifesto"
+                    )
+                bump_to_version = "1.0.1"
+                if bump_manifesto.update_type == "MAJOR":
+                    bump_to_version = "2.0.0"
+                if bump_manifesto.update_type == "MINOR":
+                    bump_to_version = "1.1.0"
                 return JobParameters(
                     bump_manifesto=bump_manifesto,
                     description="some description",
                     bump_from_version="1.0.0",
-                    bump_to_version="2.0.0",  # todo
+                    bump_to_version=bump_to_version,
                     target=target,
                     operation=operation,
                 )
@@ -112,13 +122,27 @@ def generate_job_context(
     )
 
 
+def _get_metadata_from_draft(
+    job_context: JobContext, dataset_name: str
+) -> Metadata:
+    datastore_dir = job_context.local_storage.datastore_dir
+    return next(
+        ds
+        for ds in datastore_dir.get_metadata_all_draft().data_structures
+        if ds.name == dataset_name
+    )
+
+
 def test_import_built_patch(mocked_datastore_api: MockedDatastoreApi):
     DATASET_NAME = "BUILT_PATCH_METADATA"
     job_context = generate_job_context(
         operation=Operation.PATCH_METADATA,
         target=DATASET_NAME,
     )
+    released_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
     datastores.patch_metadata(job_context)
+    patched_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
+    assert released_metadata != patched_metadata
     assert mocked_datastore_api.update_job_status.call_count == 2
     metadata_all_draft = (
         job_context.local_storage.datastore_dir.get_metadata_all_draft()
@@ -137,12 +161,7 @@ def test_import_built_add(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.add(job_context)
     assert mocked_datastore_api.update_job_status.call_count == 2
-    metadata_all_draft = (
-        job_context.local_storage.datastore_dir.get_metadata_all_draft()
-    )
-    assert DATASET_NAME in [
-        ds.name for ds in metadata_all_draft.data_structures
-    ]
+    assert _get_metadata_from_draft(job_context, DATASET_NAME)
     assert not os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
     assert not os.path.exists(
         DATASTORE_DIR / f"data/{DATASET_NAME}__DRAFT.parquet"
@@ -156,7 +175,10 @@ def test_import_built_change(mocked_datastore_api: MockedDatastoreApi):
         operation=Operation.CHANGE,
         target=DATASET_NAME,
     )
+    released_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
     datastores.change(job_context)
+    changed_metadata = _get_metadata_from_draft(job_context, DATASET_NAME)
+    assert changed_metadata != released_metadata
     assert mocked_datastore_api.update_job_status.call_count == 2
     metadata_all_draft = (
         job_context.local_storage.datastore_dir.get_metadata_all_draft()
@@ -193,6 +215,9 @@ def test_bump_patch(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.bump_version(bump_job_context)
     assert mocked_datastore_api.update_job_status.call_count == 4
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "metadata_all__1_0_1.json"
+    )
 
 
 def test_bump_minor(mocked_datastore_api: MockedDatastoreApi):
@@ -218,6 +243,12 @@ def test_bump_minor(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.bump_version(bump_job_context)
     assert mocked_datastore_api.update_job_status.call_count == 4
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "metadata_all__1_1_0.json"
+    )
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "data_versions__1_1.json"
+    )
 
 
 def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
@@ -243,6 +274,12 @@ def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.bump_version(bump_job_context)
     assert mocked_datastore_api.update_job_status.call_count == 4
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "metadata_all__2_0_0.json"
+    )
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "data_versions__2_0.json"
+    )
 
 
 def test_delete_draft(mocked_datastore_api: MockedDatastoreApi):

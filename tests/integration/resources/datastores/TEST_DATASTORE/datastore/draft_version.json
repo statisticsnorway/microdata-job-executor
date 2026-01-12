@@ -13,7 +13,7 @@
     {
       "name": "DRAFT_CHANGE",
       "description": "Andre publisering",
-      "operation": "PATCH_METADATA",
+      "operation": "CHANGE",
       "releaseStatus": "DRAFT"
     },
     {

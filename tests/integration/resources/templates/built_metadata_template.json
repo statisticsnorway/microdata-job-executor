@@ -4,7 +4,7 @@
   "languageCode": "no",
   "temporality": "FIXED",
   "sensitivityLevel": "PERSON_GENERAL",
-  "subjectFields": ["mock"],
+  "subjectFields": ["ORIGIN"],
   "temporalCoverage": { "start": 0, "stop": 1 },
   "identifierVariables": [{
     "variableRole": "Identifier",
