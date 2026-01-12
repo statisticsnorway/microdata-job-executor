@@ -38,7 +38,12 @@ class MockedDatastoreApi:
     update_description: MagicMock
 
 
-@pytest.fixture(autouse=True)
+@dataclass
+class MockedPseudonymService:
+    pseudonymize: MagicMock
+
+
+@pytest.fixture
 def mocked_datastore_api(mocker) -> MockedDatastoreApi:
     return MockedDatastoreApi(
         update_job_status=mocker.patch(
@@ -53,18 +58,20 @@ def mocked_datastore_api(mocker) -> MockedDatastoreApi:
 
 
 @pytest.fixture(autouse=True)
-def mocked_pseudonym_service(mocker):
-    return mocker.patch(
-        "job_executor.adapter.pseudonym_service.pseudonymize",
-        return_value={
-            "00000000001": 1,
-            "00000000002": 2,
-            "00000000003": 3,
-            "00000000004": 4,
-            "00000000005": 5,
-            "00000000006": 6,
-            "00000000007": 7,
-        },
+def mocked_pseudonym_service(mocker) -> MockedPseudonymService:
+    return MockedPseudonymService(
+        pseudonymize=mocker.patch(
+            "job_executor.adapter.pseudonym_service.pseudonymize",
+            return_value={
+                "00000000001": 1,
+                "00000000002": 2,
+                "00000000003": 3,
+                "00000000004": 4,
+                "00000000005": 5,
+                "00000000006": 6,
+                "00000000007": 7,
+            },
+        )
     )
 
 
@@ -119,6 +126,7 @@ def test_import_add(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_job_status.call_count == 6
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
+    assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
 
 def test_import_change(mocked_datastore_api: MockedDatastoreApi):
@@ -131,9 +139,13 @@ def test_import_change(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_job_status.call_count == 6
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
+    assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
 
-def test_import_add_no_pseudo(mocked_datastore_api: MockedDatastoreApi):
+def test_import_add_no_pseudo(
+    mocked_datastore_api: MockedDatastoreApi,
+    mocked_pseudonym_service: MockedPseudonymService,
+):
     DATASET_NAME = "IMPORTABLE_ADD_NO_PSEUDO"
     add_no_pseudo_context = generate_job_context(
         operation=Operation.ADD,
@@ -142,7 +154,9 @@ def test_import_add_no_pseudo(mocked_datastore_api: MockedDatastoreApi):
     build_dataset_worker.run_worker(add_no_pseudo_context, Queue())
     assert mocked_datastore_api.update_job_status.call_count == 5
     assert mocked_datastore_api.update_description.call_count == 1
+    assert mocked_pseudonym_service.pseudonymize.call_count == 0
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
+    assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
 
 def test_import_add_partitioned(mocked_datastore_api: MockedDatastoreApi):
@@ -155,6 +169,7 @@ def test_import_add_partitioned(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_job_status.call_count == 6
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
+    assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT")
 
 
 def test_import_add_invalid(mocked_datastore_api: MockedDatastoreApi):
@@ -167,16 +182,30 @@ def test_import_add_invalid(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_job_status.call_count == 3
     assert mocked_datastore_api.update_description.call_count == 0
     assert os.path.exists(INPUT_DIR / f"archive/{DATASET_NAME}.tar")
+    assert not os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
+    assert not os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT")
+
+
+@pytest.fixture
+def mocked_offline_datastore_api(mocker) -> MockedDatastoreApi:
+    return MockedDatastoreApi(
+        update_job_status=mocker.patch(
+            "job_executor.adapter.datastore_api.update_job_status",
+            side_effect=Exception("offline"),
+        ),
+        update_description=mocker.patch(
+            "job_executor.adapter.datastore_api.update_description",
+            side_effect=Exception("offline"),
+        ),
+    )
 
 
 def test_import_add_datastore_api_down(
-    mocked_datastore_api: MockedDatastoreApi,
+    mocked_offline_datastore_api: MockedDatastoreApi,
 ):
     DATASET_NAME = "IMPORTABLE_ADD"
     add_datastore_api_down_context = generate_job_context(
         operation=Operation.ADD, target=DATASET_NAME
     )
-    build_dataset_worker.run_worker(add_datastore_api_down_context, Queue())
-    assert mocked_datastore_api.update_job_status.call_count == 6
-    assert mocked_datastore_api.update_description.call_count == 1
-    assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
+    with pytest.raises(Exception, match="offline"):
+        build_dataset_worker.run_worker(add_datastore_api_down_context, Queue())

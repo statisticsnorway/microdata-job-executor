@@ -1,4 +1,5 @@
 import os
+import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -69,11 +70,20 @@ def generate_job_context(
     ) -> JobParameters:
         match operation:
             case Operation.BUMP:
+                if bump_manifesto is None:
+                    raise AssertionError(
+                        "Could not generate job without a bump manifesto"
+                    )
+                bump_to_version = "1.0.1"
+                if bump_manifesto.update_type == "MAJOR":
+                    bump_to_version = "2.0.0"
+                if bump_manifesto.update_type == "MINOR":
+                    bump_to_version = "1.1.0"
                 return JobParameters(
                     bump_manifesto=bump_manifesto,
                     description="some description",
                     bump_from_version="1.0.0",
-                    bump_to_version="2.0.0",  # todo
+                    bump_to_version=bump_to_version,
                     target=target,
                     operation=operation,
                 )
@@ -206,6 +216,9 @@ def test_bump_patch(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.bump_version(bump_job_context)
     assert mocked_datastore_api.update_job_status.call_count == 4
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "metadata_all__1_0_1.json"
+    )
 
 
 def test_bump_minor(mocked_datastore_api: MockedDatastoreApi):
@@ -231,6 +244,12 @@ def test_bump_minor(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.bump_version(bump_job_context)
     assert mocked_datastore_api.update_job_status.call_count == 4
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "metadata_all__1_1_0.json"
+    )
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "data_versions__1_1.json"
+    )
 
 
 def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
@@ -256,6 +275,12 @@ def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
     )
     datastores.bump_version(bump_job_context)
     assert mocked_datastore_api.update_job_status.call_count == 4
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "metadata_all__2_0_0.json"
+    )
+    assert os.path.exists(
+        DATASTORE_DIR / "datastore" / "data_versions__2_0.json"
+    )
 
 
 def test_delete_draft(mocked_datastore_api: MockedDatastoreApi):
