@@ -25,6 +25,7 @@ dev = [
 
 [tool.uv]
 package = true
+exclude-newer = "3 days"
 
 [tool.setuptools.packages.find]
 include = ["job_executor", "tests"]
