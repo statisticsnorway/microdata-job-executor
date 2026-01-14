@@ -1,0 +1,91 @@
+{
+    "name": "KJOENN",
+    "populationDescription": "new value",
+    "languageCode": "no",
+    "temporality": "FIXED",
+    "sensitivityLevel": "PERSON_GENERAL",
+    "subjectFields": ["new value", "new value"],
+    "temporalCoverage": { "start": null, "stop": null },
+    "identifierVariables": [
+      {
+        "variableRole": "Identifier",
+        "name": "PERSON",
+        "label": "new value",
+        "notPseudonym": false,
+        "dataType": "String",
+        "representedVariables": [
+          {
+            "description": "new value",
+            "validPeriod": { "start": null, "stop": null },
+            "valueDomain": {
+              "description": "new value",
+              "unitOfMeasure": "N/A"
+            }
+          }
+        ],
+        "format": "RandomUInt48",
+        "keyType": {
+          "name": "PERSON",
+          "label": "new value",
+          "description": "new value"
+        }
+      }
+    ],
+    "measureVariable": {
+      "variableRole": "Measure",
+      "name": "KJOENN",
+      "label": "new value",
+      "notPseudonym": true,
+      "dataType": "String",
+      "representedVariables": [
+        {
+          "description": "new value",
+          "validPeriod": { "start": -25567 },
+          "valueDomain": {
+            "codeList": [
+              { "category": "Mann", "code": "1" },
+              { "category": "Kvinne", "code": "2" }
+            ],
+            "missingValues": []
+          }
+        }
+      ]
+    },
+    "attributeVariables": [
+      {
+        "variableRole": "Start",
+        "name": "START",
+        "label": "new value",
+        "notPseudonym": true,
+        "dataType": "Instant",
+        "representedVariables": [
+          {
+            "description": "new value",
+            "validPeriod": { "start": null, "stop":null },
+            "valueDomain": {
+              "description": "new value",
+              "unitOfMeasure": "N/A"
+            }
+          }
+        ]
+      },
+      {
+        "variableRole": "Stop",
+        "name": "STOP",
+        "label": "Stoppdato",
+        "notPseudonym": true,
+        "dataType": "Instant",
+        "representedVariables": [
+          {
+            "description": "new value",
+            "validPeriod": { "start": null, "stop":null },
+            "valueDomain": {
+              "description": "new value",
+              "unitOfMeasure": "N/A"
+            }
+          }
+        ]
+      }
+    ]
+  }
+  
