@@ -1,4 +1,10 @@
 import logging
+import os
+from pathlib import Path
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import Job, JobStatus
@@ -20,6 +26,7 @@ from job_executor.common.exceptions import (
     UnnecessaryUpdateException,
     VersioningException,
 )
+from job_executor.config import environment
 from job_executor.domain.rollback import (
     rollback_bump,
     rollback_manager_phase_import_job,
@@ -582,3 +589,72 @@ def delete_archived_input(job: Job, dataset_name: str) -> None:
         logger.error(f"{job.job_id}: An unexpected error occured")
         logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
         datastore_api.update_job_status(job.job_id, JobStatus.FAILED)
+
+
+def generate_rsa_keys(
+    job: Job,
+) -> None:
+    """
+    Generate RSA key pair for a datastore.
+    Stores the private key in /private_keys/{rdn}/microdata_private_key.pem
+    and posts the public key to the datastore-api.
+    """
+    try:
+        logger.info(f"{job.job_id}: initiated")
+        datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
+
+        rdn = job.datastore_rdn
+        target_dir = Path(environment.private_keys_dir) / rdn
+
+        if not target_dir.exists():
+            logger.info(
+                f"{job.job_id}: Creating private keys directory at {target_dir}"
+            )
+            os.makedirs(target_dir)
+
+        logger.info(f"{job.job_id}: Generating RSA key pair")
+        private_key = rsa.generate_private_key(
+            public_exponent=65537, key_size=2048, backend=default_backend()
+        )
+        public_key = private_key.public_key()
+
+        microdata_private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+
+        private_key_location = target_dir / "microdata_private_key.pem"
+        with open(private_key_location, "wb") as file:
+            file.write(microdata_private_key_pem)
+        logger.info(
+            f"{job.job_id}: Saved private key to {private_key_location}"
+        )
+
+        microdata_public_key_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+
+        try:
+            logger.info(f"{job.job_id}: Posting public key to datastore-api")
+            datastore_api.post_public_key(rdn, microdata_public_key_pem)
+        except Exception as post_error:
+            logger.error(
+                f"{job.job_id}: Failed to post public key to datastore-api, "
+                "cleaning up saved private key"
+            )
+            if private_key_location.exists():
+                os.remove(private_key_location)
+                logger.info(
+                    f"{job.job_id}: Deleted private key at "
+                    f"{private_key_location}"
+                )
+            raise post_error
+
+        logger.info(f"{job.job_id}: completed")
+        datastore_api.update_job_status(job.job_id, JobStatus.COMPLETED)
+    except Exception as e:
+        logger.error(f"{job.job_id}: Failed to generate RSA keys")
+        logger.exception(f"{job.job_id}: {str(e)}", exc_info=e)
+        datastore_api.update_job_status(job.job_id, JobStatus.FAILED, str(e))

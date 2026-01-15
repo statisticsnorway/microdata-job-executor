@@ -217,6 +217,10 @@ class Manager:
             )
         elif operation == Operation.DELETE_ARCHIVE:
             datastores.delete_archived_input(job, job.parameters.target)
+        elif operation == Operation.GENERATE_RSA_KEYS:
+            datastores.generate_rsa_keys(
+                job,
+            )
         else:
             datastore_api.update_job_status(
                 job.job_id, JobStatus.FAILED, log="Unknown operation for job"

@@ -1,12 +1,14 @@
 import logging
 import os
 from multiprocessing import Queue
+from pathlib import Path
 from time import perf_counter
 
 from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import Job, JobStatus
 from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.common.exceptions import BuilderStepError, HttpResponseError
+from job_executor.config import environment
 from job_executor.config.log import configure_worker_logger
 from job_executor.domain.worker.steps import (
     dataset_decryptor,
@@ -69,7 +71,7 @@ def run_worker(job: Job, dataset_name: str, logging_queue: Queue) -> None:
             dataset_name,
             local_storage.input_dir.path,
             local_storage.working_dir.path,
-            local_storage.datastore_dir.vault_dir,
+            Path(environment.private_keys_dir) / job.datastore_rdn,
         )
         datastore_api.update_job_status(job.job_id, JobStatus.VALIDATING)
         (data_file_name, _) = dataset_validator.run_for_dataset(

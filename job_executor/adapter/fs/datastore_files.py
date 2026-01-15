@@ -19,7 +19,6 @@ from job_executor.common.exceptions import LocalStorageError
 
 class DatastoreDirectory:
     root_dir: Path
-    vault_dir: Path
     data_dir: Path
     metadata_dir: Path
     draft_metadata_all_path: Path
@@ -31,7 +30,6 @@ class DatastoreDirectory:
         self.root_dir = root_dir
         self.data_dir = root_dir / "data"
         self.metadata_dir = root_dir / "datastore"
-        self.vault_dir = root_dir / "vault"
         self.draft_version_path = self.metadata_dir / "draft_version.json"
         self.archive_dir = self.root_dir / "archive"
         self.draft_metadata_all_path = (
