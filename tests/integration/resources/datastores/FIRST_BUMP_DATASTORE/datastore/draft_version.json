@@ -1,0 +1,15 @@
+{
+  "version": "0.0.0.1234567891",
+  "description": "Draft",
+  "releaseTime": 1234567891,
+  "languageCode": "no",
+  "dataStructureUpdates": [
+    {
+      "name": "DRAFT_ADD",
+      "description": "Første publisering",
+      "operation": "ADD",
+      "releaseStatus": "DRAFT"
+    }
+  ],
+  "updateType": null
+}

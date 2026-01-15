@@ -1,0 +1,20 @@
+{
+  "dataStore": {
+    "name": "no.ssb.dev",
+    "label": "Integration testing datastore",
+    "description": "Mock data for testing job-executor",
+    "languageCode": "no"
+  },
+  "languages": [
+    {"code": "no", "label": "Norsk"}
+  ],
+  "dataStructures": [
+    "IMPORTABLE_PATCH_METADATA",
+    "IMPORTABLE_CHANGE",
+    "BUILT_PATCH_METADATA",
+    "BUILT_CHANGE",
+    "DRAFT_CHANGE",
+    "DRAFT_PATCH_METADATA",
+    "DRAFT_ADD"
+  ]
+}

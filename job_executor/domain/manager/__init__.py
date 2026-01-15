@@ -1,11 +1,16 @@
 import logging
 from multiprocessing import Process, Queue
+from threading import Thread
 
 from job_executor.adapter import datastore_api
-from job_executor.adapter.datastore_api.models import Job, JobStatus, Operation
-from job_executor.adapter.fs import LocalStorageAdapter
+from job_executor.adapter.datastore_api.models import (
+    JobQueryResult,
+    JobStatus,
+    Operation,
+)
+from job_executor.config.log import initialize_logging_thread
 from job_executor.domain import datastores, rollback
-from job_executor.domain.datastores import Datastore
+from job_executor.domain.models import JobContext, build_job_context
 from job_executor.domain.worker import (
     build_dataset_worker,
     build_metadata_worker,
@@ -23,8 +28,14 @@ class Manager:
 
     It ensures that the common workload of the application does not exceed
     memory limits, and makes sure that the sub-process workers lifetimes
-    are handled appropriately.
+    are handled appropriately and that their logs are piped to the main
+    process.
     """
+
+    max_workers: int
+    max_bytes_all_workers: int
+    logging_queue: Queue
+    logging_thread: Thread
 
     def __init__(
         self,
@@ -35,12 +46,11 @@ class Manager:
         :param default_max_workers: The maximum number of workers
         :param max_gb_all_workers: Threshold in GB (50) for when the number
         of workers are reduced
-        :param datastore: Datastore singleton for updating the state of the
-        datastore
         """
         self.max_workers = max_workers
         self.max_bytes_all_workers = max_bytes_all_workers
         self.workers: list[Worker] = []
+        self.logging_queue, self.log_thread = initialize_logging_thread()
 
     @property
     def current_total_size(self) -> int:
@@ -91,137 +101,131 @@ class Manager:
                     rollback.fix_interrupted_job(job)
                 self.unregister_worker(dead_worker.job_id)
 
-    def handle_worker_job(
-        self,
-        job: Job,
-        job_size: int,
-        logging_queue: Queue,
-    ) -> None:
-        dataset_name = job.parameters.target
-        operation = job.parameters.operation
+    def _handle_worker_job(self, job_context: JobContext) -> None:
+        job_id = job_context.job.job_id
+        operation = job_context.job.parameters.operation
+        assert job_context.job_size is not None
         if operation in ["ADD", "CHANGE"]:
             worker = Worker(
                 process=Process(
                     target=build_dataset_worker.run_worker,
                     args=(
-                        job,
-                        dataset_name,
-                        logging_queue,
+                        job_context,
+                        self.logging_queue,
                     ),
                 ),
-                job_id=job.job_id,
-                job_size=job_size,
+                job_id=job_id,
+                job_size=job_context.job_size,
             )
             self.workers.append(worker)
-            datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
+            datastore_api.update_job_status(job_id, JobStatus.INITIATED)
             worker.start()
         elif operation == "PATCH_METADATA":
             worker = Worker(
                 process=Process(
                     target=build_metadata_worker.run_worker,
                     args=(
-                        job,
-                        dataset_name,
-                        logging_queue,
+                        job_context,
+                        self.logging_queue,
                     ),
                 ),
-                job_id=job.job_id,
-                job_size=job_size,
+                job_id=job_id,
+                job_size=job_context.job_size,
             )
             self.workers.append(worker)
-            datastore_api.update_job_status(job.job_id, JobStatus.INITIATED)
+            datastore_api.update_job_status(job_id, JobStatus.INITIATED)
             worker.start()
         else:
             logger.error(f'Unknown operation "{operation}"')
             datastore_api.update_job_status(
-                job.job_id,
+                job_id,
                 JobStatus.FAILED,
                 log=f"Unknown operation type {operation}",
             )
 
-    def handle_manager_job(self, job: Job) -> None:
-        job_id = job.job_id
-        operation = job.parameters.operation
-        local_storage = LocalStorageAdapter(
-            datastore_api.get_datastore_directory(job.datastore_rdn)
-        )
-        datastore = Datastore(local_storage)
+    def _handle_manager_job(self, job_context: JobContext) -> None:
+        job_id = job_context.job.job_id
+        operation = job_context.job.parameters.operation
         self.unregister_worker(
             job_id
         )  # Filter out job from worker jobs if built
-        # Ignoring a lot of types here as we already have done the validation
-        # in the pydantic model.
         if operation == Operation.BUMP:
-            datastores.bump_version(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.bump_manifesto,  # type: ignore
-                job.parameters.description,  # type: ignore
-            )
+            datastores.bump_version(job_context)
         elif operation == Operation.PATCH_METADATA:
-            datastores.patch_metadata(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                job.parameters.description,  # type: ignore
-            )
+            datastores.patch_metadata(job_context)
         elif operation == Operation.SET_STATUS:
-            datastores.set_draft_release_status(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                job.parameters.release_status,  # type: ignore
-            )
+            datastores.set_draft_release_status(job_context)
         elif operation == Operation.ADD:
-            datastores.add(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                job.parameters.description,  # type: ignore
-            )
+            datastores.add(job_context)
         elif operation == Operation.CHANGE:
-            datastores.change(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                job.parameters.description,  # type: ignore
-            )
+            datastores.change(job_context)
         elif operation == Operation.REMOVE:
-            datastores.remove(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                job.parameters.description,  # type: ignore
-            )
+            datastores.remove(job_context)
         elif operation == Operation.ROLLBACK_REMOVE:
-            datastores.delete_draft(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                rollback_remove=True,
-            )
+            datastores.delete_draft(job_context, rollback_remove=True)
         elif operation == Operation.DELETE_DRAFT:
-            datastores.delete_draft(
-                datastore,
-                local_storage,
-                job,
-                job.parameters.target,
-                rollback_remove=False,
-            )
+            datastores.delete_draft(job_context)
         elif operation == Operation.DELETE_ARCHIVE:
-            datastores.delete_archived_input(job, job.parameters.target)
+            datastores.delete_archived_input(job_context)
         elif operation == Operation.GENERATE_RSA_KEYS:
-            datastores.generate_rsa_keys(
-                job,
-            )
+            datastores.generate_rsa_keys(job_context)
         else:
             datastore_api.update_job_status(
-                job.job_id, JobStatus.FAILED, log="Unknown operation for job"
+                job_context.job.job_id,
+                JobStatus.FAILED,
+                log="Unknown operation for job",
             )
+
+    def handle_jobs(self, job_query_result: JobQueryResult) -> None:
+        self.clean_up_after_dead_workers()
+        if job_query_result.available_jobs_count:
+            logger.info(
+                f"Found {len(job_query_result.queued_worker_jobs)}"
+                f"/{len(job_query_result.built_jobs)}"
+                f"/{len(job_query_result.queued_manager_jobs)}"
+                f" (worker, built, queued manager jobs)"
+            )
+
+        for job in job_query_result.queued_worker_jobs:
+            job_id = job.job_id
+            job_context = build_job_context(job, "worker")
+            if job_context.job_size == 0 or job_context.job_size is None:
+                logger.error(f"{job_id} Failed to get the size of the dataset.")
+                datastore_api.update_job_status(
+                    job_context.job.job_id,
+                    JobStatus.FAILED,
+                    log="No such dataset available for import",
+                )
+                continue  # skip futher processing of this job
+            if job_context.job_size > self.max_bytes_all_workers:
+                logger.warning(
+                    f"{job_id} Exceeded the maximum size for all workers."
+                )
+                datastore_api.update_job_status(
+                    job_id,
+                    JobStatus.FAILED,
+                    log="Dataset too large for import",
+                )
+                continue  # skip futher processing of this job
+            if self.can_spawn_new_worker(job_context.job_size):
+                self._handle_worker_job(job_context)
+
+        for job in job_query_result.queued_manager_and_built_jobs():
+            job_context = build_job_context(job, "manager")
+            try:
+                self._handle_manager_job(job_context)
+            except Exception as exc:
+                # All exceptions that occur during the handling of a job
+                # are resolved by rolling back. The exceptions that
+                # reach here are exceptions raised by the rollback.
+                logger.exception(
+                    f"{job.job_id} failed and could not roll back",
+                    exc_info=exc,
+                )
+                raise exc
+
+    def close_logging_thread(self) -> None:
+        if self.logging_queue is not None:
+            self.logging_queue.put(None)
+        if self.log_thread is not None:
+            self.log_thread.join()
