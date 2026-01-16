@@ -9,10 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from microdata_tools import package_dataset
 
 
-def _create_key_pair(vault_dir: Path):
-    if not vault_dir.exists():
-        os.makedirs(vault_dir)
-
+def _create_key_pair(public_key_dir: Path, private_key_dir: Path):
     private_key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048, backend=default_backend()
     )
@@ -21,11 +18,11 @@ def _create_key_pair(vault_dir: Path):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
-    public_key_location = vault_dir / "microdata_public_key.pem"
+    public_key_location = public_key_dir / "microdata_public_key.pem"
     with open(public_key_location, "wb") as file:
         file.write(microdata_public_key_pem)
 
-    with open(vault_dir / "microdata_private_key.pem", "wb") as file:
+    with open(private_key_dir / "microdata_private_key.pem", "wb") as file:
         file.write(
             private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -74,11 +71,15 @@ def _render_metadata_all(metadata_all_file: Path) -> None:
 def _package_to_input(datastore_dir: str):
     package_dir = Path("tests/integration/resources/input_datasets")
     input_dir = Path(f"{datastore_dir}_input")
-    vault_dir = Path(f"{datastore_dir}/vault")
-    _create_key_pair(vault_dir)
+    public_key_dir = Path(f"{datastore_dir}/vault")
+    private_key_dir = (
+        Path("tests/integration/resources/private_keys")
+        / Path(datastore_dir).name
+    )
+    _create_key_pair(public_key_dir, private_key_dir)
     for dataset in os.listdir(package_dir):
         package_dataset(
-            rsa_keys_dir=vault_dir,
+            rsa_keys_dir=public_key_dir,
             dataset_dir=Path(package_dir / dataset),
             output_dir=Path(input_dir),
         )
