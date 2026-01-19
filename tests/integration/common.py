@@ -8,6 +8,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from microdata_tools import package_dataset
 
+PRIVATE_KEYS_DIR = Path("tests/integration/resources/private_keys")
+
 
 def _create_key_pair(public_key_dir: Path, private_key_dir: Path):
     private_key = rsa.generate_private_key(
@@ -72,10 +74,7 @@ def _package_to_input(datastore_dir: str):
     package_dir = Path("tests/integration/resources/input_datasets")
     input_dir = Path(f"{datastore_dir}_input")
     public_key_dir = Path(f"{datastore_dir}/vault")
-    private_key_dir = (
-        Path("tests/integration/resources/private_keys")
-        / Path(datastore_dir).name
-    )
+    private_key_dir = PRIVATE_KEYS_DIR / Path(datastore_dir).name
     _create_key_pair(public_key_dir, private_key_dir)
     for dataset in os.listdir(package_dir):
         package_dataset(

@@ -17,9 +17,11 @@ from job_executor.adapter.datastore_api.models import (
 from job_executor.adapter.fs import LocalStorageAdapter
 from job_executor.adapter.fs.models.datastore_versions import DatastoreVersion
 from job_executor.adapter.fs.models.metadata import Metadata
+from job_executor.common.exceptions import HttpResponseError
 from job_executor.domain import datastores
 from job_executor.domain.models import JobContext
 from tests.integration.common import (
+    PRIVATE_KEYS_DIR,
     backup_resources,
     prepare_datastore,
     recover_resources_from_backup,
@@ -34,6 +36,7 @@ INPUT_DIR = RESOURCES_DIR / "TEST_DATASTORE_input"
 @dataclass
 class MockedDatastoreApi:
     update_job_status: MagicMock
+    post_public_key: MagicMock
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +45,11 @@ def mocked_datastore_api(mocker) -> MockedDatastoreApi:
         update_job_status=mocker.patch(
             "job_executor.adapter.datastore_api.update_job_status",
             return_value=None,
-        )
+        ),
+        post_public_key=mocker.patch(
+            "job_executor.adapter.datastore_api.post_public_key",
+            return_value=None,
+        ),
     )
 
 
@@ -96,7 +103,7 @@ def generate_job_context(
                     target=target,
                     release_status=release_status,
                 )
-            case Operation.DELETE_DRAFT:
+            case Operation.DELETE_DRAFT | Operation.GENERATE_RSA_KEYS:
                 return JobParameters(
                     operation=operation,
                     target=target,
@@ -294,3 +301,47 @@ def test_delete_draft(mocked_datastore_api: MockedDatastoreApi):
     )
     assert draft_version.get_dataset_release_status(DATASET_NAME) is None
     assert mocked_datastore_api.update_job_status.call_count == 2
+
+
+def test_generate_rsa_keys(mocked_datastore_api: MockedDatastoreApi):
+    generate_rsa_keys_job_context = generate_job_context(
+        operation=Operation.GENERATE_RSA_KEYS,
+        target="DATASTORE",
+    )
+    datastores.generate_rsa_keys(generate_rsa_keys_job_context)
+
+    assert mocked_datastore_api.post_public_key.call_count == 1
+    assert mocked_datastore_api.update_job_status.call_count == 2
+
+    private_key_path = (
+        PRIVATE_KEYS_DIR
+        / generate_rsa_keys_job_context.job.datastore_rdn
+        / "microdata_private_key.pem"
+    )
+    assert private_key_path.exists()
+    with open(private_key_path, "rb") as f:
+        private_key_content = f.read()
+        assert b"BEGIN PRIVATE KEY" in private_key_content
+        assert b"END PRIVATE KEY" in private_key_content
+
+
+def test_generate_rsa_keys_cleanup_on_post_public_key_failure(
+    mocked_datastore_api: MockedDatastoreApi,
+):
+    mocked_datastore_api.post_public_key.side_effect = HttpResponseError(
+        "500: Internal Server Error"
+    )
+    generate_rsa_keys_job_context = generate_job_context(
+        operation=Operation.GENERATE_RSA_KEYS,
+        target="DATASTORE",
+    )
+    datastores.generate_rsa_keys(generate_rsa_keys_job_context)
+
+    assert mocked_datastore_api.update_job_status.call_count == 2
+
+    private_key_path = (
+        PRIVATE_KEYS_DIR
+        / generate_rsa_keys_job_context.job.datastore_rdn
+        / "microdata_private_key.pem"
+    )
+    assert not private_key_path.exists()
