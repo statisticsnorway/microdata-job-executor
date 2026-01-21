@@ -24,7 +24,7 @@ def initialize_app() -> Manager:
         rollback.fix_interrupted_jobs()
         for rdn in datastore_api.get_datastores():
             local_storage = LocalStorageAdapter(
-                datastore_api.get_datastore_directory(rdn)
+                datastore_api.get_datastore_directory(rdn), rdn
             )
             if local_storage.datastore_dir.temporary_backup_exists():
                 raise StartupException(f"tmp directory exists for {rdn}")

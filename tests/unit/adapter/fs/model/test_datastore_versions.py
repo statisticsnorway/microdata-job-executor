@@ -16,7 +16,7 @@ def load_json(file_path):
 
 DATASTORE_DIR = "tests/unit/resources/adapter/fs/TEST_DATASTORE"
 METADATA_DIR = f"{DATASTORE_DIR}/datastore"
-local_storage = LocalStorageAdapter(Path(DATASTORE_DIR))
+local_storage = LocalStorageAdapter(Path(DATASTORE_DIR), "TEST_DATASTORE")
 DATASTORE_VERSIONS_PATH = f"{METADATA_DIR}/datastore_versions.json"
 
 

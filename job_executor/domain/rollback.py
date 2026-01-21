@@ -28,7 +28,8 @@ logger = logging.getLogger()
 def rollback_bump(job: Job, bump_manifesto: DatastoreVersion) -> None:
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     try:
         logger.info(f"{job_id}: Restoring files from temporary backup")
@@ -138,7 +139,8 @@ def rollback_worker_phase_import_job(
 ) -> None:
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     logger.warning(
         f"{job_id}: Rolling back worker job "
@@ -194,7 +196,8 @@ def rollback_manager_phase_import_job(
     """
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     logger.warning(
         f"{job_id}: Rolling back import job "

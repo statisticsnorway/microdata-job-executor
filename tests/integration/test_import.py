@@ -88,7 +88,7 @@ def set_up_resources():
 def generate_job_context(operation: Operation, target: str) -> JobContext:
     return JobContext(
         handler="worker",
-        local_storage=LocalStorageAdapter(DATASTORE_DIR),
+        local_storage=LocalStorageAdapter(DATASTORE_DIR, "TEST_DATASTORE"),
         job_size=100,
         job=Job(
             job_id="1",
