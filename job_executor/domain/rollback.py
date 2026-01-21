@@ -20,6 +20,7 @@ from job_executor.common.exceptions import (
     RollbackException,
     StartupException,
 )
+from job_executor.config import environment
 
 logger = logging.getLogger()
 
@@ -27,7 +28,8 @@ logger = logging.getLogger()
 def rollback_bump(job: Job, bump_manifesto: DatastoreVersion) -> None:
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     try:
         logger.info(f"{job_id}: Restoring files from temporary backup")
@@ -137,7 +139,8 @@ def rollback_worker_phase_import_job(
 ) -> None:
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     logger.warning(
         f"{job_id}: Rolling back worker job "
@@ -193,7 +196,8 @@ def rollback_manager_phase_import_job(
     """
     job_id = job.job_id
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     logger.warning(
         f"{job_id}: Rolling back import job "
@@ -290,9 +294,31 @@ def fix_interrupted_job(job: Job) -> None:
             JobStatus.FAILED,
             "Bump operation was interrupted and rolled back.",
         )
+    elif job_operation == "GENERATE_RSA_KEYS":
+        rollback_generate_rsa_keys_job(job)
+        logger.info(
+            f'{job.job_id}: Setting status to "failed" for interrupted job'
+        )
+        datastore_api.update_job_status(
+            job.job_id,
+            JobStatus.FAILED,
+            "Job was failed due to an unexpected interruption",
+        )
     else:
         log_message = (
             f"Unrecognized job operation {job_operation} for job {job.job_id}"
         )
         logger.error(log_message)
         raise RollbackException(log_message)
+
+
+def rollback_generate_rsa_keys_job(job: Job) -> None:
+    rdn = job.datastore_rdn
+    target_dir = Path(environment.private_keys_dir) / rdn
+    private_key_location = target_dir / "microdata_private_key.pem"
+    if private_key_location.exists():
+        os.remove(private_key_location)
+        logger.info(
+            f"{job.job_id}: Rollback: deleted private key at "
+            f"{private_key_location}"
+        )

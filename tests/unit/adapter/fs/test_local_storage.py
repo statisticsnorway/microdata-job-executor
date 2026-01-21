@@ -19,7 +19,7 @@ DATASTORE_DIR = "tests/unit/resources/adapter/fs/TEST_DATASTORE"
 WORKING_DIR = DATASTORE_DIR + "_working"
 DATASTORE_DATA_DIR = f"{DATASTORE_DIR}/data"
 
-local_storage = LocalStorageAdapter(Path(DATASTORE_DIR))
+local_storage = LocalStorageAdapter(Path(DATASTORE_DIR), "TEST_DATASTORE")
 
 DATASTORE_VERSIONS_PATH = f"{DATASTORE_DIR}/datastore/datastore_versions.json"
 DRAFT_METADATA_ALL_PATH = f"{DATASTORE_DIR}/datastore/metadata_all__draft.json"

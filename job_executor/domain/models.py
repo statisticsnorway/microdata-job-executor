@@ -18,7 +18,8 @@ class JobContext:
 
 def build_job_context(job: Job, handler: handler_type) -> JobContext:
     local_storage = LocalStorageAdapter(
-        datastore_api.get_datastore_directory(job.datastore_rdn)
+        datastore_api.get_datastore_directory(job.datastore_rdn),
+        job.datastore_rdn,
     )
     job_size = (
         local_storage.input_dir.get_importable_tar_size_in_bytes(

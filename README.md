@@ -48,7 +48,7 @@ uv run pytest
 ### Build docker image
 
 ```
-docker build --tag job_executor .
+docker buildx build --tag job-executor:test-local .
 ```
 
 ## Built with

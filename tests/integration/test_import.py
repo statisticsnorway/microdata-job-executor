@@ -78,15 +78,17 @@ def mocked_pseudonym_service(mocker) -> MockedPseudonymService:
 @pytest.fixture(autouse=True)
 def set_up_resources():
     backup_resources()
-    prepare_datastore(str(DATASTORE_DIR), package_to_input=True)
-    yield
-    recover_resources_from_backup()
+    try:
+        prepare_datastore(str(DATASTORE_DIR), package_to_input=True)
+        yield
+    finally:
+        recover_resources_from_backup()
 
 
 def generate_job_context(operation: Operation, target: str) -> JobContext:
     return JobContext(
         handler="worker",
-        local_storage=LocalStorageAdapter(DATASTORE_DIR),
+        local_storage=LocalStorageAdapter(DATASTORE_DIR, "TEST_DATASTORE"),
         job_size=100,
         job=Job(
             job_id="1",
