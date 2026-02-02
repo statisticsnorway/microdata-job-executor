@@ -16,10 +16,11 @@ from job_executor.adapter.datastore_api.models import (
     Operation,
 )
 from job_executor.common.exceptions import HttpRequestError, HttpResponseError
-from job_executor.config import environment
+from job_executor.config import environment, secrets
 
 DATASTORE_API_URL = environment.datastore_api_url
 DEFAULT_REQUESTS_TIMEOUT = (10, 60)  # (read timeout, connect timeout)
+DATASTORE_API_SERVICE_KEY = secrets.datastore_api_service_key
 
 logger = logging.getLogger()
 
@@ -117,6 +118,25 @@ def get_datastore_directory(rdn: str) -> Path:
     return Path(DatastoreResponse.model_validate(response.json()).directory)
 
 
+def post_public_key(datastore_rdn: str, public_key_pem: bytes) -> None:
+    """
+    Post the public RSA key to the datastore-api.
+
+    :param datastore_rdn: The RDN of the datastore
+    :param public_key_pem: The public key in PEM format as bytes
+    """
+    request_url = f"{DATASTORE_API_URL}/datastores/{datastore_rdn}/public-key"
+    execute_request(
+        "POST",
+        request_url,
+        data=public_key_pem,
+        headers={
+            "Content-Type": "application/x-pem-file",
+            "X-API-Key": DATASTORE_API_SERVICE_KEY,
+        },
+    )
+
+
 def query_for_jobs() -> JobQueryResult:
     """
     Retrieves different types of jobs based on the system's state
@@ -147,6 +167,7 @@ def query_for_jobs() -> JobQueryResult:
                         Operation.REMOVE,
                         Operation.ROLLBACK_REMOVE,
                         Operation.DELETE_ARCHIVE,
+                        Operation.GENERATE_RSA_KEYS,
                     ],
                 ),
                 queued_worker_jobs=get_jobs(

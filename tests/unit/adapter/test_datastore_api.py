@@ -179,3 +179,35 @@ def test_query_for_jobs(is_paused, expected_result, requests_mock, monkeypatch):
     else:
         assert result.queued_manager_jobs == JOB_LIST
         assert result.queued_worker_jobs == JOB_LIST
+
+
+def test_post_public_key(requests_mock: RequestsMocker):
+    public_key_pem = (
+        b"-----BEGIN PUBLIC KEY-----\n"
+        b"test_key_content\n"
+        b"-----END PUBLIC KEY-----"
+    )
+    requests_mock.post(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}/public-key",
+        json={"message": "OK"},
+    )
+    datastore_api.post_public_key(DATASTORE_RDN, public_key_pem)
+    request_history = requests_mock.request_history
+    assert len(request_history) == 1
+    assert request_history[0].body == public_key_pem
+
+
+def test_post_public_key_error(requests_mock: RequestsMocker):
+    public_key_pem = (
+        b"-----BEGIN PUBLIC KEY-----\n"
+        b"test_key_content\n"
+        b"-----END PUBLIC KEY-----"
+    )
+    requests_mock.post(
+        f"{DATASTORE_API_URL}/datastores/{DATASTORE_RDN}/public-key",
+        status_code=500,
+        text=ERROR_RESPONSE,
+    )
+    with pytest.raises(HttpResponseError) as e:
+        datastore_api.post_public_key(DATASTORE_RDN, public_key_pem)
+    assert ERROR_RESPONSE in str(e)

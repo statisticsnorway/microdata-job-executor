@@ -167,6 +167,8 @@ class Manager:
             datastores.delete_draft(job_context)
         elif operation == Operation.DELETE_ARCHIVE:
             datastores.delete_archived_input(job_context)
+        elif operation == Operation.GENERATE_RSA_KEYS:
+            datastores.generate_rsa_keys(job_context)
         else:
             datastore_api.update_job_status(
                 job_context.job.job_id,

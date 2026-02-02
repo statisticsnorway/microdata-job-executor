@@ -24,6 +24,7 @@ from job_executor.domain.rollback import (
     rollback_bump,
     rollback_manager_phase_import_job,
 )
+from job_executor.domain.rsa_keys import generate_rsa_key_pair
 
 logger = logging.getLogger()
 
@@ -586,3 +587,51 @@ def delete_archived_input(job_context: JobContext) -> None:
         logger.error(f"{job_id}: An unexpected error occured")
         logger.exception(f"{job_id}: {str(e)}", exc_info=e)
         datastore_api.update_job_status(job_id, JobStatus.FAILED)
+
+
+def generate_rsa_keys(
+    job_context: JobContext,
+) -> None:
+    """
+    Generate RSA key pair for a datastore.
+    Stores the private key in /private_keys/{rdn}/microdata_private_key.pem
+    and posts the public key to the datastore-api.
+    """
+    job_id = job_context.job.job_id
+    datastore_rdn = job_context.job.datastore_rdn
+    private_keys_dir = job_context.local_storage.private_keys_dir
+    try:
+        logger.info(f"{job_id}: initiated")
+        datastore_api.update_job_status(job_id, JobStatus.INITIATED)
+
+        logger.info(
+            f"{job_id}: Checking private keys directory at "
+            f"{private_keys_dir.path_with_rdn}"
+        )
+        if private_keys_dir.create():
+            logger.info(f"{job_id}: Private keys directory created")
+
+        logger.info(f"{job_id}: Generating RSA key pair")
+        private_key_pem, public_key_pem = generate_rsa_key_pair()
+
+        private_keys_dir.save_private_key(private_key_pem)
+        logger.info(f"{job_id}: Saved private key")
+
+        try:
+            logger.info(f"{job_id}: Posting public key to datastore-api")
+            datastore_api.post_public_key(datastore_rdn, public_key_pem)
+        except Exception as post_error:
+            logger.error(
+                f"{job_id}: Failed to post public key to datastore-api, "
+                "cleaning up saved private key"
+            )
+            if private_keys_dir.clean_up():
+                logger.info(f"{job_id}: Deleted private key due to error")
+            raise post_error
+
+        logger.info(f"{job_id}: completed")
+        datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
+    except Exception as e:
+        logger.error(f"{job_id}: Failed to generate RSA keys")
+        logger.exception(f"{job_id}: {str(e)}", exc_info=e)
+        datastore_api.update_job_status(job_id, JobStatus.FAILED, str(e))
