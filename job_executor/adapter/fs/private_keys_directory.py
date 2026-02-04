@@ -14,7 +14,12 @@ class PrivateKeysDirectory:
         return False
 
     def save_private_key(self, microdata_private_key_pem: bytes) -> None:
-        with open(self._get_private_key_location(), "wb") as file:
+        fd = os.open(
+            self._get_private_key_location(),
+            os.O_CREAT | os.O_WRONLY | os.O_EXCL,
+            0o600,
+        )
+        with os.fdopen(fd, "wb") as file:
             file.write(microdata_private_key_pem)
 
     def clean_up(self) -> bool:
