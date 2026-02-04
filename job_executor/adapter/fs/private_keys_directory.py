@@ -15,9 +15,9 @@ class PrivateKeysDirectory:
 
     def save_private_key(self, microdata_private_key_pem: bytes) -> None:
         """
-        Write the new private key file so only the owner of the 
+        Write the new private key file so only the owner of the
         file (this application) has read and write permissions.
-        Fails and raises an exception if the file exists. 
+        Fails and raises an exception if the file exists.
         """
         fd = os.open(
             self._get_private_key_location(),
