@@ -73,9 +73,14 @@ def get_jobs(
     if query_fields:
         request_url += f"?{'&'.join(query_fields)}"
 
-    response = execute_request("GET", request_url, True, headers={
-             "X-API-Key": DATASTORE_API_SERVICE_KEY,
-        },)
+    response = execute_request(
+        "GET",
+        request_url,
+        True,
+        headers={
+            "X-API-Key": DATASTORE_API_SERVICE_KEY,
+        },
+    )
     return [Job.model_validate(job) for job in response.json()]
 
 
@@ -85,10 +90,15 @@ def update_job_status(
     payload: dict[str, JobStatus | str] = {"status": str(new_status)}
     if log is not None:
         payload.update({"log": log})
-    execute_request("PUT", f"{DATASTORE_API_URL}/jobs/{job_id}", json=payload, headers={
+    execute_request(
+        "PUT",
+        f"{DATASTORE_API_URL}/jobs/{job_id}",
+        json=payload,
+        headers={
             "Content-Type": "application/json",
             "X-API-Key": DATASTORE_API_SERVICE_KEY,
-        },)
+        },
+    )
 
 
 def update_description(job_id: str, new_description: str) -> None:
@@ -99,7 +109,7 @@ def update_description(job_id: str, new_description: str) -> None:
         headers={
             "Content-Type": "application/json",
             "X-API-Key": DATASTORE_API_SERVICE_KEY,
-        }
+        },
     )
 
 
