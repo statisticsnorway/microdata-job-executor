@@ -3,8 +3,11 @@ revision = 3
 requires-python = ">=3.13"
 
 [options]
-exclude-newer = "2026-02-20T10:59:18.249672Z"
+exclude-newer = "2026-03-02T10:13:57.45771949Z"
 exclude-newer-span = "P3D"
+
+[options.exclude-newer-package]
+microdata-tools = { timestamp = "2026-03-05T10:13:57.457727946Z", span = "PT0S" }
 
 [[package]]
 name = "annotated-types"
@@ -320,7 +323,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "microdata-tools", specifier = "==1.10.5" },
+    { name = "microdata-tools", specifier = "==1.10.6" },
     { name = "pandas", specifier = ">=2.2.1,<3" },
     { name = "pyarrow", specifier = ">=21.0.0,<22" },
     { name = "pydantic", specifier = ">=2.6.1,<3" },
@@ -340,7 +343,7 @@ dev = [
 
 [[package]]
 name = "microdata-tools"
-version = "1.10.5"
+version = "1.10.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -348,9 +351,9 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/7a/2b6f0b480ca6b54d1a14689d7d12ed1fde3d4d84c0a010f10c512cf95fdb/microdata_tools-1.10.5.tar.gz", hash = "sha256:b478db373f628762682d67d4950a4e7edf88c8b8bc90fb8ea96ef800d14db391", size = 40022, upload-time = "2026-02-16T13:24:05.822Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/bf/2cf8446f4a0b3e6cefd1b431b014350bd53dd802ab4983f9ad93acc58620/microdata_tools-1.10.6.tar.gz", hash = "sha256:b04035854caaddc127a8a4777baa9dfee43a73442dace4bd704003461cfaace9", size = 39998, upload-time = "2026-03-05T08:14:21.406Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/bd/bb6774375256cf0f8774a22257972d0130d3ec95ed498f6b454012a316ed/microdata_tools-1.10.5-py3-none-any.whl", hash = "sha256:62913d6f2b67a041718bb39328e1c6a1a80a15864d47a90fd07cd65d99b160de", size = 56635, upload-time = "2026-02-16T13:24:04.655Z" },
+    { url = "https://files.pythonhosted.org/packages/62/c5/6119d0d0b0e6f58eb00c299436ab276615c747a8eb7fef81c7dae4567f83/microdata_tools-1.10.6-py3-none-any.whl", hash = "sha256:06a784f6d2f9830c58b70adba0b206f09df77580bd3654f9a1b4295266dbbcbf", size = 56628, upload-time = "2026-03-05T08:14:20.212Z" },
 ]
 
 [[package]]
