@@ -8,7 +8,6 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from job_executor.adapter.datastore_api.models import (
-    DatastoreResponse,
     Job,
     JobQueryResult,
     JobStatus,
@@ -132,9 +131,17 @@ def get_datastores() -> list[str]:
 
 
 def get_datastore_directory(rdn: str) -> Path:
-    request_url = f"{DATASTORE_API_URL}/datastores/{rdn}"
-    response = execute_request("GET", request_url, True)
-    return Path(DatastoreResponse.model_validate(response.json()).directory)
+    request_url = f"{DATASTORE_API_URL}/datastores/{rdn}/directory"
+    response = execute_request(
+        "GET",
+        request_url,
+        True,
+        headers={
+            "X-API-Key": DATASTORE_API_SERVICE_KEY,
+        },
+    )
+    directory = response.json()
+    return Path(directory)
 
 
 def post_public_key(datastore_rdn: str, public_key_pem: bytes) -> None:
