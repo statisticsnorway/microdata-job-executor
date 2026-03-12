@@ -32,22 +32,39 @@ jobs:
       - name: Check for New Version
         id: check_version
         run: |
-          CURRENT_VERSION=$(uv pip show microdata-tools | grep Version | awk '{print $2}')
+          CURRENT_VERSION=$(uv pip list --format json | jq -r '.[] | select(.name=="microdata-tools") | .version')
           LATEST_VERSION=$(curl -s https://pypi.org/pypi/microdata-tools/json | jq -r .info.version)
           echo "Current version: $CURRENT_VERSION"
           echo "Latest version: $LATEST_VERSION"
 
           if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
-            echo "::set-output name=new_version::$LATEST_VERSION"
+            echo "NEW_VERSION=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           else
             echo "Already up-to-date"
             exit 0
           fi
 
-      - name: Update Microdata Tools Dependency
-        if: steps.check_version.outputs.new_version
+      - name: Get Change Log
+        if: steps.check_version.outputs.NEW_VERSION
+        id: get_change_log
         env:
-          NEW_VERSION: ${{ steps.check_version.outputs.new_version }}
+          NEW_VERSION: ${{ steps.check_version.outputs.NEW_VERSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_DATA=$(gh release view "v$NEW_VERSION" --repo statisticsnorway/microdata-tools --json body,url)
+          CHANGELOG=$(echo "$RELEASE_DATA" | jq -r '.body')
+          RELEASE_URL=$(echo "$RELEASE_DATA" | jq -r '.url')
+          {
+            echo "CHANGELOG<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "RELEASE_URL=$RELEASE_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Update Microdata Tools Dependency
+        if: steps.check_version.outputs.NEW_VERSION
+        env:
+          NEW_VERSION: ${{ steps.check_version.outputs.NEW_VERSION }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
@@ -59,15 +76,21 @@ jobs:
           git push origin "bump-microdata-tools-$NEW_VERSION"
 
       - name: Create Pull Request
-        if: steps.check_version.outputs.new_version
+        if: steps.check_version.outputs.NEW_VERSION
         env:
-          NEW_VERSION: ${{ steps.check_version.outputs.new_version }}
+          NEW_VERSION: ${{ steps.check_version.outputs.NEW_VERSION }}
+          CHANGELOG: ${{ steps.get_change_log.outputs.CHANGELOG }}
+          RELEASE_URL: ${{ steps.get_change_log.outputs.RELEASE_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          PR_BODY="This PR updates microdata-tools to version $NEW_VERSION.
+
+          $CHANGELOG
+
+          [View the changelog for $NEW_VERSION in the microdata-tools repository.]($RELEASE_URL)"
+
           gh pr create \
             --base main \
             --head "bump-microdata-tools-$NEW_VERSION" \
             --title "Update microdata-tools to $NEW_VERSION" \
-            --body "This PR updates microdata-tools to version $NEW_VERSION."
-        # --reviewer statisticsnorway/microdata-developers # Reviwer not found [should work according to docs](https://cli.github.com/manual/gh_pr_create)
-          
+            --body "$PR_BODY"
