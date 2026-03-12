@@ -3,11 +3,11 @@ revision = 3
 requires-python = ">=3.13"
 
 [options]
-exclude-newer = "2026-03-03T10:09:53.818952378Z"
+exclude-newer = "2026-03-09T13:22:29.978232119Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
-microdata-tools = { timestamp = "2026-03-06T10:09:53.818960793Z", span = "PT0S" }
+microdata-tools = { timestamp = "2026-03-12T13:22:29.978240514Z", span = "PT0S" }
 
 [[package]]
 name = "annotated-types"
@@ -323,7 +323,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "microdata-tools", specifier = "==1.10.7" },
+    { name = "microdata-tools", specifier = "==1.10.8" },
     { name = "pandas", specifier = ">=2.2.1,<3" },
     { name = "pyarrow", specifier = ">=21.0.0,<22" },
     { name = "pydantic", specifier = ">=2.6.1,<3" },
@@ -343,7 +343,7 @@ dev = [
 
 [[package]]
 name = "microdata-tools"
-version = "1.10.7"
+version = "1.10.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -351,9 +351,9 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/8c/e382943c994e3855e5017369f935de5c02e093c5d6b2aff3106f37154dfb/microdata_tools-1.10.7.tar.gz", hash = "sha256:185accb453ddddf1960075af0cdb63b79903edcdc467d4e9b651fc6f7147e1f0", size = 39987, upload-time = "2026-03-05T11:09:02.826Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/67/ab4e3dacf4600969f624726c9407e32c058a31d4aca335f632ea1282abac/microdata_tools-1.10.8.tar.gz", hash = "sha256:a57f50348b2c7b36a8330307b53021f5112b787f468a738822aef5c3bd2300f3", size = 39944, upload-time = "2026-03-12T10:18:37.099Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/a6/7c49c4cc1af40f467f752cfe5e27556fe04f11f1b4161a75b68645fca6ad/microdata_tools-1.10.7-py3-none-any.whl", hash = "sha256:412381e5d6fe9332d9f4b167dc631837b046ee6a583b7d44f1ba607c9bf4e30c", size = 56620, upload-time = "2026-03-05T11:09:01.576Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/67/6d88c84318296f1c8ba9be01accecc69b58daa307bee9a72768db4abe3c6/microdata_tools-1.10.8-py3-none-any.whl", hash = "sha256:f136662fad04418ccfaede03bad2e751c0a4e205777d03c781757b8c093c2d36", size = 56588, upload-time = "2026-03-12T10:18:35.775Z" },
 ]
 
 [[package]]
