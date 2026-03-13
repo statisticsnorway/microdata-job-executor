@@ -52,7 +52,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RELEASE_DATA=$(gh release view "v$NEW_VERSION" --repo statisticsnorway/microdata-tools --json body,url)
-          CHANGELOG=$(echo "$RELEASE_DATA" | jq -r '.body')
+          # Replace #123 with full repo reference so GitHub links to the correct repo
+          CHANGELOG=$(echo "$RELEASE_DATA" | jq -r '.body' | sed 's/#\([0-9]\)/statisticsnorway\/microdata-tools#\1/g')
           RELEASE_URL=$(echo "$RELEASE_DATA" | jq -r '.url')
           {
             echo "CHANGELOG<<EOF"
