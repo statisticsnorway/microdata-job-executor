@@ -103,7 +103,7 @@ def generate_job_context(
                     target=target,
                     release_status=release_status,
                 )
-            case Operation.DELETE_DRAFT | Operation.GENERATE_RSA_KEYS:
+            case Operation.DELETE_DRAFT | Operation.GENERATE_KEYS:
                 return JobParameters(
                     operation=operation,
                     target=target,
@@ -303,19 +303,19 @@ def test_delete_draft(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_job_status.call_count == 2
 
 
-def test_generate_rsa_keys(mocked_datastore_api: MockedDatastoreApi):
-    generate_rsa_keys_job_context = generate_job_context(
-        operation=Operation.GENERATE_RSA_KEYS,
+def test_generate_keys(mocked_datastore_api: MockedDatastoreApi):
+    generate_keys_job_context = generate_job_context(
+        operation=Operation.GENERATE_KEYS,
         target="DATASTORE",
     )
-    datastores.generate_rsa_keys(generate_rsa_keys_job_context)
+    datastores.generate_keys(generate_keys_job_context)
 
     assert mocked_datastore_api.post_public_key.call_count == 1
     assert mocked_datastore_api.update_job_status.call_count == 2
 
     private_key_path = (
         PRIVATE_KEYS_DIR
-        / generate_rsa_keys_job_context.job.datastore_rdn
+        / generate_keys_job_context.job.datastore_rdn
         / "microdata_private_key.pem"
     )
     assert private_key_path.exists()
@@ -325,23 +325,23 @@ def test_generate_rsa_keys(mocked_datastore_api: MockedDatastoreApi):
         assert b"END PRIVATE KEY" in private_key_content
 
 
-def test_generate_rsa_keys_cleanup_on_post_public_key_failure(
+def test_generate_keys_cleanup_on_post_public_key_failure(
     mocked_datastore_api: MockedDatastoreApi,
 ):
     mocked_datastore_api.post_public_key.side_effect = HttpResponseError(
         "500: Internal Server Error"
     )
-    generate_rsa_keys_job_context = generate_job_context(
-        operation=Operation.GENERATE_RSA_KEYS,
+    generate_keys_job_context = generate_job_context(
+        operation=Operation.GENERATE_KEYS,
         target="DATASTORE",
     )
-    datastores.generate_rsa_keys(generate_rsa_keys_job_context)
+    datastores.generate_keys(generate_keys_job_context)
 
     assert mocked_datastore_api.update_job_status.call_count == 2
 
     private_key_path = (
         PRIVATE_KEYS_DIR
-        / generate_rsa_keys_job_context.job.datastore_rdn
+        / generate_keys_job_context.job.datastore_rdn
         / "microdata_private_key.pem"
     )
     assert not private_key_path.exists()

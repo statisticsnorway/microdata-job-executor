@@ -1,5 +1,7 @@
 import logging
 
+from microdata_tools import PrivateKey
+
 from job_executor.adapter import datastore_api
 from job_executor.adapter.datastore_api.models import JobStatus
 from job_executor.adapter.fs import LocalStorageAdapter
@@ -24,7 +26,6 @@ from job_executor.domain.rollback import (
     rollback_bump,
     rollback_manager_phase_import_job,
 )
-from job_executor.domain.rsa_keys import generate_rsa_key_pair
 
 logger = logging.getLogger()
 
@@ -589,11 +590,11 @@ def delete_archived_input(job_context: JobContext) -> None:
         datastore_api.update_job_status(job_id, JobStatus.FAILED)
 
 
-def generate_rsa_keys(
+def generate_keys(
     job_context: JobContext,
 ) -> None:
     """
-    Generate RSA key pair for a datastore.
+    Generate key pair for a datastore.
     Stores the private key in /private_keys/{rdn}/microdata_private_key.pem
     and posts the public key to the datastore-api.
     """
@@ -611,8 +612,11 @@ def generate_rsa_keys(
         if private_keys_dir.create():
             logger.info(f"{job_id}: Private keys directory created")
 
-        logger.info(f"{job_id}: Generating RSA key pair")
-        private_key_pem, public_key_pem = generate_rsa_key_pair()
+        logger.info(f"{job_id}: Generating key pair")
+        private_key = PrivateKey.generate()
+        public_key = private_key.public_key()
+        private_key_pem = private_key.serialize()
+        public_key_pem = public_key.serialize()
 
         private_keys_dir.save_private_key(private_key_pem)
         logger.info(f"{job_id}: Saved private key")
@@ -632,6 +636,6 @@ def generate_rsa_keys(
         logger.info(f"{job_id}: completed")
         datastore_api.update_job_status(job_id, JobStatus.COMPLETED)
     except Exception as e:
-        logger.error(f"{job_id}: Failed to generate RSA keys")
+        logger.error(f"{job_id}: Failed to generate key pair")
         logger.exception(f"{job_id}: {str(e)}", exc_info=e)
         datastore_api.update_job_status(job_id, JobStatus.FAILED, str(e))

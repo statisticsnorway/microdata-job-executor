@@ -146,7 +146,7 @@ def get_datastore_directory(rdn: str) -> Path:
 
 def post_public_key(datastore_rdn: str, public_key_pem: bytes) -> None:
     """
-    Post the public RSA key to the datastore-api.
+    Post the public key to the datastore-api.
 
     :param datastore_rdn: The RDN of the datastore
     :param public_key_pem: The public key in PEM format as bytes
@@ -193,7 +193,7 @@ def query_for_jobs() -> JobQueryResult:
                         Operation.REMOVE,
                         Operation.ROLLBACK_REMOVE,
                         Operation.DELETE_ARCHIVE,
-                        Operation.GENERATE_RSA_KEYS,
+                        Operation.GENERATE_KEYS,
                     ],
                 ),
                 queued_worker_jobs=get_jobs(
