@@ -15,7 +15,7 @@ from job_executor.adapter.datastore_api.models import (
 from job_executor.common.exceptions import HttpResponseError
 
 DATASTORE_API_URL = os.environ["DATASTORE_API_URL"]
-DATASTORE_RDN = os.environ["DATASTORE_RDN"]
+DATASTORE_RDN = "no.ssb.test"
 JOB_ID = "123"
 JOB_LIST = [
     Job(
