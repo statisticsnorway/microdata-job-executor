@@ -25,7 +25,7 @@ dev = [
 
 [tool.uv]
 package = true
-exclude-newer = "3 days"
+exclude-newer = "7 days"
 exclude-newer-package = { "microdata-tools" = "0 hours" }
 
 [tool.setuptools.packages.find]
