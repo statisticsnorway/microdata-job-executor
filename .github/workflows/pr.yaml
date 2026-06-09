@@ -1,11 +1,16 @@
 name: Run Tests on PR
-permissions:
-  contents: read
+
 on:
   pull_request:
     branches:
       - "*"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   test:

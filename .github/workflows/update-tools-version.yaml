@@ -1,15 +1,22 @@
 name: Update Microdata Tools Version
-permissions:
-  contents: write
-  pull-requests: write
 
 on:
   schedule:
     - cron: 0 10 * * * # Runs everyday at 10:00
   workflow_dispatch:  # Allows manual triggering of the workflow
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
 jobs:
   update-dependency:
+    name: Update microdata-tools dependency
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
 
     steps:
