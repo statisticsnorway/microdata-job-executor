@@ -6,7 +6,7 @@ Executes work for a datastore by polling a job-service for available jobs. Uses 
 
 ### Set up
 
-To work on this repository you need to install [uv](https://docs.astral.sh/uv/).
+To work on this repository you need to install [uv](https://docs.astral.sh/uv/) and [zizmore](https://docs.zizmor.sh/).
 After cloning the repo, install and activate an environment with:
 ```sh
 uv venv && uv sync && source .venv/bin/activate 
