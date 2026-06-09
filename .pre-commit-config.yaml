@@ -24,7 +24,7 @@ repos:
 
       - id: zizmor
         name: Lint GitHub Actions
-        entry: zizmor
+        entry: zizmor --show-audit-urls=always --min-severity=low --min-confidence=medium --pedantic .github/
         language: system
-        types: [ yaml ]
         files: ^\.github/.*
+        pass_filenames: false

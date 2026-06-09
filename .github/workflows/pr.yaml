@@ -47,3 +47,5 @@ jobs:
       with:
         inputs: .github/
         advanced-security: false
+        min-severity: low
+        min-confidence: medium

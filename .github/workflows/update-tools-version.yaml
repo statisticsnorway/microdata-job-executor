@@ -15,8 +15,8 @@ jobs:
   update-dependency:
     name: Update microdata-tools dependency
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write # Required to commit and push the dependency bump branch
+      pull-requests: write # Required to open the pull request with gh pr create
     runs-on: ubuntu-latest
 
     steps:
