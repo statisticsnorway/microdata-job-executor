@@ -1,15 +1,22 @@
 name: Update Microdata Tools Version
-permissions:
-  contents: write
-  pull-requests: write
 
 on:
   schedule:
     - cron: 0 10 * * * # Runs everyday at 10:00
   workflow_dispatch:  # Allows manual triggering of the workflow
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
 jobs:
   update-dependency:
+    name: Update microdata-tools dependency
+    permissions:
+      contents: write # Required to commit and push the dependency bump branch
+      pull-requests: write # Required to open the pull request with gh pr create
     runs-on: ubuntu-latest
 
     steps:
@@ -17,6 +24,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0  # Ensure the full history is fetched
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
