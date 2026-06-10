@@ -56,3 +56,6 @@ docker buildx build --tag job-executor:test-local .
 - [PyArrow](https://arrow.apache.org/docs/python/) - Apache Arrow
 - [Pandas](https://pandas.pydata.org/) - Data analysis and manipulation
 - [microdata-tools](https://pypi.org/project/microdata-tools/) - dataset packaging & validation
+
+## Additional Notes
+AGENTS.md is based on [Andrej Karpathy's CLAUDE.md](https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md)
