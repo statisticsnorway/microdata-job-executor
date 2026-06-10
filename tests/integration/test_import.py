@@ -5,6 +5,7 @@ from multiprocessing import Queue
 from pathlib import Path
 from unittest.mock import MagicMock
 
+from pyarrow import dataset
 import pytest
 
 from job_executor.adapter.datastore_api.models import (
@@ -20,6 +21,7 @@ from job_executor.domain.worker import (
     build_dataset_worker,
     build_metadata_worker,
 )
+from tests.common.encrypted_parquet import decryption_file_format
 from tests.integration.common import (
     backup_resources,
     prepare_datastore,
@@ -129,6 +131,15 @@ def test_import_add(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
+
+    encrypted_draft_path = WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet"
+    with pytest.raises(Exception):
+        dataset.dataset(encrypted_draft_path).to_table()
+    decrypted_table = dataset.dataset(
+        encrypted_draft_path,
+        format=decryption_file_format(),
+    ).to_table()
+    assert decrypted_table.num_rows > 0
 
 
 def test_import_change(mocked_datastore_api: MockedDatastoreApi):
