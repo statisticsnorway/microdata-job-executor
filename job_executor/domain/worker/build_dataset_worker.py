@@ -13,6 +13,7 @@ from job_executor.config.log import configure_worker_logger
 from job_executor.domain.models import JobContext
 from job_executor.domain.worker.steps import (
     dataset_decryptor,
+    dataset_encryptor,
     dataset_partitioner,
     dataset_pseudonymizer,
     dataset_transformer,
@@ -25,6 +26,7 @@ def _clean_working_dir(
 ) -> None:
     local_storage.working_dir.delete_metadata(dataset_name)
     local_storage.working_dir.delete_file(f"{dataset_name}.parquet")
+    local_storage.working_dir.delete_file(f"{dataset_name}_encrypted.parquet")
     local_storage.working_dir.delete_file(
         f"{dataset_name}_pseudonymized.parquet"
     )
@@ -97,16 +99,31 @@ def run_worker(job_context: JobContext, logging_queue: Queue) -> None:
         datastore_api.update_job_status(job_id, JobStatus.PARTITIONING)
         if temporality_type in ["STATUS", "ACCUMULATED"]:
             dataset_partitioner.run(
-                local_storage.working_dir.path / data_file_name, dataset_name
+                local_storage.working_dir.path / data_file_name,
+                dataset_name,
+                dataset_encryptor.encryption_config(
+                    [
+                        "unit_id",
+                        "value",
+                        "start_epoch_days",
+                        "stop_epoch_days",
+                    ]
+                ),
             )
             local_storage.working_dir.delete_file(data_file_name)
         else:
+            encrypted_data_file_name = f"{dataset_name}_encrypted.parquet"
+            dataset_encryptor.run(
+                local_storage.working_dir.path / data_file_name,
+                local_storage.working_dir.path / encrypted_data_file_name,
+            )
+            local_storage.working_dir.delete_file(data_file_name)
             target_path = (
                 local_storage.working_dir.path
                 / f"{dataset_name}__DRAFT.parquet"
             )
             os.rename(
-                local_storage.working_dir.path / data_file_name,
+                local_storage.working_dir.path / encrypted_data_file_name,
                 target_path,
             )
         local_storage.input_dir.delete_archived_importable(dataset_name)
