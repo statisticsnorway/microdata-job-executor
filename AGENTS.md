@@ -36,7 +36,7 @@ process on the server allowed to update a datastore.
         - **pseudonym_service.py**: client for the pseudonymization service
     - **common/**: common modules used by the whole stack
     - **config/**: configuration for application and logging
-    - **main.py**: the entry point for application startup
+    - **app.py**: the entry point for application startup
 
 
 ## Development Workflow (uv)
