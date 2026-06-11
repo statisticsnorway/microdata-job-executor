@@ -6,7 +6,7 @@ Executes work for a datastore by polling a job-service for available jobs. Uses 
 
 ### Set up
 
-To work on this repository you need to install [uv](https://docs.astral.sh/uv/).
+To work on this repository you need to install [uv](https://docs.astral.sh/uv/) and [zizmore](https://docs.zizmor.sh/).
 After cloning the repo, install and activate an environment with:
 ```sh
 uv venv && uv sync && source .venv/bin/activate 
@@ -56,6 +56,3 @@ docker buildx build --tag job-executor:test-local .
 - [PyArrow](https://arrow.apache.org/docs/python/) - Apache Arrow
 - [Pandas](https://pandas.pydata.org/) - Data analysis and manipulation
 - [microdata-tools](https://pypi.org/project/microdata-tools/) - dataset packaging & validation
-
-## Additional Notes
-AGENTS.md is based on [Andrej Karpathy's CLAUDE.md](https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md)

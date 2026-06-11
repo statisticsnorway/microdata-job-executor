@@ -21,3 +21,10 @@ repos:
         language: system
         files: ^(pyproject.toml|uv.lock)$
         pass_filenames: false
+
+      - id: zizmor
+        name: Lint GitHub Actions
+        entry: zizmor --show-audit-urls=always --min-severity=low --min-confidence=medium --pedantic .github/
+        language: system
+        files: ^\.github/.*
+        pass_filenames: false
