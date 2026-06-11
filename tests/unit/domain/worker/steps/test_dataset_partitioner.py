@@ -7,7 +7,11 @@ import pytest
 from pyarrow import parquet
 
 from job_executor.common.exceptions import BuilderStepError
-from job_executor.domain.worker.steps import dataset_partitioner
+from job_executor.domain.worker.steps import (
+    dataset_encryptor,
+    dataset_partitioner,
+)
+from tests.common.encrypted_parquet import decryption_file_format
 
 WORKING_DIR = Path(
     "tests/unit/resources/domain/worker/steps/dataset_partitioner"
@@ -50,7 +54,13 @@ def teardown_function():
 
 def test_partitioner():
     dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
-    dataset_partitioner.run(dataset_path, "input")
+    dataset_partitioner.run(
+        dataset_path,
+        "input",
+        dataset_encryptor.encryption_config(
+            ["unit_id", "value", "start_epoch_days", "stop_epoch_days"]
+        ),
+    )
     output_dir = dataset_path.parent / "input__DRAFT"
 
     assert output_dir.exists()
@@ -66,7 +76,11 @@ def test_partitioner():
         assert len(files) == 1
 
         # 3. column names are the same except for the partition column
-        table_whole_year = pyarrow.parquet.read_table(partition_path)  # type: ignore
+        table_whole_year = pyarrow.dataset.dataset(  # type: ignore[attr-defined]
+            partition_path,
+            format=decryption_file_format(),
+            partitioning="hive",
+        ).to_table()
         assert table_whole_year.column_names == [
             "unit_id",
             "value",
@@ -75,7 +89,10 @@ def test_partitioner():
         ]
 
         # 4. Load the parquet file and check its length
-        table_from_partition = pyarrow.parquet.read_table(files[0])  # type: ignore
+        table_from_partition = pyarrow.dataset.dataset(  # type: ignore[attr-defined]
+            files[0],
+            format=decryption_file_format(),
+        ).to_table()
         assert len(table_from_partition) == 1000  # Each year has 1000 records
 
         # 5. Check if start_epoch_days is within the correct start_year
@@ -102,4 +119,32 @@ def test_partitioner_missing_start_year():
 
     dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
     with pytest.raises(BuilderStepError):
-        dataset_partitioner.run(dataset_path, "input")
+        dataset_partitioner.run(
+            dataset_path,
+            "input",
+            dataset_encryptor.encryption_config(
+                ["unit_id", "value", "start_epoch_days", "stop_epoch_days"]
+            ),
+        )
+
+
+def test_partitioner_writes_encrypted_parquet():
+    dataset_path = Path(f"{WORKING_DIR}/input_pseudonymized.parquet")
+    dataset_partitioner.run(
+        dataset_path,
+        "input",
+        dataset_encryptor.encryption_config(
+            ["unit_id", "value", "start_epoch_days", "stop_epoch_days"]
+        ),
+    )
+    output_dir = dataset_path.parent / "input__DRAFT"
+
+    encrypted_dataset = pyarrow.dataset.dataset(  # type: ignore[attr-defined]
+        output_dir,
+        format=decryption_file_format(),
+        partitioning="hive",
+    )
+    assert encrypted_dataset.to_table().num_rows == TABLE_SIZE
+
+    with pytest.raises(Exception):
+        pyarrow.dataset.dataset(output_dir, partitioning="hive").to_table()  # type: ignore[attr-defined]
