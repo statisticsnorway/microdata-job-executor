@@ -5,8 +5,8 @@ from multiprocessing import Queue
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from pyarrow import dataset
 import pytest
+from pyarrow import dataset
 
 from job_executor.adapter.datastore_api.models import (
     Job,
