@@ -100,7 +100,6 @@ jobs:
     needs: build
     permissions:
       contents: read
-      id-token: write # Required for GitHub OIDC token exchange in downstream workflows
 
     steps:
       - name: Call workflow
@@ -147,7 +146,6 @@ jobs:
     environment: prod
     permissions:
       contents: read
-      id-token: write # Required for GitHub OIDC token exchange in downstream workflows
 
     steps:
       - name: Call workflow
