@@ -20,7 +20,7 @@ dev = [
     "pytest-cov>=7.1.0,<8",
     "requests-mock>=1.9.3,<2",
     "pytest-mock>=3.8.2,<4",
-    "ruff>=0.15.15,<0.16",
+    "ruff>=0.15.16,<0.16",
 ]
 
 [tool.uv]
