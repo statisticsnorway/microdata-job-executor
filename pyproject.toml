@@ -10,7 +10,7 @@ dependencies = [
     "requests>=2.34.2,<3",
     "pandas>=3.0.3,<4",
     "urllib3>=2.7.0,<3",
-    "microdata-tools==1.13.1",
+    "microdata-tools==1.14.0",
 ]
 
 [dependency-groups]
