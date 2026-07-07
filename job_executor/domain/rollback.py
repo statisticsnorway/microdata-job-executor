@@ -294,8 +294,8 @@ def fix_interrupted_job(job: Job) -> None:
             JobStatus.FAILED,
             "Bump operation was interrupted and rolled back.",
         )
-    elif job_operation == "GENERATE_RSA_KEYS":
-        rollback_generate_rsa_keys_job(job)
+    elif job_operation == "GENERATE_KEYS":
+        rollback_generate_keys_job(job)
         logger.info(
             f'{job.job_id}: Setting status to "failed" for interrupted job'
         )
@@ -312,7 +312,7 @@ def fix_interrupted_job(job: Job) -> None:
         raise RollbackException(log_message)
 
 
-def rollback_generate_rsa_keys_job(job: Job) -> None:
+def rollback_generate_keys_job(job: Job) -> None:
     rdn = job.datastore_rdn
     target_dir = Path(environment.private_keys_dir) / rdn
     private_key_location = target_dir / "microdata_private_key.pem"

@@ -347,7 +347,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "microdata-tools", specifier = "==1.14.0" },
+    { name = "microdata-tools", specifier = ">=2.0.0" },
     { name = "pandas", specifier = ">=3.0.3,<4" },
     { name = "pyarrow", specifier = "==23.0.1" },
     { name = "pydantic", specifier = ">=2.13.4,<3" },
@@ -367,7 +367,7 @@ dev = [
 
 [[package]]
 name = "microdata-tools"
-version = "1.14.0"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -375,9 +375,9 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/53/abeda4bdd7beee234eda7780d9e4ef8d857ca986e8ba8acb00ed7ab046b8/microdata_tools-1.14.0.tar.gz", hash = "sha256:5a9f4c2f1addea19547cda66e939486343d1de5787c39aaebf69d3ec51ca876f", size = 41378, upload-time = "2026-06-18T09:17:53.8Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/1f/ef5e1be8c44dfc75b934396fbfb37b780e6c991f4cb5c4aac538bf127426/microdata_tools-2.0.0.tar.gz", hash = "sha256:4c1c5d41423495c71b2974077542ea2ea598b19cd1c36b9a917e93a3c072ec9c", size = 43082, upload-time = "2026-07-06T12:12:35.162Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/37/ab1b91019f40e54f4d3a7765829e2ebe15fe83781303776d64d5e2037d73/microdata_tools-1.14.0-py3-none-any.whl", hash = "sha256:637173cb1b5932a12ff3da40e9692e007495d99bd0dd1e6d2ca7fee8d5e67d66", size = 58947, upload-time = "2026-06-18T09:17:52.293Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/db/c50533595fa288992142a245198d4e24a9df31bdd0addfc9e611229dd791/microdata_tools-2.0.0-py3-none-any.whl", hash = "sha256:ac42155994dae254a72e3fe29b5a3f9637cbe12d66b9a3e6f0c3e9b789b0704f", size = 61285, upload-time = "2026-07-06T12:12:33.954Z" },
 ]
 
 [[package]]
