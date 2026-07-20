@@ -133,6 +133,7 @@ def test_import_add(mocked_datastore_api: MockedDatastoreApi):
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
     encrypted_draft_path = WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet"
+    assert not encrypted_draft_path.is_dir()
     with pytest.raises(Exception):
         dataset.dataset(encrypted_draft_path).to_table()
     decrypted_table = dataset.dataset(
@@ -153,6 +154,7 @@ def test_import_change(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
+    assert not os.path.isdir(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
 
 def test_import_add_no_pseudo(

@@ -57,7 +57,7 @@ def test_partitioner():
     dataset_partitioner.run(
         dataset_path,
         "input",
-        dataset_encryptor.encryption_config(
+        dataset_encryptor.dataset_encryption_config(
             ["unit_id", "value", "start_epoch_days", "stop_epoch_days"]
         ),
     )
@@ -122,7 +122,7 @@ def test_partitioner_missing_start_year():
         dataset_partitioner.run(
             dataset_path,
             "input",
-            dataset_encryptor.encryption_config(
+            dataset_encryptor.dataset_encryption_config(
                 ["unit_id", "value", "start_epoch_days", "stop_epoch_days"]
             ),
         )
@@ -133,7 +133,7 @@ def test_partitioner_writes_encrypted_parquet():
     dataset_partitioner.run(
         dataset_path,
         "input",
-        dataset_encryptor.encryption_config(
+        dataset_encryptor.dataset_encryption_config(
             ["unit_id", "value", "start_epoch_days", "stop_epoch_days"]
         ),
     )
