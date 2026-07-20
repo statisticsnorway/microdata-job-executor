@@ -101,7 +101,7 @@ def run_worker(job_context: JobContext, logging_queue: Queue) -> None:
             dataset_partitioner.run(
                 local_storage.working_dir.path / data_file_name,
                 dataset_name,
-                dataset_encryptor.encryption_config(
+                dataset_encryptor.dataset_encryption_config(
                     [
                         "unit_id",
                         "value",
