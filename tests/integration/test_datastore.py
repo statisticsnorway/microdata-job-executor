@@ -256,7 +256,8 @@ def test_bump_minor(mocked_datastore_api: MockedDatastoreApi):
     assert os.path.exists(
         DATASTORE_DIR / "datastore" / "data_versions__1_1.json"
     )
-
+    datastore_dir = set_status_job_context.local_storage.datastore_dir
+    assert "1.1" in datastore_dir.get_encrypted_versions()
 
 def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
     DATASET_NAME = "DRAFT_CHANGE"
@@ -287,6 +288,8 @@ def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
     assert os.path.exists(
         DATASTORE_DIR / "datastore" / "data_versions__2_0.json"
     )
+    datastore_dir = set_status_job_context.local_storage.datastore_dir
+    assert "2.0" in datastore_dir.get_encrypted_versions()
 
 
 def test_delete_draft(mocked_datastore_api: MockedDatastoreApi):
