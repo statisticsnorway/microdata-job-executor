@@ -259,6 +259,7 @@ def test_bump_minor(mocked_datastore_api: MockedDatastoreApi):
     datastore_dir = set_status_job_context.local_storage.datastore_dir
     assert "1.1" in datastore_dir.get_encrypted_versions()
 
+
 def test_bump_major(mocked_datastore_api: MockedDatastoreApi):
     DATASET_NAME = "DRAFT_CHANGE"
     set_status_job_context = generate_job_context(
