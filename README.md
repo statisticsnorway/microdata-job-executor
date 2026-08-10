@@ -56,4 +56,3 @@ docker buildx build --tag job-executor:test-local .
 - [PyArrow](https://arrow.apache.org/docs/python/) - Apache Arrow
 - [Pandas](https://pandas.pydata.org/) - Data analysis and manipulation
 - [microdata-tools](https://pypi.org/project/microdata-tools/) - dataset packaging & validation
-

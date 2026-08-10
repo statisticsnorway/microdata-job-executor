@@ -1,14 +1,19 @@
 import logging
 from pathlib import Path
 
-from pyarrow import dataset, parquet
+import pyarrow
+from pyarrow import dataset
 
 from job_executor.common.exceptions import BuilderStepError
 
 logger = logging.getLogger()
 
 
-def run(data_path: Path, dataset_name: str) -> None:
+def run(
+    data_path: Path,
+    dataset_name: str,
+    encryption_config: dataset.ParquetEncryptionConfig,
+) -> None:
     """
     Partitions the given dataset by the 'start_year' column.
 
@@ -35,8 +40,20 @@ def run(data_path: Path, dataset_name: str) -> None:
 
         output_dir = data_path.parent / f"{dataset_name}__DRAFT"
 
-        parquet.write_to_dataset(
-            table, root_path=output_dir, partition_cols=["start_year"]
+        parquet_format = dataset.ParquetFileFormat()
+        write_options = parquet_format.make_write_options(
+            encryption_config=encryption_config
+        )
+        dataset.write_dataset(
+            table,
+            output_dir,
+            format=parquet_format,
+            file_options=write_options,
+            partitioning=dataset.partitioning(
+                pyarrow.schema([("start_year", pyarrow.string())]),
+                flavor="hive",
+            ),
+            existing_data_behavior="delete_matching",
         )
     except Exception as e:
         logger.error(f"Error during partitioning: {str(e)}")
