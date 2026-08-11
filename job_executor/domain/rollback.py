@@ -80,6 +80,15 @@ def rollback_bump(job: Job, bump_manifesto: DatastoreVersion) -> None:
             if data_versions_path.exists():
                 logger.info(f"{job_id}: Deleting {data_versions_path}")
                 os.remove(data_versions_path)
+            bumped_version_underscored = dotted_to_underscored_version(
+                bumped_version_number
+            )
+            logger.info(
+                f"Deleting {bumped_version_underscored} from encrypted versions"
+            )
+            local_storage.datastore_dir.remove_encrypted_version(
+                bumped_version_underscored
+            )
 
         metadata_all_path = (
             datastore_info_dir / f"metadata_all__{bumped_version_metadata}.json"
