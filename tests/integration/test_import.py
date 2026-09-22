@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pyarrow import dataset
 
 from job_executor.adapter.datastore_api.models import (
     Job,
@@ -20,6 +21,7 @@ from job_executor.domain.worker import (
     build_dataset_worker,
     build_metadata_worker,
 )
+from tests.common.encrypted_parquet import decryption_file_format
 from tests.integration.common import (
     backup_resources,
     prepare_datastore,
@@ -130,6 +132,16 @@ def test_import_add(mocked_datastore_api: MockedDatastoreApi):
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
+    encrypted_draft_path = WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet"
+    assert not encrypted_draft_path.is_dir()
+    with pytest.raises(Exception):
+        dataset.dataset(encrypted_draft_path).to_table()
+    decrypted_table = dataset.dataset(
+        encrypted_draft_path,
+        format=decryption_file_format(),
+    ).to_table()
+    assert decrypted_table.num_rows > 0
+
 
 def test_import_change(mocked_datastore_api: MockedDatastoreApi):
     DATASET_NAME = "IMPORTABLE_CHANGE"
@@ -142,6 +154,7 @@ def test_import_change(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
+    assert not os.path.isdir(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
 
 
 def test_import_add_no_pseudo(

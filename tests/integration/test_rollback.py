@@ -114,6 +114,8 @@ def test_rollback_bump(mocked_datastore_api: MockedDatastoreApi):
     assert not os.path.exists(metadata_dir / "tmp")
     assert not os.path.exists(metadata_dir / "metadata_all__2_0_0.json")
     assert not os.path.exists(metadata_dir / "data_versions__2_0.json")
+    with open(metadata_dir / "encrypted_versions.json", "r") as f:
+        assert "2.0" not in json.load(f)["versions"]
 
 
 @pytest.mark.parametrize(
@@ -156,6 +158,7 @@ def test_rollback_first_bump(mocked_datastore_api: MockedDatastoreApi):
             "metadata_all__DRAFT.json",
             "draft_version.json",
             "datastore_versions.json",
+            "encrypted_versions.json",
         ]
         for file in os.listdir(metadata_dir)
     )

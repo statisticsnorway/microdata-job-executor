@@ -189,6 +189,61 @@ class DatastoreDirectory:
         os.remove(self.draft_metadata_all_path)
         shutil.move(tmp_file_path, self.draft_metadata_all_path)
 
+    def get_encrypted_versions(self) -> list[str]:
+        try:
+            with open(
+                f"{self.metadata_dir}/encrypted_versions.json",
+                "r",
+                encoding="utf-8",
+            ) as f:
+                encrypted_versions = json.load(f)
+            return encrypted_versions["versions"]
+        except FileNotFoundError:
+            return []
+
+    def write_new_encrypted_version(self, new_version: str) -> None:
+        """
+        Updates the encrypted versions file with a new version.
+
+        * new_version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic
+                              version
+        """
+        new_version_parts = new_version.split("_")
+        new_version_2_dotted = f"{new_version_parts[0]}.{new_version_parts[1]}"
+        encrypted_versions_list = self.get_encrypted_versions()
+        encrypted_versions_list.append(new_version_2_dotted)
+        with open(
+            f"{self.metadata_dir}/encrypted_versions.json",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump({"versions": encrypted_versions_list}, f, indent=2)
+
+    def remove_encrypted_version(self, remove_version: str) -> None:
+        """
+        Updates the encrypted versions file by removing a version
+        number from the versions list.
+
+        * remove_version: str - '<MAJOR>_<MINOR>_<PATCH>' formatted semantic
+                              version
+        """
+        remove_version_parts = remove_version.split("_")
+        remove_version_2_dotted = (
+            f"{remove_version_parts[0]}.{remove_version_parts[1]}"
+        )
+        encrypted_versions_list = self.get_encrypted_versions()
+        encrypted_versions_list = [
+            ev
+            for ev in encrypted_versions_list
+            if ev != remove_version_2_dotted
+        ]
+        with open(
+            f"{self.metadata_dir}/encrypted_versions.json",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump({"versions": encrypted_versions_list}, f, indent=2)
+
     def rename_parquet_draft_to_release(
         self, dataset_name: str, version: str
     ) -> str:

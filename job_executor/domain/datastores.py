@@ -542,6 +542,8 @@ def bump_version(job_context: JobContext) -> None:
             local_storage.datastore_dir.write_data_versions(
                 new_data_versions, new_version
             )
+            logger.info(f"{job_id}: Writing new version to encrypted versions")
+            local_storage.datastore_dir.write_new_encrypted_version(new_version)
 
         logger.info(f"{job_id}: Writing new metadata_all to file")
         _generate_new_metadata_all(
