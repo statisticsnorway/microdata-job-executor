@@ -5,12 +5,12 @@ description = ""
 authors = [{ name = "Microdata Developers", email = "microdata-dev@ssb.no" }]
 requires-python = ">=3.13"
 dependencies = [
-    "pyarrow==23.0.1",
+    "pyarrow==25.0.1",
     "pydantic>=2.13.4,<3",
     "requests>=2.34.2,<3",
     "pandas>=3.0.5,<4",
     "urllib3>=2.7.0,<3",
-    "microdata-tools==2.2.0",
+    "microdata-tools==2.2.1",
 ]
 
 [dependency-groups]
