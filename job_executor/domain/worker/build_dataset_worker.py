@@ -30,6 +30,7 @@ def _clean_working_dir(
     local_storage.working_dir.delete_file(
         f"{dataset_name}_pseudonymized.parquet"
     )
+    local_storage.working_dir.delete_file(f"{dataset_name}.sqlite3.db")
     local_storage.working_dir.delete_sub_directory(dataset_name)
 
 
@@ -78,6 +79,7 @@ def run_worker(job_context: JobContext, logging_queue: Queue) -> None:
         datastore_api.update_description(job_id, description)
 
         local_storage.working_dir.delete_sub_directory(dataset_name)
+        local_storage.working_dir.delete_file(f"{dataset_name}.sqlite3.db")
         datastore_api.update_job_status(job_id, JobStatus.TRANSFORMING)
         transformed_metadata = dataset_transformer.run(input_metadata)
         local_storage.working_dir.write_metadata(
