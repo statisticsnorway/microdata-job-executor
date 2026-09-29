@@ -130,8 +130,16 @@ def test_import_add(mocked_datastore_api: MockedDatastoreApi):
     assert mocked_datastore_api.update_job_status.call_count == 6
     assert mocked_datastore_api.update_description.call_count == 1
     assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.json")
-    assert os.path.exists(WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet")
-
+    assert (
+        len(
+            [
+                filename
+                for filename in os.listdir(WORKING_DIR)
+                if "DRAFT" not in filename
+            ]
+        )
+        == 0
+    )
     encrypted_draft_path = WORKING_DIR / f"{DATASET_NAME}__DRAFT.parquet"
     assert not encrypted_draft_path.is_dir()
     with pytest.raises(Exception):
