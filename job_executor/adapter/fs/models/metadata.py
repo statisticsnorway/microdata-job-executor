@@ -42,7 +42,7 @@ class KeyType(CamelModel):
 
 class CodeListItem(CamelModel):
     category: str
-    code: str
+    code: str | int
 
     def patch(self, other: "CodeListItem | None") -> "CodeListItem":
         if other is None:
@@ -59,7 +59,7 @@ class ValueDomain(CamelModel):
     description: str | None = None
     unit_of_measure: str | None = None
     code_list: list[CodeListItem] | None = None
-    missing_values: list[str] | None = None
+    missing_values: list[str | int] | None = None
 
     def is_enumerated_value_domain(self) -> bool:
         return (

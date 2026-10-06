@@ -59,6 +59,19 @@ def test_transform_codelist():
     assert "Code list can not be empty" in str(e)
 
 
+def test_transform_codelist_with_integer_codes():
+    """
+    CodeList items with integer codes (dataType LONG) should be
+    kept as integers through the transformation, not coerced to strings
+    """
+    transformed_codelist = (
+        dataset_transformer._represented_variables_from_code_list(
+            "description", [], test_data.INTEGER_CODELIST
+        )
+    )
+    assert transformed_codelist == test_data.TRANSFORMED_INTEGER_CODELIST
+
+
 def test_dataset_with_enumerated_valuedomain():
     actual_metadata = dataset_transformer.run(test_data.KREFTREG_DS_ENUMERATED)
     assert (
