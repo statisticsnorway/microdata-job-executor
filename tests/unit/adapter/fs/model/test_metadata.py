@@ -66,6 +66,35 @@ def test_metadata():
     )
 
 
+def test_metadata_with_integer_codelist():
+    integer_codelist_metadata = {
+        **ENUMERATED_METADATA,
+        "measureVariable": {
+            **ENUMERATED_METADATA["measureVariable"],
+            "dataType": "LONG",
+            "representedVariables": [
+                {
+                    **ENUMERATED_METADATA["measureVariable"][
+                        "representedVariables"
+                    ][0],
+                    "valueDomain": {
+                        "codeList": [
+                            {"category": "Mann", "code": 1},
+                            {"category": "Kvinne", "code": 2},
+                        ],
+                        "missingValues": [],
+                    },
+                }
+            ],
+        },
+    }
+    metadata = Metadata(**integer_codelist_metadata)
+    assert (
+        metadata.model_dump(by_alias=True, exclude_none=True)
+        == integer_codelist_metadata
+    )
+
+
 def test_patch():
     metadata_in_datastore = Metadata(**METADATA_IN_DATASTORE)
     updated_metadata = Metadata(**UPDATED_METADATA)

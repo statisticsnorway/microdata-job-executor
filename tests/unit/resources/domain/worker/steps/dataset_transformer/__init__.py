@@ -165,3 +165,33 @@ TRANSFORMED_CODELIST_WITH_MISSING_VALUES = [
     }
     for represented in TRANSFORMED_CODELIST
 ]
+
+
+INTEGER_CODELIST = [
+    {
+        "code": 1,
+        "categoryTitle": [{"languageCode": "no", "value": "Grunnskole"}],
+        "validFrom": "1900-01-01",
+        "validUntil": None,
+    },
+    {
+        "code": 2,
+        "categoryTitle": [{"languageCode": "no", "value": "Gymnasium"}],
+        "validFrom": "1900-01-01",
+        "validUntil": None,
+    },
+]
+
+TRANSFORMED_INTEGER_CODELIST = [
+    {
+        "description": "description",
+        "validPeriod": {"start": -25567},
+        "valueDomain": {
+            "codeList": [
+                {"category": "Grunnskole", "code": 1},
+                {"category": "Gymnasium", "code": 2},
+            ],
+            "missingValues": [],
+        },
+    },
+]
