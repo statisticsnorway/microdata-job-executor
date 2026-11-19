@@ -9,7 +9,7 @@ class PrivateKeysDirectory:
 
     def create(self) -> bool:
         if not self.path_with_rdn.exists():
-            os.makedirs(self.path_with_rdn)
+            os.makedirs(self.path_with_rdn, mode=0o700)
             return True
         return False
 
