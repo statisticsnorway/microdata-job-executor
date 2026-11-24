@@ -40,7 +40,12 @@ def execute_request(
                     allowed_methods={"GET"},
                 )
                 s.mount("http://", HTTPAdapter(max_retries=retries))
-                response = s.request(method=method, url=url, **kwargs)
+                response = s.request(
+                    method=method,
+                    url=url,
+                    timeout=DEFAULT_REQUESTS_TIMEOUT,
+                    **kwargs,
+                )
         else:
             response = requests.request(
                 method=method,
