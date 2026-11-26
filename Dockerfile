@@ -12,7 +12,7 @@ RUN groupadd --gid 180291 microdata \
     && useradd --uid 180291 --gid microdata microdata
 
 # Production image
-FROM gcr.io/distroless/python3-debian13:nonroot@sha256:806765f9f0863a1f36ce5f796983fed4eced9ec367e67e2f62f57f3e325c60b6
+FROM gcr.io/distroless/python3-debian13:nonroot@sha256:72de1dda9d4c52c370e2ef2d93c28e3e1a8193c92058b7dfa42bace38a83d114
 ARG COMMIT_ID
 ENV COMMIT_ID=$COMMIT_ID
 
